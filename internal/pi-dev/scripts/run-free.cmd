@@ -6,6 +6,7 @@ set "REPO_ROOT=%SCRIPT_DIR%..\..\..\"
 set "PI_CLI=%REPO_ROOT%external\pi\packages\coding-agent\dist\bundle\cli.js"
 set "ENV_FILE=%REPO_ROOT%.env"
 set "WEB_SEARCH_EXTENSION_PATH=%CONFIG_DIR%\extensions\pi-dev-web-search.ts"
+set "MODEL_FALLBACK_EXTENSION_PATH=%CONFIG_DIR%\extensions\pi-dev-model-fallback.ts"
 set "NAVER_ENV_FILE=%REPO_ROOT%.env.naver"
 
 rem OpenRouter free-tier model runner (migrated from internal/pi-dev-AY during
@@ -35,6 +36,21 @@ rem
 rem Pass an explicit model to skip the fallback probing entirely and use
 rem exactly that model:
 rem   run-free.cmd "openrouter/<other-model>:free"
+rem
+rem Mid-session fallback (2026-09-28, pi-dev-model-fallback extension): the
+rem pre-flight probe above only picks a live model before the session
+rem starts -- it can't react to overload/outage that happens mid-session,
+rem since Pi's own native retry only retries the SAME model and an
+rem interactive session never exits on its own after a failed turn. This
+rem extension closes that gap natively (no Pi source change): it listens
+rem for `agent_end` with a retryable-shaped error (the exact pattern Pi's
+rem own retry uses -- overloaded/429/5xx/network), switches the session to
+rem the next CANDIDATES entry via `setModel()`, and resubmits the same
+rem request via `sendUserMessage()`. If all CANDIDATES are also down, it
+rem falls back further to a random untried `:free` OpenRouter model from
+rem Pi's built-in catalog, bounded to avoid looping forever. Verified with
+rem a real forced-429 run (google/gemma-4-31b-it:free -> nemotron-3.5-lightning:free
+rem mid-session switch, confirmed via --mode json trajectory).
 set "CANDIDATES=openrouter/nvidia/nemotron-3-super-120b-a12b:free openrouter/nvidia/nemotron-3.5-lightning:free openrouter/nvidia/nemotron-3-ultra-550b-a55b:free openrouter/thinkingmachines/inkling:free"
 
 where node >nul 2>nul
@@ -115,5 +131,5 @@ if not defined NAVER_CLIENT_ID (
 
 echo Starting Pi native TUI (model: %MODEL_ARG%, OpenRouter free tier)...
 echo Note: free-tier rate limits and response quality vary by model -- see README.md.
-"%NODE_EXE%" "%PI_CLI%" --model %MODEL_ARG% --tools read,edit,write,ls,grep,find,powershell,web_search --no-extensions --extension "%WEB_SEARCH_EXTENSION_PATH%" --offline
+"%NODE_EXE%" "%PI_CLI%" --model %MODEL_ARG% --tools read,edit,write,ls,grep,find,powershell,web_search --no-extensions --extension "%WEB_SEARCH_EXTENSION_PATH%" --extension "%MODEL_FALLBACK_EXTENSION_PATH%" --offline
 exit /b %ERRORLEVEL%

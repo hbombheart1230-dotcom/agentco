@@ -24,7 +24,8 @@ internal/pi-dev/
 │  └─ extensions/               -- Pi native extension discovery(`<agentDir>/extensions/`)
 │     ├─ pi-dev-info.ts              -- PoC: `/internal-info` command + `get_pi_dev_environment` tool (기본 미사용)
 │     ├─ pi-dev-security-observer.ts -- PoC: tool_call/tool_result 관찰만, custom tool 없음 (기본 미사용)
-│     └─ pi-dev-web-search.ts        -- **기본 사용.** Naver Search API로 `web_search` tool 등록 (Pi native엔 웹 tool이 전혀 없어서 추가함)
+│     ├─ pi-dev-web-search.ts        -- **기본 사용.** Naver Search API로 `web_search` tool 등록 (Pi native엔 웹 tool이 전혀 없어서 추가함)
+│     └─ pi-dev-model-fallback.ts    -- **run-free.cmd에서 기본 사용.** 세션 도중 모델 overload/outage 시 자동으로 다른 모델로 전환 (아래 "run-free.cmd" 참고)
 ├─ scripts/
 │  ├─ check-config.mjs         -- 3개 값 검증
 │  ├─ check-config.cmd         -- 검증만 실행
@@ -63,7 +64,25 @@ cd "C:\Cording Agent\internal\pi-dev\scripts"
 .\run-free.cmd
 ```
 
-인자 없이 실행하면 검증된 무료 모델 후보 목록을 순서대로 짧게 찔러보고(liveness probe, `check-model.mjs`) 살아있는 첫 모델로 TUI를 띄운다 — Pi 자체엔 "이 모델 죽으면 다른 모델로 자동 전환"하는 기능이 없어서(같은 모델/provider 재시도만 native지원) 세션 시작 전에 미리 확인하는 방식으로 만들었다. 특정 모델을 강제로 쓰려면 `run-free.cmd "openrouter/<model>:free"`처럼 인자를 주면 된다. `.env.naver`가 있으면 `web_search`도 함께 켜진다.
+인자 없이 실행하면 검증된 무료 모델 후보 목록을 순서대로 짧게 찔러보고(liveness probe, `check-model.mjs`) 살아있는 첫 모델로 TUI를 띄운다 — 세션 **시작 전** 단계의 안전장치다. 특정 모델을 강제로 쓰려면 `run-free.cmd "openrouter/<model>:free"`처럼 인자를 주면 된다. `.env.naver`가 있으면 `web_search`도 함께 켜진다.
+
+### 세션 도중 fallback (`pi-dev-model-fallback` extension, 2026-09-28)
+
+위 liveness probe는 세션 시작 전만 커버한다 — Pi 자체엔 "세션 도중 이 모델이 막히면 다른 모델로 전환"하는 기능이 없고(native retry는 같은 모델/provider만 재시도), 인터랙티브 세션은 실패해도 프로세스가 안 죽어서 밖에서 개입할 신호 자체가 없다. `pi-dev-model-fallback` extension이 이 gap을 Pi native 이벤트만으로 메운다:
+
+```
+turn 진행 중 overload/outage
+ → Pi native retry 3회 실패 (같은 모델)
+ → agent_end 이벤트 발생 (native retry가 이미 다 끝난 뒤에만 발생 — source로 확인)
+ → errorMessage가 Pi 자신의 retryable 패턴과 일치하면(429/5xx/network 등)
+ → ctx.modelRegistry.find()로 다음 후보 모델 조회
+ → pi.setModel()로 세션 모델 전환
+ → pi.sendUserMessage()로 같은 요청 재전송
+```
+
+CANDIDATES 4개를 순서대로 다 써도 안 되면, Pi 내장 OpenRouter 카탈로그에서 아직 안 써본 `:free` 모델 중 **랜덤으로 하나 골라** 추가로 시도한다(최대 8개까지, 무한루프 방지). 사내 vLLM처럼 CANDIDATES에 없는 모델로 시작한 세션은 절대 건드리지 않는다(첫 실패 시점에 현재 모델이 CANDIDATES에 없으면 조용히 무시).
+
+실제로 `google/gemma-4-31b-it:free`(429 rate-limit 상태)로 강제 시작해서 `nvidia/nemotron-3.5-lightning:free`로 자동 전환되는 것까지 `--mode json` trajectory로 검증함.
 
 ## ab-test.cmd (A/B 진단)
 
