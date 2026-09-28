@@ -1,0 +1,33 @@
+{
+	"providers": {
+		"internal-vllm": {
+			"baseUrl": "<INTERNAL_VLLM_ENDPOINT>",
+			"api": "openai-completions",
+			"apiKey": "${INTERNAL_VLLM_API_KEY}",
+			"models": [
+				{
+					"id": "<INTERNAL_GLM_MODEL_ID>",
+					"name": "Internal GLM",
+					"reasoning": true,
+					"thinkingLevelMap": {
+						"off": null,
+						"minimal": null,
+						"low": "low",
+						"medium": null,
+						"high": "high",
+						"xhigh": null,
+						"max": "max"
+					},
+					"compat": {
+						"supportsStore": false,
+						"supportsDeveloperRole": false,
+						"supportsReasoningEffort": true,
+						"maxTokensField": "max_tokens",
+						"thinkingFormat": "zai",
+						"zaiToolStream": true
+					}
+				}
+			]
+		}
+	}
+}

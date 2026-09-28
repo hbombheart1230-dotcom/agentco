@@ -1,0 +1,87 @@
+{
+  "smokeA": {
+    "label": "Smoke A - model only",
+    "aborted": false,
+    "turnCount": 1,
+    "elapsedMs": 1731,
+    "stopReason": "stop",
+    "finalText": "PI_GLM_SMOKE_OK",
+    "usage": {
+      "input": 385,
+      "output": 30,
+      "cacheRead": 0,
+      "cacheWrite": 0,
+      "reasoning": 21,
+      "totalTokens": 415,
+      "cost": {
+        "input": 0,
+        "output": 0,
+        "cacheRead": 0,
+        "cacheWrite": 0,
+        "total": 0
+      }
+    },
+    "trajectory": [
+      {
+        "role": "user",
+        "summary": "Reply with exactly:\nPI_GLM_SMOKE_OK"
+      },
+      {
+        "role": "assistant",
+        "summary": "[thinking] PI_GLM_SMOKE_OK"
+      }
+    ]
+  },
+  "smokeB": {
+    "label": "Smoke B - structured read tool",
+    "aborted": false,
+    "turnCount": 2,
+    "elapsedMs": 9765,
+    "stopReason": "stop",
+    "finalText": "The exact contents of `marker.txt`:\n\n```\nPI_STRUCTURED_TOOL_OK\n```",
+    "usage": {
+      "input": 69,
+      "output": 36,
+      "cacheRead": 640,
+      "cacheWrite": 0,
+      "reasoning": 16,
+      "totalTokens": 745,
+      "cost": {
+        "input": 0,
+        "output": 0,
+        "cacheRead": 0,
+        "cacheWrite": 0,
+        "total": 0
+      }
+    },
+    "trajectory": [
+      {
+        "role": "user",
+        "summary": "Read marker.txt using the provided file-reading tool. Then reply with the exact contents of the file. Do not use a shell command."
+      },
+      {
+        "role": "assistant",
+        "summary": "[toolCall read args={\"path\":\"marker.txt\"}]"
+      },
+      {
+        "toolExecutionStart": "read",
+        "args": {
+          "path": "marker.txt"
+        }
+      },
+      {
+        "toolExecutionEnd": "read",
+        "isError": false,
+        "summary": "PI_STRUCTURED_TOOL_OK\n"
+      },
+      {
+        "role": "toolResult",
+        "summary": "PI_STRUCTURED_TOOL_OK\n"
+      },
+      {
+        "role": "assistant",
+        "summary": "[thinking] The exact contents of `marker.txt`:\n\n```\nPI_STRUCTURED_TOOL_OK\n```"
+      }
+    ]
+  }
+}
