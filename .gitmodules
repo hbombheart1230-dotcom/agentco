@@ -1,3 +1,6 @@
 [submodule "external/mini-swe-agent"]
 	path = external/mini-swe-agent
 	url = https://github.com/SWE-agent/mini-swe-agent.git
+[submodule "external/pi"]
+	path = external/pi
+	url = https://github.com/earendil-works/pi.git

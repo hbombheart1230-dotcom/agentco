@@ -2,8 +2,8 @@
 # Pi Dev — root .gitignore
 # Written before `git init` based on an actual inventory of the current tree.
 # Last reviewed 2026-09-28 (internal/ consolidated to pi-dev only; samples/
-# converted to a runtime-generated fixture; external/mini-swe-agent submoduled,
-# external/pi submodule conversion deferred -- see note below).
+# converted to a runtime-generated fixture; both external/pi and
+# external/mini-swe-agent submoduled).
 # Distinguishes source-controlled config/fixtures (kept) from runtime-generated
 # or nested-repo state (ignored) rather than blanket-ignoring whole folders.
 # =============================================================================
@@ -50,13 +50,6 @@ internal/pi-dev/samples/
 experiments/manual-playground/
 experiments/pi-tui-playground/
 
-# --- external/pi: NOT yet a submodule. Its package.json has local
-# uncommitted changes (two convenience npm scripts added, not from upstream)
-# -- see docs/AGENT_WORKFLOW.md / PATCHNOTE for the dirty-state finding.
-# Ignored here (not staged as a plain folder, not yet a declared submodule)
-# until that's resolved; remove this line once external/pi is submoduled.
-external/pi/
-
 # --- Defensive: browser/runtime artifacts should never land inside this repo
 # (they belong in %USERPROFILE%\.pi-personal\ instead) -- not currently
 # present anywhere in the tree, kept here as a guard rail.
@@ -69,6 +62,6 @@ external/pi/
 #   internal/pi-dev/config/models.json     -- source-controlled placeholder
 #   internal/pi-dev/samples-template/      -- source-controlled canonical fixture
 #   internal/pi-dev/samples-template/.gitignore -- part of the template on purpose
-#   external/mini-swe-agent/               -- clean upstream clone, converted to
-#                                              a proper git submodule (.gitmodules)
+#   external/pi/, external/mini-swe-agent/ -- clean upstream clones, both
+#                                              converted to proper git submodules (.gitmodules)
 # =============================================================================
