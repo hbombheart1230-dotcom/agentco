@@ -22,6 +22,15 @@
  *     rate-limit, 5xx, network errors, ...) -- i.e. exactly where native
  *     retry already gave up, never on unrelated tool/logic errors that
  *     switching models wouldn't fix anyway.
+ *   - Does NOT attempt to switch models for an OpenRouter *daily* free-tier
+ *     quota error (real example seen: "Rate limit exceeded:
+ *     free-models-per-day-high-balance", limit_source
+ *     "openrouter_free_tier_daily"). That quota is shared across the whole
+ *     account/all free models, not per-model, so switching candidates would
+ *     just burn through every one of them for an identical failure and
+ *     never succeed until the daily reset (X-RateLimit-Reset). Detected
+ *     separately from the general retryable pattern and short-circuits to a
+ *     single clear notify instead.
  *   - Only starts a fallback chain if the CURRENT model is already one of
  *     CANDIDATES below (i.e. the session is already running one of
  *     run-free.cmd's free-tier picks). Never silently swaps a user's
@@ -54,6 +63,12 @@ const MAX_CHAIN_LENGTH = 8;
 const RETRYABLE_ERROR_PATTERN =
 	/overloaded|rate.?limit|too many requests|429|500|502|503|504|524|service.?unavailable|server.?error|internal.?error|provider.?returned.?error|exceeded request buffer limit while retrying upstream|network.?error|connection.?error|connection.?refused|connection.?lost|other side closed|fetch failed|getaddrinfo/i;
 
+// Account-wide daily free-tier quota exhaustion -- shared across every free
+// model, so switching candidates cannot help. Confirmed real shape:
+// "Rate limit exceeded: free-models-per-day-high-balance.",
+// limit_source: "openrouter_free_tier_daily".
+const DAILY_QUOTA_PATTERN = /per-day|per.day|daily/i;
+
 function modelKey(m: { provider: string; id: string }): string {
 	return `${m.provider}/${m.id}`;
 }
@@ -77,6 +92,14 @@ export default function (pi: ExtensionAPI) {
 		if (!RETRYABLE_ERROR_PATTERN.test(errorMessage)) {
 			// Not an overload/outage-shaped failure -- switching models wouldn't
 			// help, and native retry wouldn't have retried this either. Leave it.
+			return;
+		}
+
+		if (DAILY_QUOTA_PATTERN.test(errorMessage)) {
+			// Account-wide daily quota, not a per-model issue -- every candidate
+			// would fail identically. Don't burn through them; surface once and stop.
+			ctx.ui.notify(`OpenRouter daily free-tier quota exhausted -- switching models won't help (shared account limit). ${errorMessage.slice(0, 160)}`, "error");
+			triedThisChain.clear();
 			return;
 		}
 
