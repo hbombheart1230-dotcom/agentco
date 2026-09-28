@@ -87,6 +87,18 @@ if not defined OPENROUTER_API_KEY (
 	)
 )
 
+rem GROQ_API_KEY: optional. Used only by pi-dev-model-fallback as a further
+rem fallback tier once every OpenRouter free-tier candidate (including the
+rem daily account-wide quota case) is exhausted. Missing/empty is fine --
+rem the extension just skips the Groq tier and stops after OpenRouter.
+if not defined GROQ_API_KEY (
+	if exist "%ENV_FILE%" (
+		for /f "usebackq tokens=1,* delims==" %%A in ("%ENV_FILE%") do (
+			if "%%A"=="GROQ_API_KEY" set "GROQ_API_KEY=%%B"
+		)
+	)
+)
+
 if not "%~1"=="" (
 	set "MODEL_ARG=%~1"
 	goto :model_selected

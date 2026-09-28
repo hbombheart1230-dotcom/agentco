@@ -80,9 +80,13 @@ turn 진행 중 overload/outage
  → pi.sendUserMessage()로 같은 요청 재전송
 ```
 
-CANDIDATES 4개를 순서대로 다 써도 안 되면, Pi 내장 OpenRouter 카탈로그에서 아직 안 써본 `:free` 모델 중 **랜덤으로 하나 골라** 추가로 시도한다(최대 8개까지, 무한루프 방지). 사내 vLLM처럼 CANDIDATES에 없는 모델로 시작한 세션은 절대 건드리지 않는다(첫 실패 시점에 현재 모델이 CANDIDATES에 없으면 조용히 무시).
+OpenRouter CANDIDATES 4개를 순서대로 다 써도 안 되면, **Groq 모델로 넘어간다**(`openai/gpt-oss-120b` → `openai/gpt-oss-20b` → `qwen/qwen3.8-27b`, `.env`의 `GROQ_API_KEY` 필요). Groq는 OpenRouter의 `:free` 태그와 성격이 다르다 — Pi 카탈로그(`groq.json`)엔 이 모델들에 실제 유료 단가가 찍혀있고(`:free` 마커 없음), "무료"는 Groq 계정 자체의 free 개발자 티어(요청량 제한, 카드 불필요) 얘기지 Pi나 카탈로그가 아는 개념이 아니다. 실제 Groq API(`api.groq.com/openai/v1/models`)로 직접 확인해보니 카탈로그에 있던 `llama-3.1-8b-instant`/`llama-3.3-70b-versatile`/`qwen/qwen3.6-27b`는 이미 404(model_not_found)라 후보에서 제외했고, 위 3개만 실제 tool-call까지 되는 것까지 확인함.
 
-실제로 `google/gemma-4-31b-it:free`(429 rate-limit 상태)로 강제 시작해서 `nvidia/nemotron-3.5-lightning:free`로 자동 전환되는 것까지 `--mode json` trajectory로 검증함.
+**OpenRouter 하루 쿼터 소진**(`free-models-per-day-high-balance`, `limit_source: openrouter_free_tier_daily`)은 특별 취급한다 — 이건 계정 전체가 공유하는 한도라 남은 OpenRouter 후보로 갈아타봐야 전부 똑같이 막힌다. 이 에러가 감지되면 남은 OpenRouter 후보는 전부 건너뛰고 **곧바로 Groq로 전환**한다.
+
+Groq까지 다 실패하면 Pi 내장 OpenRouter 카탈로그에서 아직 안 써본 `:free` 모델 중 **랜덤으로 하나 골라** 마지막으로 시도한다(최대 8개까지 누적, 무한루프 방지). 사내 vLLM처럼 후보 목록에 없는 모델로 시작한 세션은 절대 건드리지 않는다(첫 실패 시점에 현재 모델이 후보에 없으면 조용히 무시).
+
+실제 검증: `google/gemma-4-31b-it:free`(429)로 강제 시작 → `nvidia/nemotron-3.5-lightning:free`로 전환(초기 버전). 이후 실제로 OpenRouter 하루 쿼터가 소진된 상태에서 재검증했더니 남은 OpenRouter 후보를 건너뛰고 **`groq/openai/gpt-oss-120b`로 바로 전환**돼 정상 응답까지 받는 것을 `--mode json` trajectory로 확인함 — 이 과정에서 `pi.sendUserMessage()`가 `agent_end` 핸들러 안에서 옵션 없이 호출되면 "Agent is already processing" 에러가 나는 버그를 발견해 `{ deliverAs: "followUp" }`로 고침.
 
 ## ab-test.cmd (A/B 진단)
 
