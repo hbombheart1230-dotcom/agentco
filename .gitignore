@@ -1,0 +1,15 @@
+# Secrets
+.env
+.env.*
+!.env.example
+
+# Dependencies
+node_modules/
+
+# Pi runtime state (pi-home/ keeps only the tracked settings.json)
+pi-home/*
+!pi-home/settings.json
+
+# Smoke-test output
+smoke-output/
+*.log

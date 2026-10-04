@@ -29,6 +29,14 @@ Tests, fixtures, and learned failure cases should be preserved whenever useful.
 
 Claude executes. Codex independently verifies and challenges. GPT resolves findings and owns architecture.
 
+## D-006 — Clean baseline on pristine Pi
+**Status:** Accepted
+
+`origin/main` is the canonical Agentco history. The retired pi-dev line is preserved only as the tag `archive/pi-dev-pre-rebootstrap` and is never merged into `main`.
+
+The baseline is upstream Pi 1.0.2 (npm, exact-pinned, zero modifications) with one fixed primary model (OpenRouter `nvidia/nemotron-3-ultra-550b-a55b:free`), a Groq secondary for smoke tests only, and no custom extensions, skills, browser code, memory, or model routing. Baseline behaviour is compared before anything is added.
+
+
 ## Pending decisions
 
 The following remain intentionally undecided until Phase 0 reports are complete:

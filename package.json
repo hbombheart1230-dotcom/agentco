@@ -1,0 +1,14 @@
+{
+  "name": "agentco",
+  "private": true,
+  "version": "0.0.0",
+  "description": "Agentco clean baseline: upstream Pi + OpenRouter/Groq, single fixed model.",
+  "type": "module",
+  "scripts": {
+    "pi": "node scripts/pi.mjs",
+    "smoke": "node scripts/smoke.mjs"
+  },
+  "dependencies": {
+    "@earendil-works/pi-coding-agent": "1.0.2"
+  }
+}
