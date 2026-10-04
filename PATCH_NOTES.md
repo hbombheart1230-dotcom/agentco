@@ -31,3 +31,10 @@ This file records user-visible and architecture-significant changes to Agentco.
 - Smoke test (`node scripts/smoke.mjs`): discovery, auth presence, text response, fixed-model check, session start/exit, `read` tool call, file content in answer — **7/7 PASS on OpenRouter and 7/7 PASS on Groq**.
 - No custom extensions, skills, BrowserRuntime/BrowserExtension, memory, or model routing are installed or ported.
 - Details: `docs/bootstrap/BASELINE.md`, `MODELS.md`, `SMOKE_TEST.md`.
+
+### Portability and Laptop 2 (baseline-pi-1.0.2)
+- Agentco source made machine-independent: no absolute paths, user paths, or machine-specific locations in tracked files; paths derive from the script location. Added `engines.node >=22.19.0` and `.gitattributes` (stable line endings).
+- Designated **Laptop 2** as the canonical Agentco development host. Canonical source is GitHub `origin/main`; secrets (`.env`) and runtime/state (`pi-home/*`, `node_modules/`, `smoke-output/`) stay machine-local and untracked.
+- Verified by a fresh-clone acceptance test (clean clone, fresh `npm install`, no pre-existing runtime state, only `.env` supplied): OpenRouter 7/7 and Groq 7/7.
+- Old pi-dev line archived at tag `archive/pi-dev-pre-rebootstrap` (`37b280c`), not merged into `main`. Old machine's `.pi-personal`, browser profiles and login state are not part of this baseline.
+- Migration steps: `docs/bootstrap/LAPTOP2_MIGRATION.md`.

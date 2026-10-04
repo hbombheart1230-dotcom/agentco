@@ -24,7 +24,7 @@ node scripts/pi.mjs         # start Pi (or pi.cmd)
 node scripts/smoke.mjs      # baseline smoke test
 ```
 
-Details: `docs/bootstrap/`.
+Canonical development host: Laptop 2. Source comes from GitHub; `.env` and runtime state stay machine-local. Setup: `docs/bootstrap/LAPTOP2_MIGRATION.md`. Details: `docs/bootstrap/`.
 
 ## Current focus
 

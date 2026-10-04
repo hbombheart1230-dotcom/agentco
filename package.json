@@ -10,5 +10,8 @@
   },
   "dependencies": {
     "@earendil-works/pi-coding-agent": "1.0.2"
+  },
+  "engines": {
+    "node": ">=22.19.0"
   }
 }
