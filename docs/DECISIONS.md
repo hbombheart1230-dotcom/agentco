@@ -37,14 +37,22 @@ Claude executes. Codex independently verifies and challenges. GPT resolves findi
 The baseline is upstream Pi 1.0.2 (npm, exact-pinned, zero modifications) with one fixed primary model (OpenRouter `nvidia/nemotron-3-ultra-550b-a55b:free`), a Groq secondary for smoke tests only, and no custom extensions, skills, browser code, memory, or model routing. Baseline behaviour is compared before anything is added.
 
 
+## D-007 — Harness composition on Pi 1.0.2
+**Status:** Accepted (2026-10-07). Details and evidence: `docs/capabilities/HARNESS.md`.
+
+- Official first: built-in `codemode`/`mcp`/`tool-search`, official `subagent` and `plan-mode` examples loaded in place from the pinned package.
+- Browser = Playwright MCP through Pi's built-in MCP (no Pi browser extension, no BrowserRuntime). LSP = `@ian-pascoe/pi-lsp`. Skill = `skill-creator`.
+- Agentco owns only three small extensions derived from official examples (`permission-gate`, `protected-paths`, `git-checkpoint`), each justified by a concrete gap in the upstream example (see HARNESS.md §2). Delete them when upstream closes the gap.
+- Pi stays on 1.0.2; community packages are version-pinned.
+
 ## Pending decisions
 
-The following remain intentionally undecided until Phase 0 reports are complete:
+The following remain intentionally undecided:
 
-- browser implementation
 - desktop/computer-use implementation
 - memory implementation
 - scheduler/background runtime
-- subagent implementation
 - control UI
 - long-running task runtime
+
+Decided by D-007: browser, subagent, LSP, MCP, tool orchestration.
