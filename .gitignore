@@ -9,6 +9,13 @@ node_modules/
 # Pi runtime state (pi-home/ keeps only the tracked settings.json)
 pi-home/*
 !pi-home/settings.json
+!pi-home/extensions/
+!pi-home/agents/
+!pi-home/prompts/
+!pi-home/skills/
+# secrets / tokens / browser profiles stay ignored even inside the allowed dirs
+pi-home/**/auth.json
+pi-home/**/mcp-auth.json
 
 # Smoke-test output
 smoke-output/
