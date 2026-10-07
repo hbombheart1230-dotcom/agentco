@@ -1,0 +1,29 @@
+{
+  "mcpServers": {
+    "playwright": {
+      "command": "npx",
+      "args": [
+        "-y",
+        "@playwright/mcp@0.0.83",
+        "--browser",
+        "msedge",
+        "--user-data-dir",
+        "~/.agentco/browser-profile",
+        "--timeout-action",
+        "15000",
+        "--output-dir",
+        "~/.agentco/browser-output"
+      ],
+      "description": "Browser automation (Playwright MCP, Edge, persistent Agentco profile)",
+      "exposure": "codemode",
+      "toolExposure": {
+        "browser_navigate": "direct",
+        "browser_snapshot": "direct",
+        "browser_click": "direct",
+        "browser_type": "direct",
+        "browser_evaluate": "direct",
+        "browser_wait_for": "direct"
+      }
+    }
+  }
+}

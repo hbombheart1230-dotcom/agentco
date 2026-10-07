@@ -1,14 +1,105 @@
-﻿{
+{
   "defaultProvider": "openrouter",
   "defaultModel": "nvidia/nemotron-3-ultra-550b-a55b:free",
   "lastChangelogVersion": "1.0.2",
-  "defaultTools": ["+codemode", "+grep", "+find", "+ls"],
-  "codemode": { "mode": "on" },
+  "defaultTools": [
+    "+codemode",
+    "+grep",
+    "+find",
+    "+ls"
+  ],
+  "codemode": {
+    "mode": "on"
+  },
   "extensions": [
     "../node_modules/@earendil-works/pi-coding-agent/examples/extensions/subagent",
     "../node_modules/@earendil-works/pi-coding-agent/examples/extensions/plan-mode",
     "extensions/permission-gate.ts",
     "extensions/protected-paths.ts",
     "extensions/git-checkpoint.ts"
-  ]
+  ],
+  "packages": [
+    "npm:@ian-pascoe/pi-lsp@0.8.0",
+    "npm:@tmustier/pi-skill-creator@0.3.4"
+  ],
+  "lsp": {
+    "timeouts": {
+      "initializeMs": 60000,
+      "requestMs": 10000,
+      "diagnosticsMs": 20000
+    },
+    "servers": {
+      "typescript": {
+        "command": "npx",
+        "args": [
+          "--no-install",
+          "tsc",
+          "--lsp",
+          "--stdio"
+        ],
+        "languages": [
+          {
+            "extensions": [
+              ".ts",
+              ".mts",
+              ".cts"
+            ],
+            "languageId": "typescript"
+          },
+          {
+            "extensions": [
+              ".tsx"
+            ],
+            "languageId": "typescriptreact"
+          },
+          {
+            "extensions": [
+              ".js",
+              ".mjs",
+              ".cjs"
+            ],
+            "languageId": "javascript"
+          },
+          {
+            "extensions": [
+              ".jsx"
+            ],
+            "languageId": "javascriptreact"
+          }
+        ],
+        "rootMarkers": [
+          "tsconfig.json",
+          "package.json",
+          ".git"
+        ]
+      },
+      "python": {
+        "command": "pyright-langserver",
+        "args": [
+          "--stdio"
+        ],
+        "languages": [
+          {
+            "extensions": [
+              ".py"
+            ],
+            "languageId": "python"
+          }
+        ],
+        "rootMarkers": [
+          "pyproject.toml",
+          "setup.py",
+          "requirements.txt",
+          ".git"
+        ],
+        "settings": {
+          "python": {
+            "analysis": {
+              "diagnosticMode": "workspace"
+            }
+          }
+        }
+      }
+    }
+  }
 }

@@ -13,6 +13,8 @@ pi-home/*
 !pi-home/agents/
 !pi-home/prompts/
 !pi-home/skills/
+!pi-home/mcp.json
+!pi-home/AGENTS.md
 # secrets / tokens / browser profiles stay ignored even inside the allowed dirs
 pi-home/**/auth.json
 pi-home/**/mcp-auth.json
