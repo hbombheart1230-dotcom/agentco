@@ -43,7 +43,7 @@ The baseline is upstream Pi 1.0.2 (npm, exact-pinned, zero modifications) with o
 - Official first: built-in `codemode`/`mcp`/`tool-search`, official `subagent` and `plan-mode` examples loaded in place from the pinned package.
 - Browser = Playwright MCP through Pi's built-in MCP (no Pi browser extension, no BrowserRuntime). LSP = `@ian-pascoe/pi-lsp`. Skill = `skill-creator`.
 - Agentco owns only three small extensions derived from official examples (`permission-gate`, `protected-paths`, `git-checkpoint`), each justified by a concrete gap in the upstream example (see HARNESS.md §2). Delete them when upstream closes the gap.
-- Pi stays on 1.0.2; community packages are version-pinned.
+- Pi is exact-pinned (1.0.2 baseline, moved to 1.0.4 on 2026-10-07 after a zero-change regression, see HARNESS.md §7); community packages are version-pinned.
 
 ## Pending decisions
 

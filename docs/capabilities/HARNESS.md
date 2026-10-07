@@ -1,8 +1,6 @@
-# Agentco harness composition (Pi 1.0.2)
+# Agentco harness composition (Pi 1.0.4)
 
-Status date: 2026-10-07. Pi stays **1.0.2, unmodified** (npm exact pin). Everything below is configuration in `pi-home/` (Pi's agent dir, set by `scripts/pi.mjs`), tracked in git except runtime state and secrets.
-
-> Pi `1.0.4` was already published on 2026-10-05 (`npm view @earendil-works/pi-coding-agent version`). The baseline deliberately stays on 1.0.2; upgrading is a separate, smoke-gated step.
+Status date: 2026-10-07. Pi is **1.0.4, unmodified** (npm exact pin; moved from 1.0.2 after the validation in §7). Everything below is configuration in `pi-home/` (Pi's agent dir, set by `scripts/pi.mjs`), tracked in git except runtime state and secrets. Sections 1–6 were validated on 1.0.2 and re-validated unchanged on 1.0.4 (§7).
 
 ## 1. Composition
 
@@ -76,3 +74,27 @@ Run through `scripts/pi.mjs` against throw-away fixtures outside the repo (JSON/
 3. `npm i -g pyright` (Python LSP). Microsoft Edge must be installed (browser MCP uses `--browser msedge`).
 4. In each TypeScript project: `npm i -D typescript@7` (or switch the LSP command, §4.2).
 5. Run `node scripts\smoke.mjs`.
+
+## 7. Pi 1.0.2 → 1.0.4 upgrade validation (2026-10-07)
+
+Done on branch `chore/pi-1.0.4-validation`; only Pi was changed (LSP, skill-creator, Playwright MCP, pyright, TypeScript untouched), **no Agentco file was modified** before the zero-change regression.
+
+Relevant upstream changes (1.0.3/1.0.4): `--tools`/`--exclude-tools` accept `*` patterns and `--tools` now keeps MCP tools (`--no-mcp` added); codemode freezes built-ins and returns image blocks from `read`; MCP shutdown/OAuth fixes; system-prompt rules omit hidden tools; Azure provider renamed (unused). Extension API: one additive method (`getPromptGuidelines`). No lifecycle, session, fork or settings-schema change.
+
+| Check (same fixtures/drivers as §3) | 1.0.4 |
+|---|---|
+| startup / tool list | PASS (same 9 listed tools) |
+| basic tools, codemode (file content in session: 0 occurrences) | PASS |
+| plan-mode, subagent (scout, worker, scout → worker), session resume | PASS |
+| safety (gate, protected paths) | PASS |
+| git checkpoint — Agentco version | PASS |
+| LSP TS + Python | PASS, identical behaviour incl. the Python cold-start diagnostics timeout |
+| browser (ordered calls, JS page, `localStorage` across processes, Edge exits, no cwd litter) | PASS |
+| MCP list + `tool_search` loading a `deferred` server | PASS |
+| baseline smoke | 14/14 |
+
+Differences: system prompt 4.8k → 5.5k chars (same tool count). Running Pi in print/JSON/RPC modes left tracked `pi-home/` files unchanged (an interactive start may still rewrite `lastChangelogVersion`; not verified).
+
+**Official `git-checkpoint` on 1.0.4: FAIL.** The example (and `permission-gate`, `protected-paths`, `subagent`, `plan-mode`) is byte-identical to 1.0.2. In an isolated agent dir the fork showed no restore prompt and the file stayed modified. Custom `git-checkpoint`, `permission-gate` and `protected-paths` therefore stay; no new official permission/protection feature exists in 1.0.4 docs. Custom extension count: 3 → 3.
+
+Decision: **adopt 1.0.4** (no regression, no new workaround).
