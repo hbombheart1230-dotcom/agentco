@@ -19,11 +19,9 @@ pi-dev/*
 pi-dev/**/auth.json
 pi-dev/**/mcp-auth.json
 
-# Preserve old runtime after tracked-asset migration
-pi-home/
+# Generated output and justified optional worktrees
 results/
 worktrees/
 
-# Smoke-test output
-smoke-output/
+# Local logs
 *.log

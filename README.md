@@ -18,7 +18,7 @@ powershell -NoProfile -File scripts/doctor.ps1
 
 Bootstrap uses `npm ci`, restores configured Pi npm packages and checks pyright. Install Microsoft Edge for the configured browser MCP. Python LSP requires pyright on PATH; bootstrap can install it with the explicit `-InstallPyright` option. TypeScript projects need their own TS7 package for the configured LSP command; see [harness caveats](docs/capabilities/HARNESS.md).
 
-Execution works from any clone location. Secrets, sessions, package caches and browser profiles stay machine-local. Existing runtime is never deleted during migration; new runtime packages are restored online. Old sessions/auth remain preserved until the user separately chooses a local migration.
+Execution works from any clone location. Secrets, sessions, package caches and browser profiles stay machine-local. The root hygiene follow-up migrates existing sessions and helper binaries into ignored `pi-dev/` runtime and removes obsolete generated caches. Newer active auth stays in place; the old auth file is retained without inspection in ignored `pi-dev/retained-auth/p0-p1/`. Smoke runs create separate output directories under ignored `results/smoke/`, preserving previous results. Future-phase folders are created only when their phase begins.
 
 ## Windows command
 

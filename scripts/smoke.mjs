@@ -1,7 +1,7 @@
 // Baseline smoke test: discovery, auth presence, text, file read (tool call), session start/exit.
 // Usage: node scripts/smoke.mjs [openrouter|groq|all]   Never prints secret values.
 import { spawnSync } from "node:child_process";
-import { mkdirSync, writeFileSync, rmSync, readdirSync } from "node:fs";
+import { mkdirSync, writeFileSync, mkdtempSync, readdirSync } from "node:fs";
 import path from "node:path";
 import { cli, piEnv, root } from "./env.mjs";
 
@@ -11,11 +11,14 @@ const TARGETS = {
 };
 const which = process.argv[2] ?? "all";
 const names = which === "all" ? Object.keys(TARGETS) : [which];
-const out = path.join(root, "smoke-output");
+const smokeRoot = path.join(root, "results", "smoke");
+mkdirSync(smokeRoot, { recursive: true });
+const out = mkdtempSync(path.join(smokeRoot, "run-"));
 const env = piEnv();
 const WORD = "PLUM-4721";
-mkdirSync(out, { recursive: true });
 writeFileSync(path.join(out, "fixture.txt"), `The magic word is ${WORD}.\n`);
+const fixturePath = path.relative(root, path.join(out, "fixture.txt")).split(path.sep).join("/");
+console.log(`Smoke output: ${path.relative(root, out).split(path.sep).join("/")}`);
 
 function pi(args, timeout = 180000) {
 	return spawnSync(process.execPath, [cli, "--offline", ...args], { cwd: root, env, encoding: "utf8", timeout, maxBuffer: 64 * 1024 * 1024 });
@@ -48,14 +51,13 @@ for (const name of names) {
 	check(name, "model discovery", (ls.stdout ?? "").split(/\r?\n/).some((l) => l.trim().split(/\s+/).slice(0, 2).join(" ") === `${t.provider} ${t.model}`));
 
 	const sessDir = path.join(out, "sessions", name);
-	rmSync(sessDir, { recursive: true, force: true });
 	const a = run(t, "Reply with exactly the single word: PONG", ["--session-dir", sessDir]);
 	check(name, "text response", !a.err && /PONG/i.test(a.text), a.err ?? `model=${a.models.join(",")}`);
 	check(name, "fixed model (no routing)", a.models.length === 1 && a.models[0] === `${t.provider}/${t.model}`, a.models.join(","));
 	let sess = []; try { sess = readdirSync(sessDir).filter((f) => f.endsWith(".jsonl")); } catch {}
 	check(name, "session start/exit", a.code === 0 && a.ev.some((e) => e.type === "session") && sess.length === 1, `exit=${a.code} sessionFiles=${sess.length}`);
 
-	const b = run(t, "Read the file smoke-output/fixture.txt and tell me the magic word.", ["--no-session", "--tools", "read"]);
+	const b = run(t, `Read the file ${fixturePath} and tell me the magic word.`, ["--no-session", "--tools", "read"]);
 	const read = b.calls.find((c) => c.toolName === "read" && !c.isError);
 	check(name, "tool call (read)", Boolean(read) && JSON.stringify(read.result).includes(WORD), b.err ?? `calls=${b.calls.map((c) => c.toolName).join(",")}`);
 	check(name, "file content used in answer", !b.err && b.text.includes(WORD));

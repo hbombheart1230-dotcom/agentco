@@ -51,3 +51,46 @@ Preservation and reconciliation:
 Canonical verification: doctor exited 0 with **28 PASS / 0 WARN / 0 FAIL**; the live baseline smoke exited 0 with **14/14 PASS**. Pinned Pi managed packages were restored online into the new canonical agent directory. Existing repository dependencies were retained.
 
 Root AGENTS.md and README now require the canonical workspace and Git branches by default; additional linked worktrees require a concrete isolation or parallelism reason. Independent Claude verification still gates merging to main.
+
+## Root folder hygiene audit — 2026-10-09
+
+Recorded before deleting or moving local state, after pulling feature branch to `9c9d2a3a794db3272377940bcaf1fd9be8dca93f`. Git was clean. All 20 physical top-level entries, including hidden/ignored files, were inventoried:
+
+| Root item | Classification | Reason / planned action |
+|---|---|---|
+| .git/ | KEEP-LOCAL | Required canonical Git metadata |
+| bin/ | KEEP-TRACKED | One portable user command wrapper |
+| docs/ | KEEP-TRACKED | Governance, work orders and evidence |
+| node_modules/ | KEEP-LOCAL | Active generated npm dependencies |
+| pi-dev/ | KEEP-TRACKED | Active configuration namespace; runtime inside stays ignored |
+| pi-home/ | MIGRATE | Move sessions and helper binaries into active runtime; retain old auth without overwriting active auth; remove proven obsolete cache/dependencies |
+| results/ | KEEP-LOCAL | Generated output and bounded prior verification/preservation archives |
+| scripts/ | KEEP-TRACKED | Portable launch, install and verification scripts |
+| smoke-output/ | MIGRATE | Preserve existing generated output under results/smoke after new-path verification |
+| .env | KEEP-LOCAL | Current root-local provider credentials; presence only inspected |
+| .env.example | KEEP-TRACKED | Portable environment template |
+| .env.naver | KEEP-LOCAL | Existing local secret file; retain untouched, not loaded by launcher |
+| .gitattributes | KEEP-TRACKED | Line-ending policy |
+| .gitignore | KEEP-TRACKED | Local-state exclusion rules |
+| AGENTS.md | KEEP-TRACKED | Durable repository rules |
+| package-lock.json | KEEP-TRACKED | Reproducible npm dependency graph |
+| package.json | KEEP-TRACKED | Pinned Pi dependency and commands |
+| PATCH_NOTES.md | KEEP-TRACKED | Change history |
+| pi.cmd | KEEP-TRACKED | Existing command entrypoint |
+| README.md | KEEP-TRACKED | Current usage and documentation links |
+
+Legacy sub-item decisions: `sessions/` contains 64 JSONL sessions and four logs, with no active sessions directory to overwrite; MIGRATE intact to `pi-dev/sessions/`. `bin/` contains only the Pi-managed rg/fd helper executables and no active counterpart; MIGRATE to ignored `pi-dev/bin/`. Installed community package versions/content are compared against the active installation before deleting the old generated npm tree. `models-store.json` is a stale dynamically refreshed provider-catalog cache, verified from installed Pi's models-store implementation; REMOVE without reading its contents. Old `auth.json` has a newer active counterpart; MIGRATE opaquely to ignored `pi-dev/retained-auth/p0-p1/auth.json`, never overwrite active auth. DEFER only the decision to activate/discard that retained credential file; no credential values are read or compared.
+
+The temporary linked worktree is already absent and Git lists only the canonical workspace. No root worktrees/ or future-phase placeholder directories exist. Existing results archives remain local evidence; their prior dependency snapshots are not active installations.
+
+### Root hygiene outcome
+
+- Migrated all 64 session JSONL files and four logs intact into `pi-dev/sessions/`, and both rg/fd helper executables into `pi-dev/bin/`. File lengths and timestamps were checked after the moves. Pi SessionManager discovers all 64 sessions, including three for the canonical working directory; session content was not printed.
+- Retained older auth opaquely at the classified ignored destination; active auth length/timestamp remained unchanged. Credential contents were not read, hashed or compared. The deferred activation/disposal decision is recorded in TASK_INBOX.md and does not block the folder cleanup.
+- Both community packages matched active versions and all 39 published package files compared identical. The obsolete npm tree and regenerable model catalog cache were removed through Windows Recycle Bin, allowing recovery. Only the classified paths were removed, followed by the empty legacy directory; no broad cleanup or Git history rewrite occurred.
+- The updated smoke script creates a fresh `results/smoke/run-*/` directory for every invocation and no longer recursively deletes prior sessions. Live regression passed **14/14**, exit 0, using the new fixture path. After verification, all three original root smoke files were moved with unchanged metadata into `results/smoke/pre-hygiene/`; the root smoke directory no longer exists.
+- Doctor passed **28 PASS / 0 WARN / 0 FAIL**, exit 0. Actual Pi launcher startup/help loaded the official plan extension with no extension load errors and dynamically targeted `pi-dev/`.
+- bin/ remains the one unchanged tracked portable command wrapper. Root contract was added to AGENTS.md and WORK_PLAN.md; current README/smoke instructions were updated while historical evidence remains dated.
+- The obsolete pi-home and root smoke-output ignore rules were removed. Migrated sessions/helpers/retained auth, generated smoke results, existing results archives and root secret files remain ignored. Git still has one canonical worktree and no temporary/placeholder worktree directory.
+
+Final physical root inventory is the original audit table minus `pi-home/` and `smoke-output/`: **18 entries**, seven directories and 11 files. Every remaining item keeps its recorded KEEP-TRACKED or KEEP-LOCAL classification. No future-phase placeholder directories were created. Independent Claude review still gates merging to main.

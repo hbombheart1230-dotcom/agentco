@@ -4,6 +4,11 @@ This file records user-visible and architecture-significant changes to Agentco.
 
 ## Unreleased
 
+### Root folder hygiene — 2026-10-09
+- Migrated useful legacy Pi sessions/helper binaries into ignored active runtime, preserved old auth without overwriting newer auth, and removed obsolete generated dependencies/catalog cache.
+- Smoke output now uses unique ignored `results/smoke/run-*/` directories, preserving previous runs.
+- Root rules exclude legacy migration folders and meaningless future-phase placeholders after validation.
+
 ### P0/P1 workspace normalization - 2026-10-09
 - Renamed tracked Pi configuration/customizations to `pi-dev/`; launch paths derive from the repository root. Original machine-local runtime is preserved.
 - Added docs-first root governance, current work plan, shared-assets architecture, conservative lockfile bootstrap and read-only doctor.

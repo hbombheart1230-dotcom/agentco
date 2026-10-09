@@ -19,7 +19,7 @@ Purpose: keep small follow-ups, cleanup items, ideas, and deferred checks in one
 
 ## Parked / Future
 
-- None.
+- P0/P1 root hygiene: decide whether to activate or discard the retained older auth file under ignored `pi-dev/retained-auth/p0-p1/` when credential recovery is needed. Active newer auth was preserved; no credential values were inspected.
 
 ## Done
 
