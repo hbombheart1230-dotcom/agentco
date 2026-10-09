@@ -309,3 +309,72 @@ PASS / PARTIAL / FAIL
 
 BLOCKERS / CLAUDE REVIEW NOTES:
 ```
+
+## Follow-up — canonical single workspace
+
+This follow-up is part of P0/P1 and supersedes routine use of per-phase sibling worktree folders.
+
+The user wants Agentco development to use **one canonical working directory** by default:
+
+`C:\Agentco`
+
+Git branches remain the normal isolation/versioning mechanism. Additional linked worktrees such as `C:\Agentco-p0-p1`, `C:\Agentco-p2`, etc. are **exceptional**, not the default. Use an extra worktree only when there is a concrete reason such as simultaneous conflicting work or a high-risk experiment that cannot safely coexist in the canonical workspace.
+
+### Required follow-up
+
+Current implementation commit:
+`23140f0addfb455cd6198441bc9e94f2e9876416`
+
+Current temporary worktree used during P0/P1:
+`C:\Agentco-p0-p1`
+
+Canonical workspace:
+`C:\Agentco`
+
+Before Claude verification:
+
+1. Inspect Git/worktree/status in both directories.
+2. Preserve all pre-existing user state in the canonical workspace. At P0 start this included:
+   - modified `README.md`
+   - modified `pi-home/settings.json`
+   - untracked `bin/`
+3. Safely make `C:\Agentco` the working directory for `feature/p0-p1-agentco-workspace`.
+4. Reconcile the preserved user changes with the new layout:
+   - preserve intentional README edits;
+   - map any meaningful old `pi-home/settings.json` changes into `pi-dev/settings.json`;
+   - do not treat runtime-only `lastChangelogVersion` churn as an intentional user setting;
+   - preserve `bin/` unless there is explicit evidence it is disposable.
+5. Remove the no-longer-needed `C:\Agentco-p0-p1` linked worktree using normal Git worktree cleanup only after the canonical workspace is confirmed safe.
+6. Re-run doctor and the 14/14 smoke from `C:\Agentco`.
+7. Update root `AGENTS.md` (and another operating document only if useful) with this durable rule:
+
+   > Agentco development uses the canonical workspace and Git branches by default. Additional linked worktrees are exceptional and require a concrete isolation or parallelism reason.
+
+8. Commit and push this follow-up on the same feature branch.
+9. **Do not merge to main yet.** Claude independent verification still gates the merge.
+
+Final follow-up report:
+
+```text
+CANONICAL WORKSPACE:
+BRANCH:
+HEAD:
+
+TEMP WORKTREE:
+REMOVED:
+
+PREEXISTING README CHANGE:
+PREEXISTING SETTINGS CHANGE:
+PREEXISTING BIN:
+ALL PRESERVED:
+
+DOCTOR:
+SMOKE:
+
+WORKTREE POLICY UPDATED:
+FOLLOW-UP COMMIT:
+PUSH:
+
+SINGLE-WORKSPACE NORMALIZATION:
+PASS / PARTIAL / FAIL
+```
