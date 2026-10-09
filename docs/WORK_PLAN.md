@@ -15,7 +15,7 @@ Current baseline: upstream Pi 1.0.4, exact-pinned. This plan supersedes the earl
 
 ## Intended layout
 
-The root contains Git, local ignored .env, .env.example, AGENTS.md, README.md, npm manifests, scripts and docs. `pi-dev/` owns Pi settings, MCP configuration, agents, prompts, extensions and later harness adapters. Runtime is ignored; npm supplies executables and dependencies.
+Tracked root source/configuration consists of `.gitattributes`, `.gitignore`, `.env.example`, `AGENTS.md`, `README.md`, `PATCH_NOTES.md`, `package.json`, `package-lock.json`, `pi.cmd`, and `bin/`, `docs/`, `scripts/`, `pi-dev/`. Local root state consists of `.git/`, ignored `.env`, optional ignored secret files such as `.env.naver`, `node_modules/`, and `results/`. `pi-dev/` owns Pi settings, MCP configuration, agents, prompts, extensions and later harness adapters. Runtime is ignored; npm supplies executables and dependencies.
 
 Keep the physical root intentional: tracked source/configuration, active pi-dev runtime, portable bin entrypoints, local secrets and node_modules, and generated results. Smoke output belongs under `results/smoke/run-*/`; each run preserves earlier results. Remove legacy migration directories after needed state is safely migrated and validated. Empty future-phase directories are not placeholders to create now.
 

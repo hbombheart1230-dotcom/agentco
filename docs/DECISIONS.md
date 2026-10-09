@@ -40,6 +40,8 @@ The historical 2026-10-04 baseline was upstream Pi 1.0.2 (npm, exact-pinned, zer
 ## D-007 — Harness composition on Pi 1.0.2
 **Status:** Accepted (2026-10-07). Details and evidence: `docs/capabilities/HARNESS.md`.
 
+The title records the historical Pi 1.0.2 composition decision. The current baseline is Pi 1.0.4 following the upgrade recorded below and D-008; the original decision remains historical evidence.
+
 - Official first: built-in `codemode`/`mcp`/`tool-search`, official `subagent` and `plan-mode` examples loaded in place from the pinned package.
 - Browser = Playwright MCP through Pi's built-in MCP (no Pi browser extension, no BrowserRuntime). LSP = `@ian-pascoe/pi-lsp`. Skill = `skill-creator`.
 - Agentco owns only three small extensions derived from official examples (`permission-gate`, `protected-paths`, `git-checkpoint`), each justified by a concrete gap in the upstream example (see HARNESS.md §2). Delete them when upstream closes the gap.

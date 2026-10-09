@@ -13,13 +13,14 @@ This file is the **only default execution entrypoint** for Codex/Claude.
 
 ## Current action
 
-P0/P1 — root folder hygiene follow-up.
+P2 entry — await GPT/user approval of the shared-skills scope and work order. P0/P1 is complete; P2 implementation is not yet authorized.
 
 ### Required context
 
 - `AGENTS.md`
-- the **latest "Root folder hygiene follow-up" section only** in `docs/work-orders/P0_P1_CODEX.md`
-- current Git status / branch / root directory inventory
+- the P2 scope in `docs/WORK_PLAN.md`
+- the new approved P2 work order, when provided
+- current Git status / branch
 
 ### Do not reread by default
 
@@ -30,4 +31,4 @@ P0/P1 — root folder hygiene follow-up.
 
 ### Completion
 
-Perform the current follow-up, validate, commit, push, and report only the new delta/results.
+Confirm the next P2 scope and acceptance criteria when the owner provides them. Begin implementation only after explicit approval; do not create shared-skill assets or install additional harnesses while awaiting it.
