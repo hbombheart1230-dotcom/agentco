@@ -74,3 +74,15 @@ PASS / PASS_WITH_MINOR / FAIL
 RECOMMENDED CODEX REWORK:
 <only if needed>
 ```
+
+### Canonical workspace follow-up
+
+Also verify the P0/P1 follow-up in `P0_P1_CODEX.md`:
+
+- canonical development workspace is `C:\Agentco`;
+- routine per-phase sibling worktrees are no longer the default;
+- the temporary `C:\Agentco-p0-p1` worktree was removed safely;
+- pre-existing README/settings/bin user state was preserved or intentionally reconciled;
+- root operating rules state that extra worktrees require a concrete isolation/parallelism reason;
+- doctor and smoke were re-run from the canonical workspace;
+- the branch has **not** been merged to main before this independent review.
