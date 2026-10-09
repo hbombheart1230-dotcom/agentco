@@ -3,7 +3,8 @@
 Owner: GPT / user
 Executor: Codex
 Verifier: Claude
-Baseline remote HEAD: `3a27a7d60b9e6305bc538bab4b2dedacc15d302c`
+Functional baseline commit: `3a27a7d60b9e6305bc538bab4b2dedacc15d302c`
+Work-order commits were added afterward on `main`; create the implementation branch from the latest `origin/main` after pulling.
 Target branch: `feature/p0-p1-agentco-workspace`
 
 ## Operating model
@@ -22,7 +23,7 @@ This repository is the single source of truth.
 
 Before starting, verify these facts against the repository and local workspace rather than assuming them:
 
-- Remote `main` HEAD is `3a27a7d...`.
+- Functional code baseline before these work-order docs is `3a27a7d...`; current `origin/main` is expected to be newer because the work-order docs themselves were committed afterward.
 - Pi is exact-pinned at `@earendil-works/pi-coding-agent@1.0.4`.
 - Current Pi agent directory is repo-local `pi-home/`, set by `scripts/env.mjs`.
 - Current harness includes:
@@ -100,7 +101,7 @@ Empty future directories do not need meaningless placeholder files unless requir
 Before modifying anything:
 
 1. Confirm local branch, HEAD, origin URL, and working-tree state.
-2. Fetch remote and compare local HEAD with `origin/main`.
+2. Fetch remote and compare local HEAD with the latest `origin/main`; do not require `origin/main` itself to equal `3a27a7d...` because the work-order documentation commits are newer.
 3. Do not discard or overwrite pre-existing dirty/untracked user work.
 4. Inventory tracked and runtime contents related to:
    - `pi-home/`
