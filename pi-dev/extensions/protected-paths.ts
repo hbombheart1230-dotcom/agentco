@@ -3,7 +3,7 @@
  *
  * Derived from Pi's official example `examples/extensions/protected-paths.ts` (MIT).
  * Differences: (1) also blocks `read` of credential files so secrets never enter model context,
- * (2) Agentco-specific secret files (pi-home auth/token stores), (3) path normalisation for Windows.
+ * (2) Agentco-specific secret files (pi-dev auth/token stores), (3) path normalisation for Windows.
  * `.env.example` stays readable/writable.
  */
 

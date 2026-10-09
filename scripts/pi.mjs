@@ -1,5 +1,5 @@
-// Thin launcher: load .env into the Pi process, point Pi at ./pi-home, run upstream Pi unchanged.
-// Usage: node scripts/pi.mjs [pi args...]   (default model comes from pi-home/settings.json)
+// Thin launcher: load .env into the Pi process, point Pi at ./pi-dev, run upstream Pi unchanged.
+// Usage: node scripts/pi.mjs [pi args...]   (default model comes from pi-dev/settings.json)
 import { spawn } from "node:child_process";
 import { cli, piEnv } from "./env.mjs";
 

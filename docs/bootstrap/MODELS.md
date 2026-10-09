@@ -4,10 +4,10 @@ Principle: one fixed model per run. No auto routing, no fallback, no `openrouter
 
 | Role | Provider | Model ID | Selected by |
 |---|---|---|---|
-| **Primary baseline (default)** | `openrouter` | `nvidia/nemotron-3-ultra-550b-a55b:free` | `pi-home/settings.json` → `defaultProvider` / `defaultModel` |
+| **Primary baseline (default)** | `openrouter` | `nvidia/nemotron-3-ultra-550b-a55b:free` | `pi-dev/settings.json` → `defaultProvider` / `defaultModel` |
 | Secondary smoke only | `groq` | `openai/gpt-oss-120b` | explicit `--provider groq --model openai/gpt-oss-120b` (smoke script) |
 
-Both are in Pi 1.0.2's built-in catalog (`--list-models`): OpenRouter nemotron-3-ultra `:free` — 1M context, 65.5K max output, thinking; Groq gpt-oss-120b — 131.1K context, 65.5K max output, thinking. Neither supports images.
+Both were verified in Pi 1.0.2's built-in catalog (historical model metadata; current Pi is 1.0.4) (`--list-models`): OpenRouter nemotron-3-ultra `:free` — 1M context, 65.5K max output, thinking; Groq gpt-oss-120b — 131.1K context, 65.5K max output, thinking. Neither supports images.
 
 Note: OpenRouter also lists the non-free `nvidia/nemotron-3-ultra-550b-a55b` (262K context). The `:free` variant is the baseline, per decision.
 

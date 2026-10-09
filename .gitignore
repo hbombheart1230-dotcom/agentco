@@ -6,18 +6,23 @@
 # Dependencies
 node_modules/
 
-# Pi runtime state (pi-home/ keeps only the tracked settings.json)
-pi-home/*
-!pi-home/settings.json
-!pi-home/extensions/
-!pi-home/agents/
-!pi-home/prompts/
-!pi-home/skills/
-!pi-home/mcp.json
-!pi-home/AGENTS.md
+# Pi runtime state (only reviewed configuration/customizations are tracked)
+pi-dev/*
+!pi-dev/settings.json
+!pi-dev/extensions/
+!pi-dev/agents/
+!pi-dev/prompts/
+!pi-dev/skills/
+!pi-dev/mcp.json
+!pi-dev/AGENTS.md
 # secrets / tokens / browser profiles stay ignored even inside the allowed dirs
-pi-home/**/auth.json
-pi-home/**/mcp-auth.json
+pi-dev/**/auth.json
+pi-dev/**/mcp-auth.json
+
+# Preserve old runtime after tracked-asset migration
+pi-home/
+results/
+worktrees/
 
 # Smoke-test output
 smoke-output/

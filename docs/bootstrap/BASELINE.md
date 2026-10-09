@@ -1,5 +1,7 @@
 # Agentco clean baseline (bootstrap)
 
+Historical evidence from 2026-10-04: paths and versions below describe the original baseline. Current Pi 1.0.4 uses `pi-dev/`; see [HARNESS.md](../capabilities/HARNESS.md) and [WORK_PLAN.md](../WORK_PLAN.md).
+
 Date: 2026-10-04 · Status: PASS (see SMOKE_TEST.md)
 
 Fresh start. Nothing from the previous pi-dev implementation was ported: no BrowserRuntime / BrowserExtension, no custom skills, no custom extensions, no custom model routing. Agentra was not touched.

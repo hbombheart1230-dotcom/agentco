@@ -8,7 +8,7 @@ export const cli = path.join(root, "node_modules", "@earendil-works", "pi-coding
 const KEYS = new Set(["OPENROUTER_API_KEY", "OPENROUTER_BASE_URL", "GROQ_API_KEY", "GROQ_BASE_URL"]);
 
 export function piEnv() {
-	const env = { ...process.env, PI_CODING_AGENT_DIR: path.join(root, "pi-home") };
+	const env = { ...process.env, PI_CODING_AGENT_DIR: path.join(root, "pi-dev") };
 	const envFile = path.join(root, ".env");
 	if (existsSync(envFile)) {
 		for (const line of readFileSync(envFile, "utf8").replace(/^﻿/, "").split(/\r?\n/)) {

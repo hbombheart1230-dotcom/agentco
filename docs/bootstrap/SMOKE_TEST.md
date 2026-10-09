@@ -1,5 +1,7 @@
 # Smoke test
 
+Historical evidence from 2026-10-04: paths and versions below describe the original baseline. Current Pi 1.0.4 uses `pi-dev/`; see [HARNESS.md](../capabilities/HARNESS.md) and [WORK_PLAN.md](../WORK_PLAN.md).
+
 Run: `node scripts/smoke.mjs [openrouter|groq|all]` (exit 0 = all checks pass). Uses Pi print/JSON mode with `--no-extensions --no-skills --no-context-files`, so only upstream Pi behaviour is measured. Writes only to `smoke-output/` (gitignored). Prints no secrets.
 
 Checks per provider/model:

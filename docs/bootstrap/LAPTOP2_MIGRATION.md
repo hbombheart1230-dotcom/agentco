@@ -1,84 +1,23 @@
-# Laptop 2 migration
+# Fresh-machine / Laptop 2 setup
 
-## Roles
+Git carries source; each machine keeps its own secrets, sessions and browser state. Pi is upstream-unmodified 1.0.4, pinned by the npm manifest and lockfile.
 
-| Machine | Role |
-|---|---|
-| Current machine | Created and pushed the clean baseline only. **Not** the primary development host from now on. |
-| **Laptop 2** | **Canonical Agentco development machine.** All extension/skill experiments and development happen here. |
+Prerequisites: Windows PowerShell, Git (including Git Bash for Pi's bash tool), Node >=22.19.0 and npm, network access to npm/provider endpoints, Microsoft Edge for browser MCP. Python LSP requires pyright; TypeScript LSP requires a project-local TS7 package (see [HARNESS.md](../capabilities/HARNESS.md)).
 
-Rule: Git carries source; each machine keeps its own secrets and runtime state.
-
-| What | Where it lives |
-|---|---|
-| Canonical source | GitHub `origin/main` (`https://github.com/hbombheart1230-dotcom/agentco`) |
-| Pi version | pinned by `package.json` + `package-lock.json` (Pi 1.0.2, upstream-unmodified) |
-| Secrets | Laptop 2 local `.env` (git-ignored, never copied through Git) |
-| Runtime/state | Laptop 2 local: `pi-home/` (except tracked `settings.json`), `node_modules/`, `smoke-output/` — all git-ignored and created on first run |
-
-Do **not** copy the old machine's folder, `.pi-personal`, browser profiles or finance login state. They are not dependencies of this baseline (the repo contains no reference to them) and stay on the old machine untouched.
-
-## Prerequisites
-
-- Windows with **Node.js >= 22.19.0** (baseline verified on 24.20) and npm
-- **Git** (Git for Windows; Pi's `bash` tool uses Git Bash)
-- Network access to npm, OpenRouter and Groq
-
-## Steps
-
-```bat
+```powershell
 git clone https://github.com/hbombheart1230-dotcom/agentco.git
 cd agentco
-npm install
-copy .env.example .env
+powershell -NoProfile -File scripts/bootstrap.ps1 -InstallPyright
+# Only if .env is absent:
+Copy-Item .env.example .env
+# Fill provider keys locally; never print or commit values.
+.\pi.cmd
+node scripts/smoke.mjs
+powershell -NoProfile -File scripts/doctor.ps1
 ```
 
-Edit `.env` (repo root, git-ignored) and fill in the values:
+Bootstrap uses npm ci and restores pinned LSP/skill-creator packages through Pi. Without -InstallPyright it checks the existing prerequisite and fails clearly if missing. It never overwrites .env. Missing .env is a warning; provider smoke tests require configured keys. Doctor warns if Edge or .env is absent and fails on missing required dependencies/configuration. Subprocess failures are reported.
 
-```
-OPENROUTER_API_KEY=<your OpenRouter key>
-GROQ_API_KEY=<your Groq key>
-```
+The launcher sets `PI_CODING_AGENT_DIR=<repo>/pi-dev` from its own script location. Do not put an absolute machine-specific path in tracked configuration. Expected smoke: OpenRouter 7/7 + Groq 7/7 = 14/14.
 
-Optional: `OPENROUTER_BASE_URL`, `GROQ_BASE_URL` (only to override Pi's defaults). Only these four names are read.
-
-`npm install` may print "install-scripts ... not yet covered by allowScripts" for esbuild, `@google/genai` and protobufjs. This is expected; the baseline passes without approving them.
-
-## Run
-
-```bat
-pi.cmd                       :: interactive Pi (default: openrouter / nvidia/nemotron-3-ultra-550b-a55b:free)
-pi.cmd --provider groq --model openai/gpt-oss-120b
-node scripts\pi.mjs --version
-```
-
-`pi.cmd` calls `scripts/pi.mjs`, which loads `.env` into the Pi process and sets `PI_CODING_AGENT_DIR` to `<repo>/pi-home`. Pi creates the rest of `pi-home/` on first run.
-
-## Verify
-
-```bat
-node scripts\smoke.mjs
-```
-
-Expected (7 checks per provider, ends with `14/14 checks passed`, exit code 0):
-
-```
-== openrouter/nvidia/nemotron-3-ultra-550b-a55b:free
-PASS  auth key present / model discovery / text response / fixed model (no routing)
-PASS  session start/exit / tool call (read) / file content used in answer
-== groq/openai/gpt-oss-120b
-PASS  (same 7 checks)
-14/14 checks passed
-```
-
-One provider only: `node scripts\smoke.mjs openrouter` or `groq`. The free OpenRouter model can rate-limit; the script retries once, then re-run later.
-
-## Baseline facts (for comparison)
-
-- Pi 1.0.2 (`@earendil-works/pi-coding-agent`), upstream tag `v1.0.2`, commit `cd32f7725fdbddbaecdff5b1e68491563394e0ca`, 0 modifications
-- Tags: `baseline-pi-1.0.2` (this baseline), `archive/pi-dev-pre-rebootstrap` (retired pi-dev line, archive only, never merged into `main`)
-- No custom extensions, skills, browser code, memory or model routing are installed
-
-## Do not
-
-Commit `.env`; copy `node_modules` or `pi-home` between machines; put machine-specific absolute paths into code, config or smoke tests (paths are derived from the script location).
+On an existing checkout, preserve original Pi runtime and archived `archive/pi-dev-pre-rebootstrap` history. P1 renames tracked assets only; it does not remove or copy old auth/sessions, node_modules, .pi-personal or browser profiles. New runtime packages come from online sources. Session/auth migration is a separate local choice; never copy credentials into conversation or Git.

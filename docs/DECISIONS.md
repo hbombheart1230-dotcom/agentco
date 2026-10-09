@@ -25,16 +25,16 @@ Previously implemented components may be replaced if external alternatives meet 
 Tests, fixtures, and learned failure cases should be preserved whenever useful.
 
 ## D-005 — Worker roles
-**Status:** Accepted
+**Status:** Superseded by D-008 (2026-10-09)
 
-Claude executes. Codex independently verifies and challenges. GPT resolves findings and owns architecture.
+Historical decision: Claude executed; Codex independently verified and challenged. GPT resolved findings and owned architecture. Current roles are defined by D-008.
 
 ## D-006 — Clean baseline on pristine Pi
 **Status:** Accepted
 
 `origin/main` is the canonical Agentco history. The retired pi-dev line is preserved only as the tag `archive/pi-dev-pre-rebootstrap` and is never merged into `main`.
 
-The baseline is upstream Pi 1.0.2 (npm, exact-pinned, zero modifications) with one fixed primary model (OpenRouter `nvidia/nemotron-3-ultra-550b-a55b:free`), a Groq secondary for smoke tests only, and no custom extensions, skills, browser code, memory, or model routing. Baseline behaviour is compared before anything is added.
+The historical 2026-10-04 baseline was upstream Pi 1.0.2 (npm, exact-pinned, zero modifications) with one fixed primary model (OpenRouter `nvidia/nemotron-3-ultra-550b-a55b:free`), a Groq secondary for smoke tests only, and no custom extensions, skills, browser code, memory, or model routing. Baseline behaviour is compared before anything is added.
 
 
 ## D-007 — Harness composition on Pi 1.0.2
@@ -44,6 +44,13 @@ The baseline is upstream Pi 1.0.2 (npm, exact-pinned, zero modifications) with o
 - Browser = Playwright MCP through Pi's built-in MCP (no Pi browser extension, no BrowserRuntime). LSP = `@ian-pascoe/pi-lsp`. Skill = `skill-creator`.
 - Agentco owns only three small extensions derived from official examples (`permission-gate`, `protected-paths`, `git-checkpoint`), each justified by a concrete gap in the upstream example (see HARNESS.md §2). Delete them when upstream closes the gap.
 - Pi is exact-pinned (1.0.2 baseline, moved to 1.0.4 on 2026-10-07 after a zero-change regression, see HARNESS.md §7); community packages are version-pinned.
+
+## D-008 - P0/P1 workspace and governance
+**Status:** Accepted (2026-10-09). Supersedes D-005.
+
+Codex executes and develops; Claude independently verifies/reviews; GPT owns architecture and final technical decisions; the user owns final product and priority decisions. Read repository docs and the current work order before implementation; Git is the source of truth.
+
+Pi remains exact-pinned at 1.0.4, upstream-unmodified. Its portable agent directory is `<repo>/pi-dev`, derived from the launcher location. Harness-specific assets stay there. Portable skills will have one canonical source in `shared/skills` in P2; reusable execution logic belongs in `shared/tools` or later MCP. No new harness installation or shared-skill migration in P1.
 
 ## Pending decisions
 

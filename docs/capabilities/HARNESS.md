@@ -1,6 +1,6 @@
 # Agentco harness composition (Pi 1.0.4)
 
-Status date: 2026-10-07. Pi is **1.0.4, unmodified** (npm exact pin; moved from 1.0.2 after the validation in §7). Everything below is configuration in `pi-home/` (Pi's agent dir, set by `scripts/pi.mjs`), tracked in git except runtime state and secrets. Sections 1–6 were validated on 1.0.2 and re-validated unchanged on 1.0.4 (§7).
+Status date: 2026-10-07; directory migration verified 2026-10-09. Pi is **1.0.4, unmodified** (npm exact pin; moved from 1.0.2 after the validation in §7). Current configuration lives in `pi-dev/` (set by `scripts/env.mjs`), tracked except runtime and secrets. Paths in sections 1–6 show the current migrated location; their original validation used the previous agent directory. Sections 1–6 were validated on 1.0.2 and re-validated unchanged on 1.0.4 (§7). P0/P1 migration evidence: [P0_P1_VALIDATION.md](../work-orders/P0_P1_VALIDATION.md).
 
 ## 1. Composition
 
@@ -10,12 +10,12 @@ Status date: 2026-10-07. Pi is **1.0.4, unmodified** (npm exact pin; moved from 
 | Built-in extensions | `codemode` (`codemode.mode = on`), `mcp`, `tool-search` (auto-activates for `deferred` MCP servers) | Pi 1.0.2 | no |
 | Built-in tools | `read bash edit write` + `grep find ls` (enabled via `defaultTools`) | Pi 1.0.2 | no |
 | Official examples (loaded in place from the pinned package, not copied) | `subagent`, `plan-mode` | `node_modules/@earendil-works/pi-coding-agent/examples/extensions` | no |
-| Agentco-owned, derived from official examples | `permission-gate.ts`, `protected-paths.ts`, `git-checkpoint.ts` | `pi-home/extensions/` | yes (≈50–60 lines each) |
-| Config | subagent roles `scout / planner / worker / reviewer` (model line removed → inherit the fixed model), 3 workflow prompts | `pi-home/agents`, `pi-home/prompts` | yes (copied Markdown) |
+| Agentco-owned, derived from official examples | `permission-gate.ts`, `protected-paths.ts`, `git-checkpoint.ts` | `pi-dev/extensions/` | yes (≈50–60 lines each) |
+| Config | subagent roles `scout / planner / worker / reviewer` (model line removed → inherit the fixed model), 3 workflow prompts | `pi-dev/agents`, `pi-dev/prompts` | yes (copied Markdown) |
 | Community package | `@ian-pascoe/pi-lsp@0.8.0` (LSP) | npm | no |
-| MCP | `@playwright/mcp@0.0.83` (browser) via built-in MCP, no Pi package | `pi-home/mcp.json` | config only |
+| MCP | `@playwright/mcp@0.0.83` (browser) via built-in MCP, no Pi package | `pi-dev/mcp.json` | config only |
 | Skill | `@tmustier/pi-skill-creator@0.3.4` | npm | no |
-| Rules | `pi-home/AGENTS.md` (3 short rules) | repo | yes |
+| Rules | `pi-dev/AGENTS.md` (3 short rules) | repo | yes |
 
 Final count: **community Pi packages 2** (LSP + skill-creator), **MCP servers 1**, **official examples 2**, **Agentco-owned extensions 3**, **skills 1**.
 
@@ -53,10 +53,10 @@ Run through `scripts/pi.mjs` against throw-away fixtures outside the repo (JSON/
 1. **LSP cold start.** The first `lsp_diagnostics` of a session can report `diagnostics timeout` (observed for Python/pyright, 20 s limit); the next call succeeds. Python cross-file references only appear after the other file has been opened/analysed (`diagnosticMode: workspace` is set).
 2. **TypeScript needs a project-local `typescript`.** The configured server is TS7 native (`npx --no-install tsc --lsp --stdio`). Projects on TypeScript ≤ 6 need `typescript-language-server` instead (`typescript-language-server` itself refuses TS 7; and with no shell flag the first LSP candidate could not spawn `.cmd` shims on Windows at all).
 3. **Python server is a global npm install** (`npm i -g pyright`) — machine-local, not in the repo.
-4. **Playwright MCP quirks (0.0.83):** `browser_click.target` takes selectors, not `ref=eN` (the model recovers); the model may batch dependent calls — mitigated by `pi-home/AGENTS.md`.
+4. **Playwright MCP quirks (0.0.83):** `browser_click.target` takes selectors, not `ref=eN` (the model recovers); the model may batch dependent calls — mitigated by `pi-dev/AGENTS.md`.
 5. **Free-model variance:** Nemotron occasionally returns empty text or wanders; every item above was re-run when that happened. Not a harness defect, but expect it.
 6. **Tool surface grew:** ≈ 9 tools listed in the prompt (system prompt ≈ 4.8k chars vs 2.9k bare) plus 6 browser tools and the LSP direct tools. Check with a context viewer before adding more.
-7. `lastChangelogVersion` in `pi-home/settings.json` is rewritten by Pi on startup (harmless noise in diffs).
+7. `lastChangelogVersion` in `pi-dev/settings.json` is rewritten by Pi on startup (harmless noise in diffs).
 
 ## 5. Held / not installed
 
@@ -69,8 +69,8 @@ Run through `scripts/pi.mjs` against throw-away fixtures outside the repo (JSON/
 
 ## 6. Fresh-machine setup for this harness
 
-1. `npm install` (pins Pi 1.0.2).
-2. Start Pi once (`node scripts\pi.mjs`). Missing packages listed in `pi-home/settings.json` are installed automatically into the ignored `pi-home/npm/` (verified with an empty agent dir containing only `settings.json`; `pi update --extensions` alone did **not** install them).
+1. `powershell -NoProfile -File scripts/bootstrap.ps1` (`npm ci`, pins Pi 1.0.4).
+2. Start Pi once (`node scripts\pi.mjs`). Missing packages listed in `pi-dev/settings.json` are installed automatically into the ignored `pi-dev/npm/` (verified with an empty agent dir containing only `settings.json`; `pi update --extensions` alone did **not** install them).
 3. `npm i -g pyright` (Python LSP). Microsoft Edge must be installed (browser MCP uses `--browser msedge`).
 4. In each TypeScript project: `npm i -D typescript@7` (or switch the LSP command, §4.2).
 5. Run `node scripts\smoke.mjs`.
@@ -93,7 +93,7 @@ Relevant upstream changes (1.0.3/1.0.4): `--tools`/`--exclude-tools` accept `*` 
 | MCP list + `tool_search` loading a `deferred` server | PASS |
 | baseline smoke | 14/14 |
 
-Differences: system prompt 4.8k → 5.5k chars (same tool count). Running Pi in print/JSON/RPC modes left tracked `pi-home/` files unchanged (an interactive start may still rewrite `lastChangelogVersion`; not verified).
+Historical differences: system prompt 4.8k → 5.5k chars (same tool count). Running Pi in print/JSON/RPC modes left the then-current tracked `pi-home/` files unchanged (an interactive start may still rewrite `lastChangelogVersion`; not verified).
 
 **Official `git-checkpoint` on 1.0.4: FAIL.** The example (and `permission-gate`, `protected-paths`, `subagent`, `plan-mode`) is byte-identical to 1.0.2. In an isolated agent dir the fork showed no restore prompt and the file stayed modified. Custom `git-checkpoint`, `permission-gate` and `protected-paths` therefore stay; no new official permission/protection feature exists in 1.0.4 docs. Custom extension count: 3 → 3.
 

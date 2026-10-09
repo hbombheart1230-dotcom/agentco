@@ -1,45 +1,36 @@
 # Agentco
 
-Agentco is a personal **cowork / companion agent** project.
+Agentco is a personal cowork / companion agent. Coding is one capability among many.
 
-It is not a coding-agent fork. Coding is one capability among many.
-
-## Direction
-
-Agentco follows four rules:
-
-1. **Pi stays upstream.** Avoid Pi core patches unless a capability is impossible otherwise.
-2. **Build last.** Search Pi built-ins, packages/extensions/skills, MCP/CLI, and mature OSS before writing Agentco code.
-3. **Compose first.** Agentco should own composition, policy, evaluation, UX, and truly Agentco-specific adapters—not commodity infrastructure.
-4. **Replace without regret.** Existing custom components are retained only when acceptance tests show a concrete advantage over available OSS.
+Pi stays upstream. Build last: prefer built-ins, maintained packages, MCP/CLI and mature OSS before thin Agentco adapters. Agentco owns composition, policy, evaluation and UX.
 
 ## Current baseline
 
-Clean baseline `baseline-pi-1.0.2`: upstream **Pi 1.0.2** (unmodified, npm-pinned), primary model OpenRouter `nvidia/nemotron-3-ultra-550b-a55b:free`, Groq `openai/gpt-oss-120b` as secondary smoke provider. No custom extensions, skills, browser, memory, or routing are installed. The retired pi-dev implementation lives only in the tag `archive/pi-dev-pre-rebootstrap`.
+Upstream **Pi 1.0.4**, exact-pinned through npm. Configuration and customizations live in `pi-dev/`, resolved from the repository root by `scripts/env.mjs`. The harness includes official plan/subagent examples, three Agentco safety/checkpoint extensions, LSP 0.8.0, skill-creator 0.3.4 and Playwright MCP 0.0.83 using Edge. OpenRouter Nemotron free is the fixed primary model; Groq gpt-oss-120b is the secondary smoke provider.
 
+```powershell
+powershell -NoProfile -File scripts/bootstrap.ps1
+# If missing, create .env from .env.example and fill provider keys locally.
+node scripts/pi.mjs             # or .\pi.cmd
+node scripts/smoke.mjs          # expected 14/14
+powershell -NoProfile -File scripts/doctor.ps1
 ```
-npm install                 # installs pinned Pi
-copy .env.example .env      # then fill OPENROUTER_API_KEY / GROQ_API_KEY
-node scripts/pi.mjs         # start Pi (or pi.cmd)
-node scripts/smoke.mjs      # baseline smoke test
-```
 
-Canonical development host: Laptop 2. Source comes from GitHub; `.env` and runtime state stay machine-local. Setup: `docs/bootstrap/LAPTOP2_MIGRATION.md`. Details: `docs/bootstrap/`.
+Bootstrap uses `npm ci`, restores configured Pi npm packages and checks pyright. Install Microsoft Edge for the configured browser MCP. Python LSP requires pyright on PATH; bootstrap can install it with the explicit `-InstallPyright` option. TypeScript projects need their own TS7 package for the configured LSP command; see [harness caveats](docs/capabilities/HARNESS.md).
 
-## Current focus
+Execution works from any clone location. Secrets, sessions, package caches and browser profiles stay machine-local. Existing runtime is never deleted during migration; new runtime packages are restored online. Old sessions/auth remain preserved until the user separately chooses a local migration.
 
-Phase 0 is a capability and repository audit:
+## Current work
 
-- inventory the existing Pi-dev work;
-- classify each component as KEEP / REPLACE / REMOVE / DEFER;
-- evaluate reusable Pi packages, skills, CLI tools, MCP servers, and OSS;
-- preserve validated test assets even when implementations are replaced;
-- define the smallest Agentco-owned surface.
+P0/P1 normalizes the workspace and governance. Codex develops, Claude independently reviews, GPT directs architecture, and the user decides product priorities. Shared skills and other harnesses remain later phases.
 
-See:
+- [Repository rules](AGENTS.md)
+- [Current work plan and intended layout](docs/WORK_PLAN.md)
+- [Worker roles](docs/WORKER_ROLES.md)
+- [Decisions](docs/DECISIONS.md)
+- [Harness and regression evidence](docs/capabilities/HARNESS.md)
+- [Fresh-machine setup](docs/bootstrap/LAPTOP2_MIGRATION.md)
+- [P0 audit](docs/work-orders/P0_P1_AUDIT.md)
+- [Patch notes](PATCH_NOTES.md)
 
-- `docs/ARCHITECTURE.md`
-- `docs/BASELINE_AUDIT.md`
-- `docs/WORK_PLAN.md`
-- `docs/WORKER_ROLES.md`
-- `PATCH_NOTES.md`
+The original clean Pi 1.0.2 baseline is historical evidence under [BASELINE.md](docs/bootstrap/BASELINE.md). The retired implementation remains in `archive/pi-dev-pre-rebootstrap`; it is not merged into main.
