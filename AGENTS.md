@@ -11,3 +11,5 @@ Read README.md, docs/WORK_PLAN.md, docs/DECISIONS.md, docs/WORKER_ROLES.md, docs
 - Preserve .gitattributes line endings. Run work order acceptance checks; report failures accurately before any conditional commit/push.
 
 - Documentation routing: phase-defining work goes in `docs/work-orders/`; small follow-ups, cleanup, ideas, and deferred checks accumulate in `docs/TASK_INBOX.md`. Promote an inbox item to a work order when it becomes substantial; do not create one-off work-order files for trivial items.
+
+- **Delta-context rule:** `docs/CURRENT_TASK.md` is the default execution entrypoint. Read only the context it explicitly references. Completed work-order sections and historical reports are archival context and must not be reread unless the current task requires them. Prefer direct Git/file verification over reloading long history. Keep final reports delta-only and do not restate completed work.
