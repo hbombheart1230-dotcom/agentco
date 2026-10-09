@@ -86,3 +86,21 @@ Also verify the P0/P1 follow-up in `P0_P1_CODEX.md`:
 - root operating rules state that extra worktrees require a concrete isolation/parallelism reason;
 - doctor and smoke were re-run from the canonical workspace;
 - the branch has **not** been merged to main before this independent review.
+
+### Root folder hygiene follow-up
+
+Before issuing the independent verdict, also verify the root-folder cleanup required by the latest P0/P1 Codex work order:
+
+- Codex inventoried all top-level tracked/ignored/untracked items before deletion.
+- Legacy `pi-home/` is gone, or any remaining copy has a concrete documented blocker; unique useful state was not silently lost.
+- If `pi-home/` was removed, obsolete compatibility ignore rules were removed as well.
+- generated smoke/test output is consolidated under the documented ignored results area rather than unnecessarily cluttering the root.
+- temporary worktree directories/metadata from P0/P1 are gone.
+- `bin/` is retained intentionally and remains minimal/portable.
+- `node_modules/`, secrets, runtime, sessions, browser state, logs and results remain untracked.
+- empty future-phase directories were not created solely as placeholders.
+- root hygiene policy is documented.
+- doctor and 14/14 smoke pass after cleanup.
+- no broad cleanup command caused loss of unrelated user state.
+
+Treat data loss, credential exposure, or an active-path regression as BLOCKER.
