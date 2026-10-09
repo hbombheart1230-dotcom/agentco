@@ -101,5 +101,6 @@
         }
       }
     }
-  }
+  },
+  "hideThinkingBlock": true
 }

@@ -34,3 +34,20 @@ Scratch RPC/SDK drivers and fixtures remain locally under ignored `smoke-output/
 Old-directory mentions remain only in dated historical evidence, supplied pre-migration work orders, this audit, and an ignore rule that protects retained original runtime. The lastChangelogVersion setting is the last viewed changelog marker, not the installed Pi version, and was preserved as tracked baseline metadata. Original dirty settings were not folded into this change.
 
 P2 shared-skill migration, other harness installations, Harbor, Commander implementation and runtime/session migration are outside this change. Independent Claude review has not been performed by Codex.
+
+## Follow-up: canonical single workspace — 2026-10-09
+
+Pulled feature branch to `06b7083eb2b8b5599edf5877bc9e0a46242fbf37` before following the appended work order. Development now uses the canonical workspace on `feature/p0-p1-agentco-workspace`. Git reports one working directory; the temporary P0/P1 linked worktree and its directory were removed with normal Git worktree cleanup after canonical validation. No merge to main was performed.
+
+Preservation and reconciliation:
+
+- Original README Windows command instructions were restored, with their active Pi directory reference updated to `pi-dev/`.
+- Original `hideThinkingBlock: true` was mapped into `pi-dev/settings.json`. `lastChangelogVersion` was identified as runtime-only churn and not carried as a user setting.
+- Original `bin/agentco.cmd` was restored unchanged in content, respecting the existing CRLF Git policy, and is now tracked. Running `agentco --version` from an external directory returned 1.0.4 and preserved the caller directory.
+- Original README/settings/bin state remains in the local stash, also pinned by `refs/agentco-preserved/p0-p1-follow-up-user-state`. This ref is local only; no credential/runtime files were stashed or committed.
+- Original root `.env` and old Pi runtime were retained without reading credential values. Original smoke output was moved into ignored `results/p0-p1-follow-up/preexisting-smoke-output` before rerunning smoke, so existing sessions/fixtures were not overwritten.
+- All six ignored top-level entries from the temporary worktree (dependencies, Pi runtime/cache and regression artifacts) were moved into ignored `results/p0-p1-follow-up/temporary-worktree` before cleanup. The historical scratch-driver location mentioned above is superseded by this archive location. No local data was discarded.
+
+Canonical verification: doctor exited 0 with **28 PASS / 0 WARN / 0 FAIL**; the live baseline smoke exited 0 with **14/14 PASS**. Pinned Pi managed packages were restored online into the new canonical agent directory. Existing repository dependencies were retained.
+
+Root AGENTS.md and README now require the canonical workspace and Git branches by default; additional linked worktrees require a concrete isolation or parallelism reason. Independent Claude verification still gates merging to main.
