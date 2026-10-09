@@ -378,3 +378,126 @@ PUSH:
 SINGLE-WORKSPACE NORMALIZATION:
 PASS / PARTIAL / FAIL
 ```
+
+## Follow-up — root folder hygiene
+
+The canonical workspace is now `C:\Agentco`, but the user wants the **physical folder layout cleaned up before Claude review**. Do not leave legacy/current/generated folders mixed at the repository root merely because they are ignored by Git.
+
+This is still part of P0/P1.
+
+### Goal
+
+After cleanup, the root should clearly separate:
+
+- tracked Agentco source/configuration;
+- the active Pi workspace (`pi-dev/`);
+- intentional command entrypoints (`bin/`);
+- generated dependencies/runtime/output;
+- future harness areas only when they actually exist.
+
+Legacy migration folders must not remain indefinitely “just in case”.
+
+### Required audit
+
+From `C:\Agentco`, inventory **all top-level files and directories**, including ignored and untracked items. For each top-level item classify it as exactly one of:
+
+- **KEEP-TRACKED** — canonical source/config/docs
+- **KEEP-LOCAL** — required machine-local runtime/dependency/secret state
+- **MIGRATE** — useful content currently in a legacy/wrong location
+- **REMOVE** — obsolete/duplicate/temp content proven unnecessary
+- **DEFER** — uncertain item that must not be deleted without evidence
+
+Record the classification in the validation report before deleting anything.
+
+### Specific cleanup expectations
+
+1. **Legacy `pi-home/`**
+   - It is no longer an active Agentco path.
+   - Compare its remaining local-only contents against active `pi-dev/`.
+   - If it contains unique sessions/auth/runtime state that the current Pi can safely reuse and that the user would reasonably expect to retain, migrate only the needed state into the correct ignored locations under `pi-dev/` without printing credential contents.
+   - Do not overwrite newer active state.
+   - If contents are duplicate, stale, or already preserved elsewhere, remove `pi-home/`.
+   - At the end, there should be no legacy `pi-home/` directory unless a concrete unresolved blocker is documented.
+   - If cleanup succeeds, remove the obsolete `pi-home/` compatibility ignore rule so accidental recreation is visible.
+
+2. **Smoke/test output**
+   - Avoid a dedicated root-level `smoke-output/` if generated output can live under the already ignored `results/` tree.
+   - Prefer `results/smoke/` (or another single documented results subtree).
+   - Update smoke scripts/docs accordingly and remove stale root-level smoke output after verification.
+   - Generated benchmark/test artifacts remain untracked.
+
+3. **Temporary worktree artifacts**
+   - Confirm `C:\Agentco-p0-p1` is gone and Git worktree metadata is clean.
+   - Remove any now-unused local `worktrees/` directory if it is empty/legacy.
+   - Do not remove the future ability to use worktrees when a justified parallel/isolation task actually needs them; simply do not keep meaningless empty/legacy folders now.
+
+4. **`bin/`**
+   - Keep it. It is now an intentional user-facing command entrypoint.
+   - Verify its tracked contents are minimal and portable.
+
+5. **Dependencies and runtime**
+   - `node_modules/` is local/generated and may remain.
+   - Pi runtime state that legitimately belongs to `pi-dev/` remains ignored there.
+   - `.env` remains root-local and ignored.
+   - Browser profiles, caches, sessions, logs and generated results must not become tracked merely for cleanliness.
+
+6. **Future empty folders**
+   - Do not create empty `hermes-dev/`, `claude-code-dev/`, `codex-cli-dev/`, `harbor/`, `commander/`, etc. just to match a diagram.
+   - Create them only when their phase begins.
+   - Documentation may describe the future layout without physical placeholder folders.
+
+7. **Root contract**
+   - Update `AGENTS.md` and/or `docs/WORK_PLAN.md` with a short durable rule: keep the repository root intentional; generated outputs belong under `results/`; legacy migration directories are removed once validated; empty future-phase directories are not kept merely as placeholders.
+
+### Safety
+
+- No broad `git clean -fdx`, recursive delete, or wildcard cleanup without prior classification.
+- Do not delete unique user data.
+- Do not print or inspect credential values.
+- Preserve Git history; cleanup is about the working tree/layout, not rewriting history.
+- Keep this on `feature/p0-p1-agentco-workspace`; do not merge main yet.
+
+### Re-validation
+
+After cleanup from `C:\Agentco`:
+
+- `scripts/doctor.ps1`: PASS
+- baseline smoke: 14/14 PASS
+- Pi launch / extension configuration still uses `pi-dev/`
+- Git working tree clean after intentional commit
+- top-level directory inventory matches the documented contract
+- no active `pi-home/` path
+- no stale root `smoke-output/` if outputs were migrated to `results/`
+- secrets/runtime/generated outputs remain untracked
+
+Commit and push the cleanup on the same feature branch.
+
+Final report:
+
+```text
+ROOT INVENTORY BEFORE:
+KEEP-TRACKED:
+KEEP-LOCAL:
+MIGRATED:
+REMOVED:
+DEFERRED:
+
+PI-HOME:
+RUNTIME MIGRATION:
+SMOKE OUTPUT:
+WORKTREE ARTIFACTS:
+BIN:
+RESULTS LAYOUT:
+
+ROOT CONTRACT UPDATED:
+
+DOCTOR:
+SMOKE:
+GIT STATUS:
+
+CLEANUP COMMIT:
+PUSH:
+
+ROOT FOLDER HYGIENE:
+PASS / PARTIAL / FAIL
+```
