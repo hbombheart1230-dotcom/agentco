@@ -4,19 +4,17 @@ This file is the sole default entrypoint for Codex/Claude. Follow `AGENTS.md`, i
 
 ## Current action
 
-**P3.2 — Windows Worker Harness environment preflight: APPROVED (2026-10-12).** P3 architecture (D-010) remains PROPOSED and P3.3 installation/configuration is NOT APPROVED. Use the canonical `C:\Agentco` workspace on `feature/p3-worker-harness-design`; P2 main baseline is `1f928974c3fcfc70456fa06bc03064576a9fd51d`.
+**P3.2 findings awaiting GPT/user P3.3 approval.** Read-only inventory complete: signed VS Code-bundled Codex CLI 0.162.0-alpha.2 detected; Claude Code and Hermes not detected on PATH/checked default routes. Authentication, worker readiness, sandbox and Windows link E2E remain UNKNOWN/NOT RUN. D-010 remains PROPOSED; installation/configuration/model calls are NOT APPROVED. Main baseline remains `1f928974c3fcfc70456fa06bc03064576a9fd51d`.
 
 ## Required context
 
 - `AGENTS.md` — common rules
-- `docs/work-orders/P3_WORKER_HARNESSES.md` — **Approved P3.2 inventory execution order** and its gates only
+- `docs/work-orders/P3_WORKER_HARNESSES.md` — **P3.2 inventory findings**, its next approval gates and approved inspection boundary only
 - actual `git status`, branch, remote HEAD and local CLI metadata
 
 ## Codex action
 
-Run an inspection-only preflight for **Codex CLI, Claude Code and Hermes** as specified in the approved work order. No installs, upgrades, logins, model calls, new Skill links, user-profile changes, service starts, or Pi changes. Existing credentials and personal configuration must not be read or printed. A compact, sanitized inventory summary may be committed to the work order; raw nonsecret diagnostics belong under ignored `results/p3/`.
-
-First verify/fetch the exact feature branch and ensure no dirty/unexpected local or remote changes. If those checks fail, stop safely and report. Update only this current task and the P3 work order with preflight findings and next-step review status; check diff; commit/push to the feature branch, never main. Report only delta, tests NOT RUN and gates remaining.
+The inventory and sanitized evidence summary are recorded in the P3 work order. Only this task and that work order were updated. No installs, upgrades, logins, model calls, link creation, profile changes, service starts or Pi changes are authorized by completion of this inventory. Retain ignored `results/p3/`, runtime, auth, all stashes and user work; do not merge main. Await GPT/user decisions before any P3.3 setup or independent verification.
 
 ## Next handoff
 
