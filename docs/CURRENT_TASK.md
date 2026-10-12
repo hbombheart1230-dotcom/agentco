@@ -1,25 +1,19 @@
 # Agentco Current Task
 
-Start here, follow `AGENTS.md`, check current Git status/origin, then read **only** the active work order. Avoid reopening completed phase histories. Canonical workspace `C:\Agentco`.
+Sole active Codex developer/executor entrypoint. Follow `AGENTS.md`, inspect live branch/status and read only `docs/work-orders/P3_FREE_MODEL_SMOKE.md` (especially its **P3.4 resumed gate — local operator-injected key** section). Do not reread completed P2/P3 stages.
 
-## Current status
+## Current state
 
-**P3.3c1 Claude Code CLI + Hermes native Windows installation: FINAL PASS / CLOSED (2026-10-12).** Executor SHA `9033375b8e813f9ab8b9aa3b490dc8939d59507e` independently verified by Claude, clean HEAD=origin. Claude Code CLI `2.1.292` official WinGet/signature verified; Hermes `v0.21.7` pinned official source build verified. Existing installed routes, main, two stashes, Pi/Codex/Claude Desktop and shared Skill link preserved. **Correction:** the installation removed two pre-existing empty User PATH entries, while preserving order/spelling of all 13 nonempty prior entries; no functioning command shadow observed. No PATH restoration task; new shell may be needed for `claude`. **WORKER READY = NO.**
+**P3.4 initial attempt BLOCKED at key-presence gate (2026-10-12), executor `038d2569a3398d5c8cdf442dda83771532e8aa0c`.** `OPENROUTER_API_KEY` absent from that Codex process; Codex 0.162.1, Claude 2.1.292 and Hermes v0.21.7 each made **0 calls**. No model incompatibility or Tool Calling conclusion is possible. Everything installed, sessions/config/stashes/main/Pi and shared Skill were preserved. **WORKER READY = NO**.
 
-## ACTIVE P3.4 — NVIDIA OpenRouter free-only minimal native CLI smoke: APPROVED
+## ACTIVE — Resume SAME approved P3.4 after operator supplies process-only key
 
-**P3.4 BLOCKED: OPENROUTER_API_KEY absent from the executing process environment.** Codex, Claude and Hermes each made 0 model requests; no fallback, provider/config change, external synthetic home or source transmission. Installation versions are preserved; inference/tool compatibility NOT RUN and WORKER READY = NO. Evidence and STOP outcome are recorded in the active work order.
+**Operator step outside agent:** open a new local PowerShell, securely prompt for OpenRouter key without echoing and set `OPENROUTER_API_KEY` in that PowerShell **process only**, then launch the existing Codex developer/executor agent from **that same terminal**. Existing VS Code/GUI processes do NOT inherit a new terminal's variables. Never send a key in chat, source, logs, CLI arguments, Git or persistent profile.
 
-## Required context for Codex
+**Codex execution:** verify `OPENROUTER_API_KEY` presence only. If absent, BLOCKED and 0 calls again; do not search private configs or key files. Once present, execute ONLY remaining P3.4 public-priced-free synthetic text-only model checks, one short prompt attempt per independent CLI, isolated child settings, pinned `nvidia/nemotron-3-super-120b-a12b:free`, no paid/provider fallback, no private repo data transmitted, no tool/subagent hooks. If exact free-only/no-tools isolation cannot be proved for any CLI, mark that CLI BLOCKED without calling. Preserve all user/Agentco auth, PATH, installations, sessions, main and stashes. No custom loader, key manager, login or adapter.
 
-- `AGENTS.md`
-- `docs/work-orders/P3_FREE_MODEL_SMOKE.md` — current P3.4 gate ONLY
-- live feature Git status/remote and installed CLI entrypoints as necessary
-
-## Execute
-
-Credential-presence gate completed; live execution stopped as required. Commit/push only this task and P3_FREE_MODEL_SMOKE result documentation. Do not inspect other credential sources, log in, configure a provider or start a CLI/model while the key is absent. Preserve existing settings, sessions/runtime, installations, source Skill, PATH, stashes and main.
+Report PASS/BLOCKED/FAIL/NOT RUN with exact model/version/request count and costs only if observed. Update only this file and `docs/work-orders/P3_FREE_MODEL_SMOKE.md`, `git diff --check`, feature-branch commit/push, no main merge. No redundant setup/checklist reading.
 
 ## Next handoff
 
-GPT/user arrange inherited environment-key availability without exposing the value, then resume the bounded synthetic-only/free-only gate after native safety prechecks. Claude can independently review this zero-request STOP. Skill/tool/sandbox integration and worker readiness remain separate and unproven.
+Claude independent review of the factual live free-only evidence without repeating chargeable requests. GPT/user final gate then separate native Skill/tool/sandbox E2E only if simple text inference succeeds. **WORKER READY = NO** pending tool correctness.
