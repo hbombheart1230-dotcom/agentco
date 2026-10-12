@@ -75,8 +75,8 @@ Decided by D-007: browser, subagent, LSP, MCP, tool orchestration.
 
 
 ## D-010 — P3 worker harnesses and native-first execution environment
-**Status:** PROPOSED (2026-10-12), awaiting user scope approval.
+**Status:** PROPOSED (2026-10-12). Read-only P3.2 environment preflight approved 2026-10-12; P3.3 installation/activation and overall architecture remain unapproved.
 
-P3 proposes three independent worker CLIs (Codex CLI, Claude Code, Hermes) alongside the unchanged upstream Pi 1.0.4 baseline. Prefer existing installations and official **Windows-native** methods first, scoped repository discovery, one Git-managed shared-skill source, per-worker opt-in setup, strict permission/credential/cost gates and no auto-started autonomous services. Hermes writable `external_dirs` cannot be treated as read-only without a proved technical barrier. P3 confirms execution readiness only; P4 Harbor determines relative harness capability and roles. No P3.2 preflight or P3.3 installation is authorized by this proposal.
+P3 proposes three independent worker CLIs (Codex CLI, Claude Code, Hermes) alongside the unchanged upstream Pi 1.0.4 baseline. Prefer existing installations and official **Windows-native** methods first, scoped repository discovery, one Git-managed shared-skill source, per-worker opt-in setup, strict permission/credential/cost gates and no auto-started autonomous services. Hermes writable `external_dirs` cannot be treated as read-only without a proved technical barrier. P3 confirms execution readiness only; P4 Harbor determines relative harness capability and roles. Only the P3.2 metadata-only preflight is authorized; no P3.3 installation, login, model call, profile mutation or Skill adapter activation is approved.
 
 Evidence, staged acceptance and rollback: [P3_WORKER_HARNESSES.md](work-orders/P3_WORKER_HARNESSES.md).
