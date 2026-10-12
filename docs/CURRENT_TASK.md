@@ -1,21 +1,23 @@
 # Agentco Current Task
 
-This is the sole default entrypoint for Codex/Claude. Follow `AGENTS.md`, inspect live Git status and read only the current P3.3b2b work-order section; do not reread completed phases.
+This is the only active Codex/Claude entrypoint. Follow `AGENTS.md` and inspect current Git status/origin before any approved work.
 
-## Active execution
+## Current state
 
-**P3.3b2b BLOCKED: relative directory-symlink access failed (WinError 123).** Registration stopped at filesystem identity verification; the newly owned link was safely rolled back and no link staged/committed. Canonical source remains unchanged. Git mode/Windows clean checkout, Pi dedup against registration and Codex discovery were NOT RUN. WORKER READY = NO; await GPT/user review and separately approved investigation or revised approach.
+**P3.3b2b BLOCKED (2026-10-12), safe rollback PASS.** Real repo-local Codex Skill link was NOT registered: Windows `os.symlink()` accepted a forward-slash relative target but dereferencing `SKILL.md` failed with WinError 123. Executor `44f5a7014f20aeaaf4106e9344280de774b83fd4` committed failure documentation only; canonical shared Skills, Pi, existing Codex/Claude sessions, stashes, runtime and main remained unchanged. Git link mode, clean-clone portability, native Codex discovery/invocation and model E2E are NOT RUN. **WORKER READY = NO.**
 
-## Required context
+GPT reviewed the failure against official Windows/Python documentation: forward slashes in relative Windows symlink reparse targets are a strong root-cause hypothesis; using Windows-native backslashes may fix local file access. **Git-tracked portability is still unverified**, so do not retry persistent repo registration directly.
+
+## Required context for next authorized action
 
 - `AGENTS.md`
-- `docs/work-orders/P3_LOCAL_RUNTIME_ROUTES.md` — **P3.3b2b stopped registration attempt** only, plus its approved STOP boundary if needed
-- live Git branch/status/origin
+- `docs/work-orders/P3_LOCAL_RUNTIME_ROUTES.md` — **P3.3b2b stopped registration attempt** and **P3.3b2c — proposed Windows link-target diagnostic** only
+- Live Git branch/status/origin
 
-## Codex instruction
+## Authorization boundary
 
-Execution stopped under the approved failure rule. Failure and safe rollback are documented; only documentation changes may be committed/pushed in this outcome. Do not rewrite link targets, force index modes, change Git settings, elevate, copy Skills or develop an adapter without a new approved gate. Preserve all existing settings, sessions, runtime, stashes and main; no model/login or provider action.
+**P3.3b2c fixture-only diagnostics are PROPOSED / NOT YET AUTHORIZED.** No real `.agents/skills` changes, link retries, code/installer creation, index-mode forcing, PATH or Git-global settings, profile changes, login, model calls, OpenRouter traffic or new CLI installs. Preserve all state until a separate user approval. P3.3b3 and subsequent harness setup remain separate gates.
 
 ## Next handoff
 
-GPT/user review the blocked relative-symlink result and decide whether to authorize targeted native Windows/Git investigation. Claude independent verification is required if a later actual registration is approved and committed. Auth/provider/model E2E and Claude/Hermes setup remain separate gates.
+On user approval, GPT activates the narrow disposable Windows target-separator and isolated Git-checkout test in the work order. Codex runs/tests and records only delta; GPT/Claude review the safety and portability evidence before any actual registration decision.
