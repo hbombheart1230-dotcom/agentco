@@ -4,21 +4,17 @@ Sole local Codex task entrypoint. Read `AGENTS.md`, this file and **only the act
 
 ## Active task — P3.3c1 official Claude/Hermes Windows CLI install: APPROVED (2026-10-12)
 
-Previous P3.3c preflight at `04131c426a18054503dd65871091bb0f79bb3145` stopped **before installation** because two official installers make User PATH changes outside the original narrow limit. User has already approved sequential native CLI installations and wants subsequent prompts without reconfirming each small gate. **GPT now authorizes exactly the below narrow User PATH changes**, while keeping all prior prohibitions on models, login, private config, and unrelated system changes.
+**P3.3c1 installation complete; awaiting Claude independent verification.** Claude Code CLI 2.1.292 (official user WinGet) and Hermes v0.21.7 at pinned `71d34bad1045610252eda02ee79549436896e784` installed sequentially; version/help, dependencies and exact allowed User PATH order passed. Existing routes, Machine/parent PATH, Desktop/Pi/Codex/shared Skill/stashes/main preserved. WORKER READY = NO; auth/model/provider/sandbox/Skill E2E remains unapproved.
 
 ## Required context
 
 - `AGENTS.md`
-- `docs/work-orders/P3_LOCAL_RUNTIME_ROUTES.md` — **P3.3c1 — APPROVED exact User PATH scope and official CLI installation**, and preceding pre-install evidence only if needed
+- `docs/work-orders/P3_LOCAL_RUNTIME_ROUTES.md` — **P3.3c1 installation findings** and its independent-verification/approval boundaries only
 - Git branch/status/origin
 
 ## Codex execution
 
-1. Safely sync `C:\Agentco` on `feature/p3-worker-harness-design`; stop on dirty/divergent state. Reuse the previous public installer/WinGet manifest audit; compare known SHA/version/side-effect evidence rather than reviewing all history.
-2. **Claude first:** reuse if already healthy, otherwise official per-user portable `winget install --id Anthropic.ClaudeCode --exact --scope user` if vendor manifest supports it. Permit *only* missing WinGet user Links directory **appended** to User PATH. Verify `claude --version`/passive `--help` by explicit installed path or safe alias; no interactive execution. Keep existing Claude Desktop and its Code runtime untouched. Native bootstrap fallback is not approved.
-3. **Hermes second:** reuse if already healthy, otherwise execute **downloaded, source-hash-checked official pinned** Windows `install.ps1` with `-NonInteractive -SkipBrowser -SkipComputerUse` (no Desktop/gateway/onboarding). Permit *only* its absent vendor Hermes bin **prepended** to User PATH, preserving all prior entries/order. Vendor managed dependencies are permitted only in approved user-scoped installation dirs; no unrelated system package upgrades or changes to existing auth/config. Check no existing CLI command is shadowed. Do not use streaming `irm | iex` or modify vendor script.
-4. Compare ordered User PATH and Machine PATH before/after: only two approved insertions, no removals, no reorder, no surprise duplicate. Check executable resolution, versions, install origin, existing Pi/Codex/Claude Desktop/shared Skill/stashes/main preserved. Do not inspect user secrets, private conversations or process arguments. On any unexpected side effect, STOP; report BLOCKED, do not patch/repair or auto-uninstall arbitrary existing state.
-5. Record concise `CLAUDE/HERMES/PATH/PRESERVED/NOT RUN` results only in this file and the active work order. Keep installer evidence ignored under `results/p3/`, `git diff --check`, commit/push documentation only on the feature branch, no main merge. No new product code, Skill adapters, extensions or tests from completed phases.
+Installation and focused checks are recorded in the active work order. Only these two task documents change in Git; sanitized evidence and installed vendor state stay local. Preserve installed versions, all prior settings/sessions/runtime/stashes and main. Await independent review; do not run login, models, provider configuration, sandbox, new Skill adapters or further integration under this completed install scope.
 
 ## Strictly NOT RUN
 
