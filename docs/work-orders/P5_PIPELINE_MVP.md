@@ -39,7 +39,7 @@ Use only toy/fabricated task data for all model calls. Example: ask Claude to pr
 
 ### C — Preserve project, repair corrupted docs, and hand off
 
-- **Repair confirmed encoding corruption**: rewrite `docs/CURRENT_TASK.md` cleanly to point at this task; in `docs/work-orders/P3_WORKER_E2E_BATCH.md`, replace ONLY the corrupt appended `## Round 2 ?? ??` outcome block with a short accurate **ASCII-English** historical summary based on existing validated report and ignored evidence. Keep previous intact sections, preserve original bad bytes in Git history, and don't invent lost prose. Windows writes must be UTF-8; automated integrity check should reject literal runs of `???`, replacement U+FFFD in changed docs. Future status reports **Korean only**.
+- **Repair confirmed encoding corruption**: rewrite `docs/CURRENT_TASK.md` cleanly to point at this task; in `docs/work-orders/P3_WORKER_E2E_BATCH.md`, replace ONLY the corrupt appended `## Round 2 ?? ??` outcome block with a short accurate **ASCII-English** historical summary based on existing validated report and ignored evidence. Keep previous intact sections, preserve original bad bytes in Git history, and don't invent lost prose. Windows writes must be UTF-8; automated integrity check should reject runs of three consecutive question marks, replacement U+FFFD in changed docs. Future status reports **Korean only**.
 - Minimal code/config only if essential for a user-operable pipeline. Prefer a small native extension setting/prompt to custom source. Keep canonical Skill source/link untouched; metadata may be reused and basic Skill injection is optional, never gate pipeline on prior synthetic Skill invocation failures.
 - 1 compact evidence/report: `Pi started? | Claude CLI actually invoked? | exact model | Worker output returned into Pi? | final Pi response | new files/config | actual tool/file E2E NOT RUN`. Save sanitized logs only under ignored `results/p5/`.
 - Normal `git diff --check`, focused startup/smoke plus reproducible pipeline test, stage only intended files, **one commit/push** to feature branch. Preserve user `.env`, existing sessions/runtime/PATH, all stashes, main, VS Code versions. Do not run a full regression or re-audit old P3 gates.
@@ -50,3 +50,49 @@ Use only toy/fabricated task data for all model calls. Example: ask Claude to pr
 - **P5 PIPELINE MVP PASS**: human request processed by real Pi, real Claude Code CLI invoked under pinned free route, nonempty Worker result observed by Pi and included in final Commander response, startup command and evidence reproducible.
 - **P5 PIPELINE MVP PARTIAL**: one component not wired (say exactly which), even if Pi and Claude each work separately; preserve any functional progress and include *one shortest remaining action*.
 - **WORKER READY = NO** until genuine native Skill invocation/file-edit/security E2E passes. No P4 harness comparison, Ultra vs Super comparisons, Hermes/Codex integration, P6 routing, background daemon, UI, browser or new paid models in this phase.
+
+
+## Execution result (2026-10-12): P5 PIPELINE MVP PASS
+
+Base `e433b37` / feature/p3-worker-harness-design; clean fast-forward synchronization. One real user request -> Pi Commander -> installed Claude Code CLI -> Worker JSON artifact -> Pi tool result -> final Pi answer completed. This is text/artifact delegation, not real file-edit or native Skill invocation PASS. **WORKER READY remains NO.**
+
+### Native-first selection and minimal implementation
+
+The already-installed official subagent example spawns Pi, not Claude; it was inspected but never changed/retested. Community `pi-subagents@0.77.0` official npm tarball and published runner docs were inspected under ignored `results/p5/pipeline-mvp/`, with SHA512 integrity verification, no dependency installation/execution. Its Claude adapter forces `--setting-sources user` and its env allowlist omits default Opus/Sonnet/Haiku/Fable/subagent-model pins. This violates this task's isolated no-user-settings/exact-free-all-roles contract without vendor patching, so it was rejected. No second competing subagent tool or production package/settings were installed.
+
+Fallback is one transparent **82-line** `scripts/commander.mjs`, using Pi's existing native Extension API and official `claude -p`, not a manager/daemon/SDK fork. It creates one ephemeral `claude_worker` Extension in an owned external toy directory, starts upstream pinned Pi with only that tool, and lets the actual Commander model dispatch the Worker. The official Pi subagent/package/default settings remain untouched. The Worker process is launched only by the Commander tool execution, not separately by the executor. A single-dispatch guard prevents multiple workers per run. Tool inputs are bounded synthetic task text; no arbitrary executable/path/shell parameter is exposed.
+
+Helper derives paths from its own repository location, resolves the existing WinGet Claude CLI, checks the exact free model's public zero prices, reads only the authorized OPENROUTER_API_KEY entry into memory if not inherited, and builds an OS-variable whitelist plus that key for the child. No key in argv/config/prompts/logs. Fresh Pi/Claude homes, no existing profiles, external model cwd, no ancestor AGENTS.md/CLAUDE.md, no session persistence. Pi disables discovery of extensions/Skills/context/MCP/themes/prompts and explicitly loads only the temporary Worker tool; there are no built-in file/shell tools. Claude uses official `--bare --restricted --tools "" --disallowedTools *`, strict MCP, empty settings/sources, no Chrome/session, one turn and 256 requested output tokens; all model roles pin the same free slug. No login/provider subscriptions/paid fallback or global environment/PATH change. Upstream retry disabled for Pi and retry 0 requested for Claude; internal HTTP counts remain unobserved.
+
+The helper creates sanitized Worker JSON in its owned toy area and retains sanitized evidence under ignored results. Worker process timeout 30s / Pi pipeline timeout 60s / bounded buffers; Worker errors are converted to a fixed message without raw stderr/auth details, no retries/fallback. The helper is deliberately synthetic/text-only; do not supply real project/company/private data. It does not turn the source repo into a model workspace.
+
+### Reproduce
+
+From `C:\Agentco` (or invoke this script by absolute path from another cwd):
+
+```powershell
+node scripts/commander.mjs --check
+node scripts/commander.mjs "Delegate this synthetic task to Claude: calculate 13+29 and return exactly PIPELINE_P5_RESULT=42. Return the worker result to me."
+```
+
+Use the already authorized local key source; the script never displays it and does not install anything. This is a single user request and one reproducible launch, with no manual result copying. Existing `node scripts/pi.mjs` remains unchanged for ordinary Pi operation.
+
+| Acceptance | Observed result |
+| --- | --- |
+| Real Pi Commander started | PASS: upstream 1.0.4 CLI, exact free model in assistant events |
+| Real Claude CLI Worker invoked | PASS: native claude_worker execFile dispatch, one Worker JSON result / one reported turn |
+| Exact same free route | PASS: public prompt/completion price 0; both observed model lists contain only nvidia/nemotron-3-super-120b-a12b:free |
+| Result returned into Pi | PASS: native toolResult contains Worker output PIPELINE_P5_RESULT=42 |
+| Pi final answer | PASS: PIPELINE_P5_RESULT=42 |
+| Whole run | Exit 0, 8.119 seconds; 1 Commander prompt + 1 Worker prompt = 2 new CLI attempts, below <=5 cap |
+| Actual file-edit / Skill / full Worker readiness | NOT RUN / NO; no inflated P3 claim |
+
+Evidence: `results/p5/pipeline-1791794810224/evidence.json`, `worker.json`; candidate/provenance and damaged archive backup in `results/p5/pipeline-mvp/`. Selected Commander tool calls/tool results/final answer and observed Worker model/turns are retained; no raw sessions/env/auth logs. Actual HTTP count and individual provider billing NOT VERIFIED. No account-limit polling or repeated prior P3 benchmarks.
+
+### Encoding repair and checks
+
+Replaced only the literal-damaged appended Round 2 outcome in P3_WORKER_E2E_BATCH with a short ASCII historical summary based on accepted ignored artifacts. Prefix bytes of earlier intact sections were checked unchanged; original damaged bytes remain in Git and ignored backup. CURRENT_TASK rewritten as clean ASCII English current handoff. All changed docs decode as UTF-8 and reject consecutive question-mark runs/U+FFFD. No guessing/retranslation of missing Korean prose; user-facing execution report is Korean.
+
+`node --check`, focused `--check` startup, real pipeline acceptance, Worker JSON/toolResult/final equivalence, exact observed model checks, package SHA512, archive-prefix equality, UTF-8 integrity, local evidence links and `git diff --check` PASS. No broad regression/doctor/reinstall/Skill benchmark was run. Only one helper and three scoped docs changed; canonical Skill/link/Pi settings/main/two stashes/runtime/sessions/user auth/PATH preserved. One feature commit/push, no main merge.
+
+Next: Claude independent delta/evidence review of the single implementation SHA without repeating models; GPT/user accept the P5 text/artifact vertical slice. Native Skill/file-edit readiness and harness comparisons remain deferred, not prerequisites for this MVP.
