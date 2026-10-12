@@ -128,7 +128,39 @@ Next: Claude independent delta/evidence review of the single implementation SHA 
 
 1. Run `node --check`, `--check`, two offline negative response-validation tests, offline nested-process timeout/cancel test, and one real **toy** Pi->Claude->Pi request if safety gates are still intact. Budget <=2 NEW CLI model prompt attempts (1 Commander + 1 Worker), no repeat of model-quality benchmarks. Same exact published $0 `nvidia/nemotron-3-super-120b-a12b:free` model for both, zero paid/provider/auxiliary fallback, limited synthetic-only inputs. Inherit only already-authorized key source; never print or persist value. No private Agentco or company source may be supplied to free models.
 2. Keep new code localized to `scripts/commander.mjs` and at most a tiny dedicated offline test file if truly necessary. No third-party packages, new Pi Extensions in production, new Skill loaders, sidecars, custom commander framework, browser/daemon or UI.
-3. Update `docs/CURRENT_TASK.md` and this active work order with **short Korean or clean ASCII-English** status (avoid the prior encoding `???` corruption). Keep `docs/DECISIONS.md` and `docs/WORK_PLAN.md` unchanged unless vital. Save sanitized evidence under ignored `results/p5/` and report portable launch example with optional Claude CLI override. `git diff --check`, check no secret artifacts staged, one commit/push on feature branch only. Preserve root `.env`, profiles, PATH, Claude Desktop, Pi settings, both stashes, main and runtime.
+3. Update `docs/CURRENT_TASK.md` and this active work order with **short Korean or clean ASCII-English** status (avoid the prior encoding three consecutive question marks corruption). Keep `docs/DECISIONS.md` and `docs/WORK_PLAN.md` unchanged unless vital. Save sanitized evidence under ignored `results/p5/` and report portable launch example with optional Claude CLI override. `git diff --check`, check no secret artifacts staged, one commit/push on feature branch only. Preserve root `.env`, profiles, PATH, Claude Desktop, Pi settings, both stashes, main and runtime.
 4. One Claude independent review at the end, **한국어 보고**, no repeated model/API tests. Before review say `P5 pipeline operation PASS; final hardening independent review PENDING`. No P5 main merge until GPT/user accepts post-hardening evidence.
 
 **Acceptance:** healthy synthetic pipeline PASS; fake/mismatched final answer FAIL; missing toolResult/failed Worker FAIL; induced timeout cleans the known fixture process tree; installation-path override works without global modifications; exact-free-model routing unchanged. This is **P5 PIPELINE MVP hardening**, **not** full file-edit/Skill/Worker READY proof. Upon closure prioritize extending the already working Pi -> Claude pipeline to a toy file-edit task, separately from Codex/Hermes benchmarks.
+
+
+## Hardening execution result (2026-10-12)
+
+**P5 pipeline operation PASS; final hardening independent review PENDING.** Base `cbb8af3de40482b6361902868cfb81622832bc44`, clean feature fast-forward. Changes: existing `scripts/commander.mjs`, one dedicated `scripts/commander.test.mjs`, CURRENT_TASK and this work order. No packages/framework/production extensions, prior P3 comparisons or benchmark reruns.
+
+**Correspondence:** successful Pi/Worker exit, one actual dispatch, exact observed free model lists, non-error claude_worker toolResult carrying the full Worker output, and Pi final exact equality are all required. Only outer whitespace/CRLF normalize. Missing/failed/forged result, paraphrase or model drift fails closed with nonzero exit; evidence records pipelineSuccess, failure and correspondence. Worker artifact/process exit alone cannot PASS.
+
+**Lifecycle:** asynchronous Node spawn/AbortController replaces blocking orchestration. Bounded timeout/combined output limit/launch error/abort cleanup uses native Windows taskkill /PID <known-child> /T /F with 5s bound. Worker PID is tracked in owned temporary data and cleaned in main finally after Pi exits, errors or mismatches. SIGINT/SIGTERM route into abort. No process-name-wide termination or unrelated PID selection. UTF-8 streaming preserves split multibyte characters. Cleanup failures are surfaced; root-kill fallback is best effort. Tests prove owned fixtures, not universal termination under arbitrary OS permissions or abrupt external killing of this helper. A physical console Ctrl+C gesture was NOT RUN; shared cancellation was tested.
+
+**Portable Windows selection:** trusted process-scoped AGENTCO_CLAUDE_CLI selects an existing local .exe file; the current WinGet link remains default. Model input cannot select executables. --check validates Pi/path without secret access, provider calls or login; override with spaces and missing/directory negative cases tested. Other PCs require existing compatible Node/Pi/official Claude; non-Windows portability is deferred. No global PATH or vendor profile modification.
+
+**Offline: 8 tests PASS, zero model/API calls.** Initial suite 7 PASS; added parent-error case ran separately without repeating those checks. Wrong final, missing/failed/forged toolResult, nonzero Worker and model drift rejected; distinct SECOND_PAYLOAD=137 plus harmless whitespace accepted. Timeout, abort and output limit killed owned parent/child/grandchild while unrelated control survived. Nonzero parent exit followed by the separately tracked Worker cleanup killed Worker/grandchild and preserved control. Pre-aborted/missing executable and split Unicode stream checks PASS. Mock fixtures retained and all mock processes cleaned; only Node built-ins/native Windows tools used.
+
+**One new live acceptance:** exact OpenRouter `nvidia/nemotron-3-super-120b-a12b:free`, public input/output pricing 0; 1 Commander + 1 Worker prompt (2 CLI attempts total), no manual retries/fallback/account polling. Worker artifact, real returned toolResult and Pi final all **HARDENED_PAYLOAD=137**, exits 0, one worker dispatch/reported Worker turn, pipelineSuccess=true, failure=null, 3.659s. Worker stays text-only, no file/shell tools; Commander exposes only delegation. Opaque target-key handling and fresh off-repo homes/cwd retained, no actual private project/Skill/auth content transmitted. Actual HTTP count/provider billing remain unverified.
+
+Evidence: ignored `results/p5/hardening-cbb8af3/offline-tests.json` and `results/p5/pipeline-1791796530917/evidence.json`, `worker.json`. No raw auth stderr/env/session logs or secret values. Syntax/startup/override preflight, live exact correspondence/route, UTF-8/no replacement/question-mark runs, intended scope and diff-check PASS. Main/two stash SHAs unchanged; production settings/PATH/auth/runtime/session/source/Skill files untouched by the change. Full file-edit/Skill E2E NOT RUN; **WORKER READY = NO**.
+
+Run (default verified installation):
+
+```powershell
+node scripts/commander.mjs --check
+node scripts/commander.mjs "Delegate this synthetic task to Claude: return exactly HARDENED_PAYLOAD=137. Return the worker output verbatim."
+```
+
+Other Windows install: set the opt-in only in the launching terminal, then use the same commands:
+
+```powershell
+$env:AGENTCO_CLAUDE_CLI = 'D:\Tools\Claude\claude.exe'
+```
+
+One Claude independent delta/evidence review next, no model/API rerun, Korean report; GPT/user acceptance before main merge. Next separately approved product scope: the same pipeline's synthetic file-edit Worker, not four-harness micro-gates.
