@@ -1,19 +1,23 @@
 # Agentco Current Task
 
-This is the sole default entrypoint for Codex/Claude. Follow `AGENTS.md` and inspect live Git/status; read only this phase's required context.
+This file is the sole default entrypoint for Codex/Claude. Follow `AGENTS.md`, check actual Git status, and read only the referenced active work order.
 
 ## Current action
 
-**P3.3a standalone Codex CLI: FINAL PASS / CLOSED (2026-10-12).** Codex installed and checked official stable Codex CLI `0.162.1` at `<repo>/results/p3/tools/codex/0.162.1/codex.exe` (ignored); Claude independently verified SHA256, OpenAI signature, version, isolation, preserved VS Code bundle/stashes and the exact reviewed SHA `fc47bd0ce4e420a597dc4f432bef4fb0b0ad32f3`. No implementation issue blocks closure. **WORKER READY remains NO / NOT TESTED.**
-
-**Next: P3.3b runtime/Skill integration is a PROPOSAL, NOT AUTHORIZED.** Suggested gates: b1 read-only inventory of both VS Code extension binaries/paths; b2 isolated shared-Skill discovery and sandbox setup (requires separate approval); b3 login/model smoke with explicit user-approved limits (requires separate approval). No login, model calls, sandbox activation, Skill link, CLI/profile changes, installs or benchmarks may start until a specific substage is approved. D-010 overall remains PROPOSED; main still holds the P2 baseline.
+**P3.3b1 — existing local Codex + Claude invocation-route audit: APPROVED (2026-10-12).** The user confirmed that **both Codex and Claude are already in local use** for Agentco development and verification. Earlier failure to find `claude` on PATH/default locations does **not** mean Claude is absent. Do not reinstall either existing harness. Codex's separate, signed stable CLI 0.162.1 installation already passed Claude review, but worker readiness remains NOT TESTED. Main retains the completed P2 baseline.
 
 ## Required context
 
 - `AGENTS.md`
-- `docs/work-orders/P3_WORKER_HARNESSES.md` — **P3.3a installation findings** and remaining approval gates only
-- Current Git branch/status/remote for future execution
+- `docs/work-orders/P3_LOCAL_RUNTIME_ROUTES.md` — the **only active P3.3b1 work order**
+- actual Git branch/status/remote, passive OS and extension/executable metadata
+
+## Codex action
+
+Run the approved **read-only system metadata audit** for the actual existing Codex and Claude execution routes, including two installed VS Code ChatGPT extension versions and the isolated stable Codex CLI. Distinguish user-confirmed local execution from confirmed standalone callable CLI. If Claude route remains unknown, report UNKNOWN; never infer that Claude needs installation from PATH alone. Avoid sessions, secrets, config contents and process arguments.
+
+Only append nonsecret results to the active work order and update this task status to awaiting GPT/user integration decision. `git diff --check`, commit/push documentation on feature branch, no main merge. Preserve working sessions, Pi, users' installations, ignored results, PATH, auth, runtime and all stashes. **No** install/upgrade, login, model call, user configuration change, Skill adapters, links, WSL startup, sandbox execution or other P3.3b implementation.
 
 ## Next handoff
 
-GPT/user choose the narrowly scoped **P3.3b1 metadata-only runtime plan** or prioritize Claude Code Worker installation next. Any substantive Codex integration is implemented by Codex, independently verified by Claude and adjudicated by GPT/user before main merge. No action is authorized merely by publishing this proposal.
+GPT/user decide minimal reuse/adapters after the audit; Claude independently checks implementation changes after a separately approved execution gate. Hermes remains a future distinct install decision.
