@@ -1,21 +1,27 @@
 # Agentco Current Task
 
-Sole active Codex/Claude entrypoint. Check `AGENTS.md` and current clean Git branch/origin. Read only the active P3.3b2d work-order section and P3.3b2c conclusions; no P0–P2 rereads.
+Default entrypoint. Follow `AGENTS.md` and read only this file and the referenced active proposal. Preserve all completed phase history and existing local runtime.
 
-## Active execution — P3.3b2d Windows-correct native Codex Skill registration APPROVED
+## Current state
 
-**P3.3b2d implementation awaiting Claude independent verification.** One native repo Skill symlink registered; source/reference integrity, normal Git 120000/canonical blob, fresh local Windows test-commit checkout and Pi root/nested 3 Skills/0 diagnostics passed. Codex discovery/invocation and POSIX checkout NOT RUN. WORKER READY = NO; auth/provider/model and other worker setup remain separately gated.
+**P3.3b2d native Codex Skill registration: FINAL PASS / CLOSED (2026-10-12).** Implementation `099cb2661ecb3469af57bdd1320387432cbdbb61` was independently verified by Claude: Git-owned symlink mode `120000`, valid target/reference, Windows fresh checkout at the final SHA, Pi root/nested 3 Skills/0 diagnostics, clean working tree and preserved main/stashes. **Codex live Skill discovery/model execution and POSIX checkout NOT RUN; WORKER READY = NO.**
+
+**Known portability limitation:** a Windows clone with `core.symlinks=false` renders the Skill view as a plain text file rather than a linked directory. Future fresh-machine checks must report this loudly. Prefer a small check in the existing doctor under a future separately approved change; no new loader, copier or auto-repair program.
+
+## Next proposed task
+
+**Native Claude Code CLI + Hermes CLI installation, reuse existing installations: PROPOSED / NOT YET APPROVED.** Existing Claude Desktop Code continues as the independent reviewer, separate from the future supported `claude -p` CLI route. The official native installers can affect per-user directories, dependencies or User PATH; installation needs explicit user permission.
 
 ## Required context
 
 - `AGENTS.md`
-- `docs/work-orders/P3_LOCAL_RUNTIME_ROUTES.md` — **P3.3b2d implementation findings** and remaining verification/approval boundaries only
-- live Git status, current branch/origin
+- `docs/work-orders/P3_LOCAL_RUNTIME_ROUTES.md` — **P3.3b2d — final independent PASS** and **P3 next: official Claude Code CLI + Hermes CLI on native Windows — proposal** only
+- current feature Git status/origin when the next scope is approved
 
-## Codex instruction
+## Authorization boundary
 
-Implementation and focused acceptance are complete; findings/evidence/rollback are recorded in the active work order. Only the one owned `.agents/skills/agentco-delta-handoff` symlink and these two documents change in Git. Keep source, settings, sessions, runtime, stashes, main and ignored test evidence intact. No Codex/model/auth/sandbox execution or further integration is authorized by this completion.
+No new CLI installations/updates, credential reads, login, OpenRouter/NVIDIA model calls, code/config/Skill changes, sandbox activation, global settings changes or main merge are currently authorized by this closure. Future installation should be one CLI at a time, native-first, official-only, minimal code, with Claude independent verification. Model E2E will be separately gated and must use sanitized synthetic tasks and NVIDIA free-only without paid fallback.
 
 ## Next handoff
 
-Claude independent verification is REQUIRED after Codex implementation: exact link and target, fresh-Windows-checkout compatibility, Git tree and Pi dedup, no unintended writes. GPT final gate after Claude. Actual Codex/Claude/Hermes model testing with OpenRouter NVIDIA free-only and synthetic prompts is separate and NOT approved by this task.
+User approves (or revises) the small installation-only plan; GPT then activates the work order and supplies the short Codex prompt. All other work remains frozen.
