@@ -4,17 +4,17 @@ This is the only default execution entrypoint for Codex/Claude. Follow `AGENTS.m
 
 ## Current action
 
-**P2.3 — close the Claude CONDITIONAL PASS evidence gaps for P2.1+P2.2.** The tested implementation SHA is `5037e417a5fa6a9cc29852d79204cf3c43d34592`. Claude independently confirmed native Pi discovery/diagnostics, settings, ownership and doctor 28/28; the remaining issues are documentation/evidence gaps, not a known implementation failure.
+**P2.3: evidence amendments complete; Claude evidence-only follow-up pending.** Reviewed implementation remains `5037e417a5fa6a9cc29852d79204cf3c43d34592`. The work order now separates Codex-recorded live invocation/final-clone evidence from Claude-independent checks and states baseline/provenance limitations; GPT/user final PASS and merge remain pending.
 
 ## Required context
 
 - `AGENTS.md`
-- `docs/work-orders/P2_SHARED_SKILLS.md` — **P2.3 conditional-pass evidence closure** section only; follow linked implementation evidence as needed
+- `docs/work-orders/P2_SHARED_SKILLS.md` — **P2.3 conditional-pass evidence closure** section and **P2.2 final evidence** subsection only; follow linked evidence as needed
 - current branch/HEAD/status and local ignored `results/p2-2/` evidence relevant to these claims, **without inspecting credentials, sessions, or private test payloads**
 
-## Codex action
+## Codex closure
 
-Reconcile the original model-invocation and exact-SHA fresh-clone claims against retained evidence, add a concise truthful tracked evidence summary, and update this task's status. If evidence is absent, label it NOT VERIFIED and run only the missing safe targeted check if needed. Do not rerun the complete smoke or destructive bootstrap in the canonical workspace. Preserve the named recovery stash, user changes and all local runtime. Commit/push documentation-only corrections on the feature branch; do not merge main.
+Retained relevant evidence was re-inspected; no model call, regression suite or bootstrap rerun was needed. Only this file and the work order changed. Keep implementation SHA, ignored evidence, recovery stash and runtime unchanged; no main merge. The documentation commit/push completes this executor scope.
 
 ## Next handoff
 
