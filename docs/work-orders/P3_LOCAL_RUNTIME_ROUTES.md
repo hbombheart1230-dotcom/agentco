@@ -76,9 +76,9 @@ P3.3b1 permits passive system inspection plus its limited Git documentation writ
 
 Do not implement a full Commander, generic orchestration broker, per-agent config mirroring, a new skill loader or copied skill bodies in P3; use native supported process/Skill surfaces first.
 
-## P3.3b2a recommended next gate — PROPOSED, NOT APPROVED
+## P3.3b2a approved next gate — disposable native Skill-view feasibility
 
-**Scope if approved:** small, reversible **Codex-only native Skill view feasibility** and stable explicit-path launcher *design*, without launching a model or using any auth.
+**APPROVED 2026-10-12 by user:** small, reversible **Codex-only native Skill view feasibility** and stable explicit-path launcher *design*, without launching a model or using any auth. Prefer native Skill discovery directly; use a link only if that is the least additional mechanism.
 
 1. Inspect exact Git HEAD, ignored-state ownership and Pi skill discovery baseline. Do not modify user-level Codex/Claude profiles or global PATH. Preserve all existing applications, versions, sessions and stashes.
 2. In a **new, owned and ignored** `results/p3/` disposable fixture (not the canonical repo `.agents/skills`), test Windows per-skill symlink creation to the one canonical `shared/skills/agentco-delta-handoff`. Verify `SKILL.md`, reference resolution, identity/reversibility, junction/symlink semantics and safe unlink without following/deleting the shared source. If privilege/behavior fails, STOP and report UNVERIFIED or BLOCKED; do not elevate or copy files.
@@ -88,4 +88,21 @@ Do not implement a full Commander, generic orchestration broker, per-agent confi
 
 **Following gates require separate approval:** P3.3b2b actual owned Skill registration and thin explicit-path adapter (with Claude independent verification), then P3.3b3 auth/sandbox/model E2E with stated provider and spend cap. For the Claude automated-worker route, decide reuse versus separately managed CLI only after a specific supported command path is established. Do not silently reuse Desktop auth or private binaries.
 
-**Current authorization:** P3.3b1 is completed; P3.3b2a remains only a work-order proposal, so no agent should execute it from this document yet.
+**Current authorization:** P3.3b1 is CLOSED; P3.3b2a disposable ignored-fixture and documentation-only checks are APPROVED. No actual repo Skill view, new package/CLI installation, credentials, config change or model call is authorized. On unexpected link/provenance/privilege behavior, STOP and report.
+
+
+## User-confirmed P3 architecture and OpenRouter provider policy (2026-10-12)
+
+**ACCEPTED design direction:** keep Pi plus official **Codex CLI / Claude Code CLI / Hermes CLI**, reusing existing installations where applicable; official standalone install should be lightweight when required. **Build last**: native CLI/Skill/extension capabilities before custom code. All Agentco-owned portable Skills have **one canonical editable source** in `shared/skills/`. Harness-specific Extensions/hooks/plugins/config stay in their respective harness domains. Never duplicate Skill bodies, build a custom Skill loader, or create an orchestration framework in P3.
+
+**Target inference:** OpenRouter **NVIDIA free** models for each CLI, initially `nvidia/nemotron-3-super-120b-a12b:free` (example target, verify actual availability and tool ability). **Free-only fail closed**: no automatically paid model fallback or provider substitution. Validate each harness separately because common API access does **not** imply equivalent tool execution:
+
+- Codex: documented OpenRouter custom model provider via `Responses API`; use a separate scoped `CODEX_HOME` rather than changing the user's `~/.codex`. Official/OpenRouter guidance: https://openrouter.ai/blog/tutorials/codex-cli-openrouter/ (Codex `wire_api = "responses"`).
+- Claude Code: OpenRouter documents an Anthropic Messages API gateway, but its integration is only guaranteed for Anthropic first-party provider. NVIDIA free model functioning with Claude Code tool calls is **UNVERIFIED**; test independently before claiming PASS. https://openrouter.ai/docs/guides/coding-agents/claude-code-integration
+- Hermes: official OpenRouter provider is supported, but its external Skill directories may be writable; maintain a strong write barrier or defer that Skill registration. https://hermes-agent.nousresearch.com/docs/integrations/providers and https://hermes-agent.nousresearch.com/docs/user-guide/features/skills/
+
+NVIDIA's OpenRouter free model page warns that free requests can be logged/used to improve services and says **do not send confidential or personal data**; no secret, private code, credential or sensitive repository content may be submitted to that endpoint in any trial. Only synthetic/sanitized fixture tasks; no model request in P3.3b2a. The free tier has rate limits. https://openrouter.ai/nvidia/nemotron-3-super-120b-a12b:free/
+
+**Execution sequence after this narrow test:** (1) validate simple native Skill link strategy; (2) reuse/pin official CLI routes, installing Claude CLI and Hermes only under explicit execution scope without touching Desktop or PATH; (3) test separate, isolated OpenRouter-free-only provider connections on non-confidential toy tasks with approved credentials; (4) Claude independently validates substantive changes; (5) P4 measures quality/latency, not P3. User's current Desktop Claude independent verification proceeds unchanged.
+
+**Codex P3.3b2a completion:** run the five checks in this section, update only this work order and `docs/CURRENT_TASK.md` with concise PASS/FAIL/NOT RUN and next gate, save fixture under ignored `results/p3/`, commit/push feature branch; leave main, all stashes, native Pi, installations and sessions unchanged.
