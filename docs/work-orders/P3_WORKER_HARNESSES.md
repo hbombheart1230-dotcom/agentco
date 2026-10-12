@@ -117,3 +117,29 @@ Record before/after command path, version, package ownership and every Agentco-c
 **Evidence/checks:** sanitized machine-local inventory `results/p3/p3-2-inventory-1e072e67.json` and `results/p3/codex-help-sanitized.txt` remain ignored. Installed binary SHA256: `D83CC3582592E307DF008411F02F61A93FB93580B53DC173608A63202D97BBE4`. Worker model smoke, auth readiness, sandbox, discovery/invocation, fresh setup and Pi doctor/smoke/bootstrap are **NOT RUN** in this inventory. Tracked Pi/shared/scripts/package inputs match the P2 main baseline; no regression PASS is claimed from metadata checks. Only this work order and CURRENT_TASK are changed; runtime, auth, existing stashes and main remain preserved.
 
 **Next approval gates:** GPT/user select reuse of the extension-bundled alpha versus a separately managed stable Codex channel; select exact Claude/Hermes channels/versions and setup order; approve safe auth/permission checks and provider/model budget separately (default no calls/charges); keep Hermes shared access deferred until write isolation is demonstrated. No P3.3 action or Claude verification has started.
+
+
+## P3.3a proposed standalone Codex setup (GPT architecture review, 2026-10-12)
+
+**Status: PROPOSED / NOT AUTHORIZED.** P3.2 inspection completed at executor SHA `d4b8ae5504ea5ab9f0047283b4438f1d655fc74f` with clean working tree. GPT independently confirmed the origin branch and reviewed the captured inventory. The existing VS Code-bundled `0.162.0-alpha.2` executable is signed and can serve as a reference, but **is not the independently pinned worker binary** for reproducible P4 evaluation. It may change when the editor extension updates.
+
+### Recommendation and rationale
+
+**First approved installation should be one independently managed, official stable Codex CLI on native Windows**, before installing Claude/Hermes. Do not uninstall, overwrite, relink, shadow accidentally, or update the VS Code package. The current npm registry advertised stable `@openai/codex@0.162.1` (2026-10-12) and official OpenAI docs support versioned npm installations, standalone installers and Windows binaries: [official Codex CLI](https://learn.chatgpt.com/docs/codex/cli), [official repo](https://github.com/openai/codex), [npm package](https://www.npmjs.com/package/@openai/codex). There is a [Windows optional-platform-package report](https://github.com/openai/codex/issues/52683) concerning the `0.162.1` release; **do not blindly install `latest` or assume `0.162.1` will start**. Validate package and platform artifact availability on the actual installation date; choose a verifiably working stable exact version (e.g. `0.162.0` only if validated) and document the decision. An alpha is not the preferred target.
+
+### Proposed P3.3a Codex scope — requires explicit separate user approval
+
+1. Inspect current Git status, unexpected origin drift and current `codex` candidates; abort on conflicts or dirty work. Do not read any secrets or personal configuration bodies.
+2. Review the **actual** official distribution, Windows x64 payload, version/integrity metadata, install/update/uninstall/side effects and absence of unexpected postinstall/network bootstrap. Record the selected stable exact version, hash/provenance and expected disk/profile changes. If the requested version cannot be safely validated, stop **before install** for new approval rather than switching channel/version silently.
+3. Install **only the agreed Codex CLI distribution** in a dedicated, machine-local, versioned location controlled for Agentco worker evaluation, preferring user-level isolation over a global installation/PATH modification; install no new shell profile changes. Never patch VS Code's bundled extension or the existing Pi.
+4. Use the explicit installed executable path for `--version` and `--help`, verify publisher/integrity and effective binary, and distinguish it from VS Code's alpha. Any startup/config write outside the approved install destination requires preflight/approval. Model invocation, login, account status reading and external tool execution are **not** in this stage.
+5. Summarize exact version/source/destination, install verification, rollback command, any unknown runtime behavior and worker readiness = **NOT READY** until auth, permissions/sandbox and shared-skill invocation pass later separately approved steps. Save sanitized local results only under ignored `results/p3/`.
+6. Update only this P3 work order and `docs/CURRENT_TASK.md`; commit/push feature branch, no main merge. Independently verify afterward when appropriate. If Windows install/update/install-privilege, hidden profile writes or version availability differs, STOP, preserve all unrelated state and report BLOCKED.
+
+### Explicit non-goals and next gates
+
+- No Claude or Hermes installations in P3.3a, no WSL activation and no user-profile/auth migration.
+- No shared Skill symlink creation yet; avoid accidental Pi double discovery and untested Windows junction behavior. Proposed adapter activation and root/nested invocation are separately gated after a working, authorized CLI is established.
+- **No provider costs or model calls**. P3.3b must separately approve auth/status method, permissions, allowed model/provider, max spend and Skill integration.
+- Track Hermes as deferred until a safe write boundary for shared skills is proven.
+- User approval of P3.3a does **not** approve all of P3.3, D-010 FINAL, P4 benchmarking or Pi Commander.
