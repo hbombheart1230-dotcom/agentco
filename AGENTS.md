@@ -1,6 +1,6 @@
 # Agentco repository rules
 
-Read README.md, docs/WORK_PLAN.md, docs/DECISIONS.md, docs/WORKER_ROLES.md, docs/capabilities/HARNESS.md, docs/TASK_INBOX.md and the current docs/work-orders work order before implementation. Git and actual tracked files are the source of truth. Preserve dirty/untracked user work; do not broaden the assigned scope.
+Start at `docs/CURRENT_TASK.md` and follow its **Required context** only. Do not preload README, WORK_PLAN, DECISIONS, HARNESS, TASK_INBOX, old work orders or validation history unless the current task explicitly requires them. Git and actual tracked files are the source of truth. Preserve dirty/untracked user work; do not broaden the assigned scope.
 
 - Codex: primary executor/developer. Claude: independent verifier/reviewer. GPT: architect/director and final technical decision. User: final product/priority decision.
 - Build last: prefer Pi built-ins, packages, stable MCP/CLI and thin adapters. Do not patch upstream Pi without explicit approval.
@@ -14,3 +14,5 @@ Read README.md, docs/WORK_PLAN.md, docs/DECISIONS.md, docs/WORKER_ROLES.md, docs
 - Documentation routing: phase-defining work goes in `docs/work-orders/`; small follow-ups, cleanup, ideas, and deferred checks accumulate in `docs/TASK_INBOX.md`. Promote an inbox item to a work order when it becomes substantial; do not create one-off work-order files for trivial items.
 
 - **Delta-context rule:** `docs/CURRENT_TASK.md` is the default execution entrypoint. Read only the context it explicitly references. Completed work-order sections and historical reports are archival context and must not be reread unless the current task requires them. Prefer direct Git/file verification over reloading long history. Keep final reports delta-only and do not restate completed work.
+
+- **Git-first task delegation:** GPT writes/updates shared policy in `AGENTS.md` and task-specific instructions, acceptance criteria and the verification handoff in the active Git work order. `docs/CURRENT_TASK.md` points to that scope. Execution prompts should only synchronize the assigned branch and say to run `CURRENT_TASK.md`; do not paste a second full work order into chat. Codex implements/tests/commits/pushes; Claude independently verifies the named implementation SHA (including preceding design when the work order requests a combined review); GPT and user gate final PASS/main merge. Tests not actually executed must be reported NOT RUN.
