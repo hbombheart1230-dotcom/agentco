@@ -1,21 +1,27 @@
 # Agentco Current Task
 
-This file is the sole default entrypoint for Codex/Claude. Follow `AGENTS.md`, check actual Git status, and read only the referenced active work order.
+This is the only default execution entrypoint for Codex/Claude. Follow `AGENTS.md`, inspect live Git/status, and read only the active scope.
 
 ## Current action
 
-**P3.3b1 inventory complete, awaiting GPT/user integration choice.** Current Codex PATH/running route is VS Code ChatGPT 26.1002; additional 26.1007 and reviewed isolated Stable 0.162.1 exist separately. Claude local use is user-confirmed and Desktop/Code-path processes were passively observed; a supported independently callable CLI remains UNKNOWN (observed Code payload path unavailable on disk). No reinstall or readiness conclusion follows from PATH absence.
+**P3.3b1 — existing local Codex/Claude route inventory CLOSED / PASS (2026-10-12).** Executor SHA: `6e1f98b1b19fff93f4ce40d077e1f74c4335d21c`. No installer, model, login, profile mutation or shared Skill view was invoked. P3.3a separately pinned Codex CLI 0.162.1 remains installed, installation-only FINAL PASS; **WORKER READY = NO / NOT TESTED**.
 
-## Required context
+**GPT architecture choice recorded, no implementation yet:**
+- User's VS Code Codex extension remains the existing development route.
+- Agentco Codex future worker will use the independently pinned 0.162.1 CLI via an explicit path, not the extension-owned PATH binary.
+- Claude Desktop Code continues as the local independent verifier. Its privately managed Code executable is **not** a proven supported standalone CLI or automated worker surface. Claude CLI installation is **not currently approved or required** for the user's existing workflow.
+- Hermes remains pending a separate official-native install gate. Pi and shared skills stay unchanged.
+
+## Required context for next phase
 
 - `AGENTS.md`
-- `docs/work-orders/P3_LOCAL_RUNTIME_ROUTES.md` — the **P3.3b1 findings** and subsequent gates only
-- actual Git branch/status/remote, passive OS and extension/executable metadata
+- `docs/work-orders/P3_LOCAL_RUNTIME_ROUTES.md` — **P3.3b1 disposition and interface choice** and **P3.3b2a recommended next gate** only
+- live Git branch/status/remote
 
-## Codex action
+## Authorization boundary
 
-Passive route/provenance findings and limitations are recorded in the active work order. Only this task and that work order changed; sanitized metadata remains ignored under `results/p3/`. No CLI/app launch, reinstall, login/status, model call, configuration/PATH change, adapter, link, WSL startup, sandbox or session disruption was performed. Preserve existing sessions/installations/runtime/stashes, Pi and main. Await integration selection and a separately approved execution gate.
+**P3.3b2a is PROPOSED, NOT APPROVED.** Do not run link fixtures, create adapters, change profiles/PATH, start Claude/Codex sessions, install anything, authenticate, invoke models or merge main from this proposal. Only GPT/user may open a separate approval gate for the fixture-only native Skill view feasibility check.
 
 ## Next handoff
 
-GPT/user decide minimal reuse/adapters after the audit; Claude independently checks implementation changes after a separately approved execution gate. Hermes remains a future distinct install decision.
+On user approval, GPT changes this entrypoint and work order to authorize the narrow P3.3b2a disposable-link test. Codex executes/commits; Claude independently reviews any substantive registration/integration changes; GPT/user gate actual P3.3b2b integration separately.
