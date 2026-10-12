@@ -270,3 +270,9 @@ Future adapters: unlink only an owned entry after checking its type and exact ta
 - License/provenance for any later third-party promotion and avoiding collisions with user/system/package skills.
 
 These remaining design/implementation gates belong in this work order. Unrelated existing follow-ups remain in TASK_INBOX. Only the explicitly approved P2.2 skill and Pi connection are authorized; no broader skill migration or future harness adapter is authorized.
+
+## P2 final technical decision and merge authorization (2026-10-12)
+
+**FINAL PASS — GPT after Claude evidence-only independent PASS.** Verified P2.1 native-first/one-authoring-source design and P2.2 Pi integration; 3 skills with zero diagnostics and unchanged community package loading; canonical doctor 28/28. Canonical root/nested live invocation and exact implementation-SHA fresh clone were Codex-executed and independently checked against retained local evidence by Claude; exact-SHA live model invocation was NOT RUN, and model-dependent smoke outcome 14/14 was previous executor evidence rather than an independently reproducible test. First smoke 13/14 was a Groq output-marker omission. Future non-Pi adapters and Windows junction E2E remain UNKNOWN/NOT RUN. No current blocker.
+
+**Merge authorization:** Once Git confirms the feature branch descends from reviewed implementation `5037e417a5fa6a9cc29852d79204cf3c43d34592`, with only the expected evidence/closure documentation commits afterward and a fast-forward relationship to `main`, Codex may perform `--ff-only` merge and push `main`. Do not rerun old tests just for this documentary finalization. Preserve feature branch, named recovery stash, local runtime and ignored results. After merge, P2 is CLOSED; P3 scope/design awaits separate user approval.
