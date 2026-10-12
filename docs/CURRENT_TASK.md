@@ -1,27 +1,24 @@
 # Agentco Current Task
 
-This is the only default execution entrypoint for Codex/Claude. Follow `AGENTS.md`, inspect live Git/status, and read only the active scope.
+Default Codex/Claude entrypoint. Follow `AGENTS.md`, verify actual Git branch/origin/clean status, read only the active P3.3b2a section.
 
 ## Current action
 
-**P3.3b1 — existing local Codex/Claude route inventory CLOSED / PASS (2026-10-12).** Executor SHA: `6e1f98b1b19fff93f4ce40d077e1f74c4335d21c`. No installer, model, login, profile mutation or shared Skill view was invoked. P3.3a separately pinned Codex CLI 0.162.1 remains installed, installation-only FINAL PASS; **WORKER READY = NO / NOT TESTED**.
+**P3.3b2a — APPROVED (2026-10-12): Codex native Shared Skill link feasibility, disposable fixture only.** User accepted the simplified P3 architecture: official Pi / Codex CLI / Claude Code CLI / Hermes CLI, native behavior before custom code, one shared Skill authoring source and harness-specific Extensions. Target future model connection is **OpenRouter NVIDIA free-only**, subject to per-harness protocol/tool support and confidential-data safeguards. **No model calls or new CLI installs in this subtask.**
 
-**GPT architecture choice recorded, no implementation yet:**
-- User's VS Code Codex extension remains the existing development route.
-- Agentco Codex future worker will use the independently pinned 0.162.1 CLI via an explicit path, not the extension-owned PATH binary.
-- Claude Desktop Code continues as the local independent verifier. Its privately managed Code executable is **not** a proven supported standalone CLI or automated worker surface. Claude CLI installation is **not currently approved or required** for the user's existing workflow.
-- Hermes remains pending a separate official-native install gate. Pi and shared skills stay unchanged.
-
-## Required context for next phase
+## Required context
 
 - `AGENTS.md`
-- `docs/work-orders/P3_LOCAL_RUNTIME_ROUTES.md` — **P3.3b1 disposition and interface choice** and **P3.3b2a recommended next gate** only
-- live Git branch/status/remote
+- `docs/work-orders/P3_LOCAL_RUNTIME_ROUTES.md` — **P3.3b2a approved next gate** and **User-confirmed P3 architecture and OpenRouter provider policy** sections only
+- live Git status, branch and origin
 
-## Authorization boundary
+## Codex execution
 
-**P3.3b2a is PROPOSED, NOT APPROVED.** Do not run link fixtures, create adapters, change profiles/PATH, start Claude/Codex sessions, install anything, authenticate, invoke models or merge main from this proposal. Only GPT/user may open a separate approval gate for the fixture-only native Skill view feasibility check.
+1. Safely synchronize `feature/p3-worker-harness-design` (stop on dirty work or diverged branch). Preserve user's existing VS Code Codex, Claude Desktop/Code, Pi, both stashes, main, private profiles and sessions.
+2. Perform ONLY the five P3.3b2a checks: native per-skill discovery design and a reversible Windows symlink/link feasibility probe in an **owned ignored `results/p3/` fixture** pointing at `shared/skills/agentco-delta-handoff`; verify `SKILL.md`, reference resolution, link safety and Pi discovery collision risk. Avoid actual repo `.agents/skills` and `.claude/skills` registration. Describe the pinned Codex 0.162.1 explicit-path process contract **without implementing a launcher**.
+3. Do not install/upgrade/login, touch PATH or profiles, create extension code or new adapter files, invoke a model, start new Claude/Codex sessions, enable sandbox, or send source to OpenRouter. If native link is unsafe or unsupported, STOP and report rather than copy Skill bodies or elevate privileges.
+4. Update only `docs/CURRENT_TASK.md` and `docs/work-orders/P3_LOCAL_RUNTIME_ROUTES.md` with sanitized findings, `git diff --check`, commit/push **feature branch only** and report delta (PASS/FAIL/NOT RUN). Avoid rerunning completed P2/P3 checks.
 
 ## Next handoff
 
-On user approval, GPT changes this entrypoint and work order to authorize the narrow P3.3b2a disposable-link test. Codex executes/commits; Claude independently reviews any substantive registration/integration changes; GPT/user gate actual P3.3b2b integration separately.
+GPT/user approve separate minimal CLI setup / Skill registration and synthetic OpenRouter-free model tests. Claude independently verifies substantive executable/config changes; D-010 high-level design is accepted but downstream gates remain separate.
