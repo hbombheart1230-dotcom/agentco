@@ -1,21 +1,25 @@
 # Agentco Current Task
 
-Start here and follow AGENTS.md. Read only the Execution result in docs/work-orders/P5_PIPELINE_MVP.md for this handoff. Do not reread or rerun completed P3 installations, links, text benchmarks or failed E2E probes.
+Canonical Windows workspace: `C:\Agentco`, branch `feature/p3-worker-harness-design`. Follow `AGENTS.md` and read ONLY the new **"P5 hardening: independently reviewed MVP corrections"** section near the end of `docs/work-orders/P5_PIPELINE_MVP.md`. Inspect `scripts/commander.mjs` directly; do not reload old P3 reports or run the previous model benchmarks.
 
-## Current state: P5 PIPELINE MVP PASS, pending independent review
+## Verified baseline and independent review
 
-Base e433b37. Real upstream Pi Commander dispatched one installed Claude Code CLI Worker, received its JSON through the native tool result, and returned PIPELINE_P5_RESULT=42 to the user. Both observed routes used nvidia/nemotron-3-super-120b-a12b:free. One Commander prompt plus one Worker prompt; 8.119s; exit 0. Actual provider billing/HTTP counts unverified. WORKER READY remains NO; real file-edit and Skill invocation NOT RUN.
+Executor `bf94451` genuinely completed human request -> Pi 1.0.4 Commander -> official Claude Code CLI Worker -> toolResult -> Pi final answer `PIPELINE_P5_RESULT=42`, observed same exact OpenRouter NVIDIA Super free model; 2 CLI prompt attempts, 8.119 sec. One 82-line `scripts/commander.mjs` helper, with no external adapter package or production config change. Existing Skill/file-edit Worker E2E remains NOT RUN / WORKER READY = NO.
 
-One small scripts/commander.mjs helper creates isolated toy homes and a transient native Pi delegation Extension, leaving production Pi/subagent/settings unchanged. Preferred community pi-subagents@0.77.0 was inspected without installing and rejected for user-settings/model-role isolation incompatibility. Evidence is ignored at results/p5/pipeline-1791794810224/ and results/p5/pipeline-mvp/.
+Claude independent review confirmed actual routing and artifact, but **classified overall delivery PARTIAL** because (1) nonempty final responses can falsely pass without matching Worker output, (2) timeout may orphan Claude descendants, and (3) Claude's executable path is fixed to one WinGet install location. No provider calls or repo writes were made during that review.
 
-Corrupted appended P3 Round 2 outcome replaced only with a verified ASCII historical summary; prior intact bytes preserved, bad bytes retained in Git/ignored backup. Changed docs are UTF-8 without literal question-mark runs or replacement characters. Source/Skills/links/auth/profiles/PATH/runtime/sessions/main/two stashes retained.
+## ACTIVE — one P5 hardening batch APPROVED
 
-## Run
+In ONE Codex execution, implement three narrow corrections in the existing helper:
 
-node scripts/commander.mjs "Delegate this synthetic task to Claude: calculate 13+29 and return exactly PIPELINE_P5_RESULT=42. Return the worker result to me."
+1. Enforce deterministic Pi final **correspondence to actual Worker toolResult and Worker output**, correct nonzero failures and sanitized evidence; offline mismatched/missing-result negative tests.
+2. Handle Pi/Claude descendant process cancellation/timeouts, with Windows process-tree cleanup aimed at known child PIDs; offline mock nested-child timeout test without actual models. Avoid broad PID termination.
+3. Support explicit trusted local Claude executable path override while preserving present working WinGet default. Local preflight must not need API access or read secrets.
+4. Run focused offline checks and **at most one** fresh end-to-end synthetic Pi->Claude->Pi workflow (<=2 CLI model prompt attempts total) using exact free NVIDIA slug, zero paid fallback, no private source or credential exposure; no benchmark comparisons.
+5. Commit/push feature branch one time, update only current task, active P5 work order and minimal helper/test. One Claude independent review of final commit **without model rerun**.
 
-Synthetic requests only. Existing approved local key is handled opaquely; no installation or login is performed.
+Continue using vendor CLIs/native Pi APIs; no new adapter framework, paid integration, Skill loader, Linux portability work, Codex/Hermes benchmarking or main merge. Preserve main, both stashes, personal profiles/runtime/auth/PATH. Write clean UTF-8 docs (no literal replacement `???`). Report only final delta in Korean.
 
-## Next handoff
+## Handoff
 
-Claude independently reviews the single new implementation delta and sanitized evidence without new model/API calls. Report in Korean. GPT/user accept the pipeline MVP; full Worker/Skill/file-edit readiness is a later scope. No main merge or additional model/implementation work authorized by this completion pointer.
+After Codex push: Claude reviews new implementation + offline/live evidence once; GPT/user judge the P5 hardened pipeline. Next useful product milestone is a **real synthetic file-editing Worker using this same pipeline**; do not reopen P3 four-harness gating as an MVP blocker.
