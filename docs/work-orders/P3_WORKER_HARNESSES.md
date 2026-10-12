@@ -76,7 +76,7 @@ Record before/after command path, version, package ownership and every Agentco-c
 4. Should Hermes shared Skill registration remain **deferred until write isolation is proven**? (Recommended.)
 5. After approved P3.2 preflight, which harness to configure first? Proposed order **Codex → Claude → Hermes** for simple incremental integration; not a performance ranking.
 
-**Only P3.2 inspection is now authorized.** P3.3 installs, logins, Skill adapters, model calls, profile writes and P3.4 implementation remain separately gated.
+**Authorization status as of 2026-10-12:** P3.2 inspection is complete; **only the isolated P3.3a Codex CLI installation described below is approved**. Claude/Hermes installs, logins, Skill adapters, model calls, profile/global-PATH writes and P3.4 implementation remain separately gated.
 
 
 ## Approved P3.2 inventory execution order (2026-10-12)
@@ -116,7 +116,7 @@ Record before/after command path, version, package ownership and every Agentco-c
 
 **Evidence/checks:** sanitized machine-local inventory `results/p3/p3-2-inventory-1e072e67.json` and `results/p3/codex-help-sanitized.txt` remain ignored. Installed binary SHA256: `D83CC3582592E307DF008411F02F61A93FB93580B53DC173608A63202D97BBE4`. Worker model smoke, auth readiness, sandbox, discovery/invocation, fresh setup and Pi doctor/smoke/bootstrap are **NOT RUN** in this inventory. Tracked Pi/shared/scripts/package inputs match the P2 main baseline; no regression PASS is claimed from metadata checks. Only this work order and CURRENT_TASK are changed; runtime, auth, existing stashes and main remain preserved.
 
-**Next approval gates:** GPT/user select reuse of the extension-bundled alpha versus a separately managed stable Codex channel; select exact Claude/Hermes channels/versions and setup order; approve safe auth/permission checks and provider/model budget separately (default no calls/charges); keep Hermes shared access deferred until write isolation is demonstrated. No P3.3 action or Claude verification has started.
+**P3.2 conclusion and later approval:** GPT/user chose the independently managed stable Codex channel and subsequently approved only its isolated P3.3a installation as defined below. Exact installed artifact remains subject to verification. Claude/Hermes versions and installation order, safe auth/permission checks and provider/model budget are still gated (default no calls/charges); Hermes shared access stays deferred until write isolation is demonstrated. At this P3.2 inventory snapshot, no P3.3 action or Claude verification had started.
 
 
 ## P3.3a approved standalone Codex setup (2026-10-12)
