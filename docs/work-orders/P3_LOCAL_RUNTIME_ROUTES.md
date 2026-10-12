@@ -59,3 +59,33 @@ P3.3b1 permits passive system inspection plus its limited Git documentation writ
 **Scope/evidence:** current-session `Get-Command -All`; known vendor extension/package metadata and exact executable `Get-Item`/hash/Authenticode; current-user Claude Appx metadata; process query requested **only Name and ExecutablePath**, not command lines. A limited known Claude Code runtime-directory check found no accessible payload; no broad user-directory scan. Sanitized executable metadata is ignored at `results/p3/p3-3b1-executable-metadata.json`. No CLI/app/WSL was launched, stopped or updated; version/help tests were reused rather than rerun. No account/status/config/session/editor-window/browser/private content was read. Model, login, sandbox, discovery/invocation, adapters and regression tests are **NOT RUN**. Only this work order and CURRENT_TASK change in Git; main, Pi/shared assets, PATH, installations, runtime, working sessions and all stashes are preserved.
 
 **Next:** GPT/user choose which Codex interface to reuse (current editor route versus reviewed explicit Stable binary) and resolve Claude's supported callable route through metadata/targeted clarification under a new gate; never infer NEEDS INSTALL from PATH absence. P3.3b2 integration and P3.3b3 live readiness/budget remain unapproved. Hermes stays deferred; no independent verification run was initiated.
+
+
+## P3.3b1 disposition and interface choice (GPT review, 2026-10-12)
+
+**P3.3b1 metadata audit CLOSED / PASS**, executor commit `6e1f98b1b19fff93f4ce40d077e1f74c4335d21c`. No new CLI was installed or launched, and no model, session, secret, credential or profile was inspected. This PASS is for **route/provenance inspection only**, not worker readiness.
+
+**Architecture recommendation (implementation not yet authorized):**
+
+- **Development Codex:** preserve current VS Code ChatGPT extension 26.1002 effective process/PATH; additional extension 26.1007 stays untouched. Do not tie worker identity to extension autoupdates.
+- **Agentco Codex worker:** use exact executable `<repo>/results/p3/tools/codex/0.162.1/codex.exe` through an explicit, future minimal adapter; do not replace user's PATH. That binary passed independent installation-only checks but no login/exec/sandbox/E2E.
+- **Current Claude independent verifier:** preserve the **existing Claude Desktop Code tab**, which is locally running; its packaged Code 2.1.295 path label is not a verified standalone entrypoint. Do not treat Claude Desktop as not installed.
+- **Future automated Claude worker:** independent callable CLI remains **UNKNOWN**; do not automate Desktop's private runtime executable or infer that the Desktop app exports `claude -p`. Anthropic official [Desktop reference](https://code.claude.com/docs/en/desktop) states the Code tab downloads/updates **its own Claude Code copy**, potentially different from the separate terminal CLI. Official [programmatic mode](https://code.claude.com/docs/en/headless) documents the supported `claude -p` route. Reuse a supported CLI if a genuine one is later found; otherwise propose an **optional separate official CLI installation** for automated worker use under a new approval. It is not needed for continued local manual Claude verification.
+- **Hermes:** later approved official native install and separate external skill write-boundary test.
+- **Pi:** preserve upstream 1.0.4 and P2 single-source shared-skill behavior.
+
+Do not implement a full Commander, generic orchestration broker, per-agent config mirroring, a new skill loader or copied skill bodies in P3; use native supported process/Skill surfaces first.
+
+## P3.3b2a recommended next gate — PROPOSED, NOT APPROVED
+
+**Scope if approved:** small, reversible **Codex-only native Skill view feasibility** and stable explicit-path launcher *design*, without launching a model or using any auth.
+
+1. Inspect exact Git HEAD, ignored-state ownership and Pi skill discovery baseline. Do not modify user-level Codex/Claude profiles or global PATH. Preserve all existing applications, versions, sessions and stashes.
+2. In a **new, owned and ignored** `results/p3/` disposable fixture (not the canonical repo `.agents/skills`), test Windows per-skill symlink creation to the one canonical `shared/skills/agentco-delta-handoff`. Verify `SKILL.md`, reference resolution, identity/reversibility, junction/symlink semantics and safe unlink without following/deleting the shared source. If privilege/behavior fails, STOP and report UNVERIFIED or BLOCKED; do not elevate or copy files.
+3. Check whether any intended future repo-local skill view would duplicate existing Pi discovery. Do not register an actual repo `.agents/skills` or `.claude/skills` in this gate. Do not modify `pi-dev/settings.json`.
+4. Document the simplest possible explicit executable invocation contract for pinned Codex 0.162.1, scoped environment, permissions and future stdout/stderr capture, grounded in the installed version's prior documented CLI help. This is **design only**, not a launcher/script implementation. No `codex exec`, authentication/status probing, sandbox launch or network/model access.
+5. If a file change is needed beyond ignored test fixtures and sanitized documentation, STOP for new authorization. Update `docs/CURRENT_TASK.md` and this work order only; commit/push feature branch after `git diff --check`. Report test PASS/FAIL/NOT RUN with true provenance and **WORKER READY = NO**.
+
+**Following gates require separate approval:** P3.3b2b actual owned Skill registration and thin explicit-path adapter (with Claude independent verification), then P3.3b3 auth/sandbox/model E2E with stated provider and spend cap. For the Claude automated-worker route, decide reuse versus separately managed CLI only after a specific supported command path is established. Do not silently reuse Desktop auth or private binaries.
+
+**Current authorization:** P3.3b1 is completed; P3.3b2a remains only a work-order proposal, so no agent should execute it from this document yet.
