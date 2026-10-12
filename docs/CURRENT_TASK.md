@@ -4,20 +4,17 @@ This file is the sole default entrypoint for Codex/Claude. Follow `AGENTS.md`, v
 
 ## Current action
 
-**P3.3a — isolated stable Codex CLI installation APPROVED (2026-10-12), limited to installation-only verification.** P3.2 inventory closed at `d4b8ae5504ea5ab9f0047283b4438f1d655fc74f`. The existing VS Code-bundled signed Codex `0.162.0-alpha.2` must remain intact. Claude Code/Hermes were not detected and are **not authorized for installation**. D-010 stays PROPOSED; later Codex authentication, Skill adapters, model tests and P3.3b remain unapproved.
+**P3.3a install-only verification PASS; Claude narrow independent review pending.** Official stable Codex CLI 0.162.1 is isolated at `<repo>/results/p3/tools/codex/0.162.1/codex.exe`; explicit-path version/help, official digests and OpenAI signature checks passed. Existing VS Code alpha and environment are preserved. WORKER READY remains NO / NOT TESTED; D-010 stays PROPOSED. Login, auth/status, model calls, adapters, sandbox activation, other installs and P3.3b remain unapproved.
 
 ## Required context
 
 - `AGENTS.md`
-- `docs/work-orders/P3_WORKER_HARNESSES.md` — **P3.2 inventory findings** and **P3.3a approved standalone Codex setup** only
+- `docs/work-orders/P3_WORKER_HARNESSES.md` — **P3.3a installation findings** and approved P3.3a boundaries only
 - actual branch/status and origin, relevant installed executable metadata and official package metadata necessary to verify the chosen stable artifact
 
 ## Codex action
 
-1. In canonical `C:\Agentco` on `feature/p3-worker-harness-design`, verify Git/branch/remote/status; synchronize using fast-forward only if safe, otherwise STOP without modifying user work.
-2. Follow the approved P3.3a installation order and preflight gates in the work order: validate the **exact** official stable Windows x64 version/artifact and integrity, install in an **isolated, ignored, versioned Agentco-local destination**, then verify only explicit-path `--version` and `--help`. If package/version selection or side effects cannot be established safely, STOP before installing and report; don't silently select alpha/latest/fallback.
-3. Preserve VS Code bundled Codex, Pi, PATH/shell profiles, personal configs/credentials, all stashes, ignored runtime/results and main. No login, auth/status probes, model calls, linked Skills, permission/sandbox activation, other worker installs, global upgrades, or extra costs.
-4. Update only `docs/CURRENT_TASK.md` and `docs/work-orders/P3_WORKER_HARNESSES.md` with **sanitized** installed version/provenance/exact-path designation (not username), checks, rollback and NOT RUN/UNKNOWN. Leave worker readiness NOT READY. `git diff --check`; commit/push feature branch only and report delta. Preserve the installer artifact/evidence locally under ignored `results/p3/`.
+Installation and focused checks are complete; findings/provenance/isolation/rollback are recorded in the work order. Only this task and the work order changed in Git; artifact, executable and sanitized evidence remain ignored under `results/p3/`. No login, auth/status or model test was performed. Retain the isolated install, existing runtime/results/stashes and main; await independent review and separately approved P3.3b scope.
 
 ## Next handoff
 
