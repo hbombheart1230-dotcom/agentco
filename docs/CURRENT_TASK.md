@@ -1,21 +1,24 @@
 # Agentco Current Task
 
-This is the only default execution entrypoint for Codex/Claude. Follow `AGENTS.md`, inspect Git/status directly, and read only the minimum specified task context.
+This is the default execution entrypoint for Codex/Claude. Follow `AGENTS.md`; inspect live Git/status first, and read only the minimum current context.
 
 ## Current action
 
-**P2.3: evidence amendments complete; Claude evidence-only follow-up pending.** Reviewed implementation remains `5037e417a5fa6a9cc29852d79204cf3c43d34592`. The work order now separates Codex-recorded live invocation/final-clone evidence from Claude-independent checks and states baseline/provenance limitations; GPT/user final PASS and merge remain pending.
+**P2 FINAL PASS (2026-10-12) — approved fast-forward merge to main.** GPT reviewed Claude's evidence-only PASS at implementation `5037e417a5fa6a9cc29852d79204cf3c43d34592` and documentation evidence `e1a0f60027ce59e62aa298d6f7a042bf03e382a7`. No functional blockers. Reused model-dependent smoke was 14/14 on second run after a Groq marker omission on first run; it was not independently rerun. Exact-SHA fresh-clone and live invocation provenance/limits are recorded in the work order.
 
 ## Required context
 
 - `AGENTS.md`
-- `docs/work-orders/P2_SHARED_SKILLS.md` — **P2.3 conditional-pass evidence closure** section and **P2.2 final evidence** subsection only; follow linked evidence as needed
-- current branch/HEAD/status and local ignored `results/p2-2/` evidence relevant to these claims, **without inspecting credentials, sessions, or private test payloads**
+- `docs/work-orders/P2_SHARED_SKILLS.md` — final evidence and completion/merge notes only if needed
+- actual local/remote Git HEAD, branch, status, ancestry
 
-## Codex closure
+## Codex merge action
 
-Retained relevant evidence was re-inspected; no model call, regression suite or bootstrap rerun was needed. Only this file and the work order changed. Keep implementation SHA, ignored evidence, recovery stash and runtime unchanged; no main merge. The documentation commit/push completes this executor scope.
+1. In canonical `C:\Agentco`, check branch, fetch, status and current `origin/main` / `origin/feature/p2-shared-skills-design`. Check there are **only authorized documentation-only commits** after independently verified implementation `5037e417...` and evidence `e1a0f600...`. If dirty work, unexpected commits, origin drift, or a non-fast-forward is detected, STOP and report; do not reset, force-push, clean or overwrite.
+2. Fast-forward the approved feature branch into `main` with `--ff-only`; push `origin/main`, verify remote SHA equals the fast-forwarded HEAD. Never rebase/squash/change verified implementation files as part of merging.
+3. Preserve the feature branch, ignored results, runtime, auth, user work and **all existing stashes**, including retained recovery stash `0c43cbd1b330fad177cecfbc24a3d7a95f26c397`. Do not delete anything or run a new model/smoke/bootstrap regression merely for the docs-only finalization.
+4. Report only `MAIN SHA / ORIGIN SHA / MERGE METHOD / GIT STATUS / NEXT`. If this approved P2 merge is already completed by another actor, verify and report without a new merge.
 
-## Next handoff
+## After merge
 
-Claude performs a **short evidence-only follow-up** on the new document commit (no full re-review or model call), distinguishing self-reported Codex evidence from independently observed results. GPT/user then decide final PASS and main merge.
+P2 is CLOSED. **Next: P3 worker-harness installation/evaluation work-order design, pending user/GPT scope approval. Do not install Hermes, Claude Code or Codex CLI or begin P3 implementation until a new work order is approved.**
