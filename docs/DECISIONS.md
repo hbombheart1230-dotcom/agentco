@@ -54,7 +54,14 @@ Codex executes and develops; Claude independently verifies/reviews; GPT owns arc
 
 Pi remains exact-pinned at 1.0.4, upstream-unmodified. Its portable agent directory is `<repo>/pi-dev`, derived from the launcher location. Harness-specific assets stay there. Portable skills will have one canonical source in `shared/skills` in P2; reusable execution logic belongs in `shared/tools` or later MCP. No new harness installation or shared-skill migration in P1.
 
-## Pending decisions
+## D-009 — Canonical shared skills and native discovery
+**Status:** PROPOSED (2026-10-12), awaiting GPT/user design approval.
+
+Agentco-owned portable skills would have one authoring source in `shared/skills/`. Prefer native direct references for Pi and future Hermes; use minimal native link views for future Codex/Claude where appropriate, with bootstrap limited to idempotent registration. Keep user/system/community skills in their current ownership and location. Do not maintain copied harness skill bodies or assume identical permissions and invocation semantics.
+
+P2.1 is documentation only. P2.2 implementation and future adapter activation require separate explicit approval. Evidence, alternatives, unknowns and rollback: [P2_SHARED_SKILLS.md](work-orders/P2_SHARED_SKILLS.md).
+
+## Other pending decisions
 
 The following remain intentionally undecided:
 

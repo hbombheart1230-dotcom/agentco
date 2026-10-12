@@ -13,13 +13,13 @@ This file is the **only default execution entrypoint** for Codex/Claude.
 
 ## Current action
 
-P2 entry — await GPT/user approval of the shared-skills scope and work order. P0/P1 is complete; P2 implementation is not yet authorized.
+P2.1 Shared Skills Architecture — design proposal ready for GPT/user review. P2.2 implementation remains unapproved.
 
 ### Required context
 
 - `AGENTS.md`
-- the P2 scope in `docs/WORK_PLAN.md`
-- the new approved P2 work order, when provided
+- `docs/work-orders/P2_SHARED_SKILLS.md`
+- D-009 (PROPOSED) in `docs/DECISIONS.md`, only if decision context is needed
 - current Git status / branch
 
 ### Do not reread by default
@@ -31,4 +31,4 @@ P2 entry — await GPT/user approval of the shared-skills scope and work order. 
 
 ### Completion
 
-Confirm the next P2 scope and acceptance criteria when the owner provides them. Begin implementation only after explicit approval; do not create shared-skill assets or install additional harnesses while awaiting it.
+Await GPT/user approval of the proposed architecture, initial skill and P2.2 scope. Record requested design revisions as documentation changes. Do not install, copy, move or delete skills, change Pi configuration, or begin P2.2 before explicit approval.

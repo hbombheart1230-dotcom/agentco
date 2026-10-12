@@ -5,7 +5,7 @@ Current baseline: upstream Pi 1.0.4, exact-pinned. This plan supersedes the earl
 | Phase | Scope |
 |---|---|
 | P0/P1 | Audit, docs-first role governance, portable pi-dev workspace, bootstrap/doctor and regression verification |
-| P2 | Shared Agent Skills with one canonical source in shared/skills |
+| P2 | P2.1 shared-skills design review; P2.2 implementation only after approval; P2.3 independent verification |
 | P3 | Install/evaluate Hermes, Claude Code and Codex CLI after a new work order |
 | P4 | Harbor benchmark and reproducible evaluation evidence |
 | P5 | Pi Commander MVP using supported Pi control surfaces |
@@ -22,6 +22,8 @@ Keep the physical root intentional: tracked source/configuration, active pi-dev 
 Future sibling areas: `shared/{skills,tools,mcp,prompts,docs}/`, `hermes-dev/`, `claude-code-dev/`, `codex-cli-dev/`, `commander/`, `harbor/`, `benchmark/`, ignored `results/` and `worktrees/`. Empty future folders have no placeholders and need not exist yet.
 
 Portable Agent Skills belong canonically in `shared/skills/`. Harness-specific extensions/hooks/plugins remain in their harness area. Lift reusable execution logic into `shared/tools/` or later MCP only when justified. Do not duplicate skills into four harness directories. P1 preserves the community skill-creator package unchanged; actual shared-skill migration is P2.
+
+The [P2.1 proposal](work-orders/P2_SHARED_SKILLS.md) records current discovery, official compatibility and a native-reference/link strategy. D-009 is PROPOSED. Existing user/community package skills retain their ownership/location; no migration or P2.2 implementation is approved yet. Future harness activation remains separately gated by P3 scope and version-specific tests.
 
 ## Verification and portability
 
