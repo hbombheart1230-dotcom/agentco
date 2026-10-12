@@ -1,23 +1,24 @@
 # Agentco Current Task
 
-This is the only active Codex/Claude entrypoint. Follow `AGENTS.md` and inspect current Git status/origin before any approved work.
+This is the sole default Codex/Claude task entrypoint. Follow `AGENTS.md`, check current Git branch/origin/status, and read only the active P3.3b2c section. Do not reread completed phases.
 
-## Current state
+## Active task — APPROVED P3.3b2c (2026-10-12)
 
-**P3.3b2b BLOCKED (2026-10-12), safe rollback PASS.** Real repo-local Codex Skill link was NOT registered: Windows `os.symlink()` accepted a forward-slash relative target but dereferencing `SKILL.md` failed with WinError 123. Executor `44f5a7014f20aeaaf4106e9344280de774b83fd4` committed failure documentation only; canonical shared Skills, Pi, existing Codex/Claude sessions, stashes, runtime and main remained unchanged. Git link mode, clean-clone portability, native Codex discovery/invocation and model E2E are NOT RUN. **WORKER READY = NO.**
+**Windows relative symlink portability diagnosis; ignored-fixture-only.** P3.3b2b repo registration STOPPED at Windows WinError 123; new link safely removed, source/Pi/sessions/runtime/main and stashes preserved. User explicitly approved this narrowly scoped next experiment. **Worker readiness = NO.**
 
-GPT reviewed the failure against official Windows/Python documentation: forward slashes in relative Windows symlink reparse targets are a strong root-cause hypothesis; using Windows-native backslashes may fix local file access. **Git-tracked portability is still unverified**, so do not retry persistent repo registration directly.
-
-## Required context for next authorized action
+## Required context
 
 - `AGENTS.md`
-- `docs/work-orders/P3_LOCAL_RUNTIME_ROUTES.md` — **P3.3b2b stopped registration attempt** and **P3.3b2c — proposed Windows link-target diagnostic** only
-- Live Git branch/status/origin
+- `docs/work-orders/P3_LOCAL_RUNTIME_ROUTES.md` — **P3.3b2c — APPROVED Windows link-target diagnostic** section only; refer to P3.3b2b failure evidence only when necessary
+- actual Git status, branch, remote
 
-## Authorization boundary
+## Codex execution
 
-**P3.3b2c fixture-only diagnostics are PROPOSED / NOT YET AUTHORIZED.** No real `.agents/skills` changes, link retries, code/installer creation, index-mode forcing, PATH or Git-global settings, profile changes, login, model calls, OpenRouter traffic or new CLI installs. Preserve all state until a separate user approval. P3.3b3 and subsequent harness setup remain separate gates.
+1. Safely synchronize branch `feature/p3-worker-harness-design` in canonical `C:\Agentco`; STOP for dirty/divergent work. Do not modify main or existing user's work.
+2. In a **new, owned, ignored `results/p3/` fixture only**, reproduce forward-slash relative symlink failure and compare native Windows backslash relative symlink read/identity and safe unlink. Isolate a toy Git repo + clean checkout inside the fixture; inspect true link Git mode/blob and Windows checkout behavior, and report POSIX portability only if genuinely verified. Use normal Git settings without privilege escalation, index manipulation or global config change.
+3. Do not create a real `.agents/skills` link or modify `shared/skills`, Pi, profiles, PATH, Git global settings, installed CLI, sessions, stashes or runtime. No Skill loader, copier, bootstrap, extension, launcher, Codex discovery, auth/status/login, model/sandbox invocation or OpenRouter traffic.
+4. Document focused PASS/FAIL/NOT RUN matrix, explain whether there is a single portable link. Update only this work order and `docs/CURRENT_TASK.md`; `git diff --check`, commit/push **feature branch only**. Sanitize findings and retain evidence under ignored `results/p3/`; report delta only. No main merge.
 
 ## Next handoff
 
-On user approval, GPT activates the narrow disposable Windows target-separator and isolated Git-checkout test in the work order. Codex runs/tests and records only delta; GPT/Claude review the safety and portability evidence before any actual registration decision.
+GPT/user review diagnostic and decide whether to approve a new actual-registration strategy. Claude independent verification applies to any later code/config/Skill registration. P3.3b3 auth/provider/model tests remain gated.
