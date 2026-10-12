@@ -4,20 +4,17 @@ Default Codex/Claude entrypoint. Follow `AGENTS.md`, verify actual Git branch/or
 
 ## Current action
 
-**P3.3b2a — APPROVED (2026-10-12): Codex native Shared Skill link feasibility, disposable fixture only.** User accepted the simplified P3 architecture: official Pi / Codex CLI / Claude Code CLI / Hermes CLI, native behavior before custom code, one shared Skill authoring source and harness-specific Extensions. Target future model connection is **OpenRouter NVIDIA free-only**, subject to per-harness protocol/tool support and confidential-data safeguards. **No model calls or new CLI installs in this subtask.**
+**P3.3b2a disposable feasibility PASS; awaiting GPT/user P3.3b2b approval.** Owned ignored fixture proved Windows per-skill symlink identity/reference resolution/safe unlink and Pi canonical-file dedup (3 skills, diagnostics 0). Canonical source unchanged; temporary link removed, evidence retained. Codex native loader/invocation, junction/relocation and sandbox remain NOT RUN. WORKER READY = NO. No actual repo Skill registration, launcher, auth, provider setup or model call is authorized by this completion.
 
 ## Required context
 
 - `AGENTS.md`
-- `docs/work-orders/P3_LOCAL_RUNTIME_ROUTES.md` — **P3.3b2a approved next gate** and **User-confirmed P3 architecture and OpenRouter provider policy** sections only
+- `docs/work-orders/P3_LOCAL_RUNTIME_ROUTES.md` — **P3.3b2a fixture findings**, following gates and accepted provider-policy boundaries only
 - live Git status, branch and origin
 
 ## Codex execution
 
-1. Safely synchronize `feature/p3-worker-harness-design` (stop on dirty work or diverged branch). Preserve user's existing VS Code Codex, Claude Desktop/Code, Pi, both stashes, main, private profiles and sessions.
-2. Perform ONLY the five P3.3b2a checks: native per-skill discovery design and a reversible Windows symlink/link feasibility probe in an **owned ignored `results/p3/` fixture** pointing at `shared/skills/agentco-delta-handoff`; verify `SKILL.md`, reference resolution, link safety and Pi discovery collision risk. Avoid actual repo `.agents/skills` and `.claude/skills` registration. Describe the pinned Codex 0.162.1 explicit-path process contract **without implementing a launcher**.
-3. Do not install/upgrade/login, touch PATH or profiles, create extension code or new adapter files, invoke a model, start new Claude/Codex sessions, enable sandbox, or send source to OpenRouter. If native link is unsafe or unsupported, STOP and report rather than copy Skill bodies or elevate privileges.
-4. Update only `docs/CURRENT_TASK.md` and `docs/work-orders/P3_LOCAL_RUNTIME_ROUTES.md` with sanitized findings, `git diff --check`, commit/push **feature branch only** and report delta (PASS/FAIL/NOT RUN). Avoid rerunning completed P2/P3 checks.
+Five approved checks are recorded in the work order; only this file and the work order change in Git. Native link fixture and Pi discovery checks ran without Codex/Claude sessions or model calls. No settings, PATH, profiles, product code or actual repo Skill views changed. Preserve ignored evidence, original Skills, sessions/runtime/installations, all stashes and main; await separately approved integration scope.
 
 ## Next handoff
 
