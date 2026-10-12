@@ -10,7 +10,10 @@ User explicitly requested faster progress and **larger task units**, avoiding ap
 
 ## Codex execution
 
-1. Safely fast-forward canonical `C:\Agentco` branch `feature/p3-worker-harness-design`; stop if dirty/diverged. Read active work order only.
+**Important:** local Codex previously stopped when GPT advanced origin from `9504669` to `5f1082f`; its two uncommitted P3.4b documentation edits are real user work and MUST be copied/verified before selective reconciliation. GPT's revised work order explicitly approves this reconciliation and the rest of the Fast Track in one session. No additional approval question is needed.
+
+
+1. **First reconcile the interrupted P3.4b's two known locally dirty docs** exactly via the active work order's **Interrupted P3.4b recovery** section: verify ancestor, snapshot full byte-for-byte edited files/diffs in owned ignored results, verify their hashes, then surgically restore only those two docs and safely fast-forward to remote. Preserve evidence, don't touch stashes/other files. STOP on unexpected dirt/divergence. Fold the new P3.4b findings into the Fast Track work order; do not reactivate obsolete P3.4b.
 2. **Batch A:** bring Claude native project Skill view online with one repo-local symlink to the existing single shared Skill source (if officially supported), focused integrity checks. Hermes must not acquire a writable pointer to canonical Skills. Inventory native per-harness Extensions only.
 3. **Batch B:** re-use local narrowly authorized OpenRouter key safely (never log/expose). Use external synthetic workspace, exact free NVIDIA model, zero paid fallback. Run bounded native CLI model/text and safe toy-tool trials for Pi/Codex/Claude/Hermes **where real sandbox/tool containment is established**. Do not add a bespoke adapter or block all work when one CLI remains unsupported.
 4. **Batch C:** same two minimal toy tests across reachable harnesses; one compact results table with truthfully labeled PASS/PARTIAL/BLOCKED and latency/request counts when observed. Stop per failing lane after one focused check, continue remaining lanes.
