@@ -172,3 +172,27 @@ NVIDIA's OpenRouter free model page warns that free requests can be logged/used 
 5. **STOP** if either a single portable link cannot be demonstrated or any fixture modifies outside its owned directory. A failure at this gate is an architecture input, not permission to create custom infrastructure.
 
 **Approval boundary:** the user has approved **only** this disposable fixture-only diagnostic. Success still requires separate approval for any real repo link, machine-local registration, Codex/Claude/Hermes Skill view or model invocation. Claude independently verifies any subsequent registered Skill or execution change. Worker readiness remains NO.
+
+## P3.3b2c diagnostic findings (2026-10-12)
+
+**Base:** `dea855ffb527d9463368b378711c9b4eb3a4aa2a`. Windows/Git fixture diagnostic complete; no actual registration authorized. Git 2.55.0.windows.5, unchanged ambient `core.symlinks=true`. Synthetic repos and fresh space-path clones remained inside the new ignored owned `results/p3/p3-3b2c-slash-diagnostic-dea855f/` fixture. Real shared source and repo Skill paths were untouched.
+
+| Probe | Forward-slash native target | Backslash native target |
+| --- | --- | --- |
+| Python directory symlink / tag | Created, `0xA000000C` | Created, `0xA000000C` |
+| Windows read / identity | FAIL: `samefile` WinError 123 / errno 22; file open exposes errno 22 without WinError | PASS: synthetic file and reference identity |
+| Normal Git staging / blob | `120000`, `../../shared/skills/agentco-delta-handoff` | `120000`, the same forward-slash blob; Git normalized backslashes |
+| Fresh Windows checkout | PASS: native symlink, backslash `readlink`, file/reference identity | PASS: same native target and identity |
+| Fresh Git status before cleanup | clean, `core.symlinks=true`, mode `120000` | clean, `core.symlinks=true`, mode `120000` |
+| Safe unlink / target preservation | PASS | PASS |
+| POSIX runtime / checkout | NOT RUN | NOT RUN |
+
+**Conclusion:** the failure concerns forward slashes passed directly to Windows symlink creation; relative depth is correct. It does not imply that a forward-slash Git blob produces a broken Windows checkout. This Git naturally records one forward-slash body and materializes native backslashes in fresh clones. No forced index mode/blob, config override, elevation or fallback was used. Native backslashes were not committed as backslashes on this host. The single representation is demonstrated across both Windows creation cases and fresh clones; universal Windows/POSIX portability remains UNVERIFIED because no Linux/macOS checkout ran and other host settings may differ. Stop at the diagnostic; no real registration or infrastructure follows automatically.
+
+**Method/evidence:** native symlink/readlink/lstat, read and samefile; ordinary Git init/add, inspected stage mode and exact blob, synthetic commits from normal staged trees, then default local fresh clone. Both blobs contain the same 41-byte target, without newline. Fresh status was captured before cleanup. Verified owned links were unlinked nonrecursively; synthetic sources, repos and evidence remain. Initial assertion incorrectly expected file-open exceptions to expose WinError 123; samefile reproduced it and error reporting was corrected without changing link behavior. Sanitized `matrix.json` and `forward-interrupted-evidence.json` remain inside the ignored fixture.
+
+**Official boundaries:** [Git for Windows caveats](https://gitforwindows.org/symbolic-links.html) describe platform/type/privilege limits; [core.symlinks](https://git-scm.com/docs/git-config#Documentation/git-config.txt-coresymlinks) describes plain-file checkout when disabled. No setting was changed to suppress those limitations. POSIX-style path text is not an actual POSIX test.
+
+**NOT RUN:** POSIX/WSL, actual Skill registration, Codex discovery/model, Pi regression, install/login/auth/sandbox/provider activity, launcher/adapter/bootstrap/junction/copier/loader development and main merge. Only CURRENT_TASK and this work order change in Git; existing sessions/runtime/installations/PATH/config/stashes, Pi and canonical source are preserved.
+
+**Next:** GPT/user review Windows Git normalization and decide whether to approve a new native registration attempt. WORKER READY remains NO. Actual registration, Claude independent verification and auth/provider/model E2E require their separate gates; no further workaround development is authorized here.
