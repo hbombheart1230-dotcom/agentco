@@ -1,11 +1,11 @@
 # P2 Shared Skills Architecture
 
-Status: **PROPOSED — P2.1 design review only**. Investigated 2026-10-12.
+Status: **P2.1 architecture APPROVED / P2.2 implementation APPROVED (2026-10-12)**. P2.1 investigation dated 2026-10-12; joint Claude verification follows P2.2 implementation.
 Architecture/director: GPT. Investigation and Git documentation: Codex. Independent verification: Claude. Final direction approval: user.
 Repository: `hbombheart1230-dotcom/agentco`. Design branch: `feature/p2-shared-skills-design`.
 Verified main/design base: `2eb1bd7f476d70951e4364040592c065f97c1a17`.
 
-Creating this document does **not** authorize P2.2 implementation. GPT/user must approve the design, initial skill and implementation scope first.
+Creating the original P2.1 document alone did not authorize implementation. GPT/user approval of the limited first skill and P2.2 scope was granted 2026-10-12; execute only the approved order below.
 
 ## 1. Goal and non-goals
 
@@ -100,7 +100,7 @@ Use **A first, B where needed, with C limited to idempotent registration**:
 - Future Claude: prefer the small documented per-skill `.claude/skills/` symlink bridge for local authoring. Evaluate the native plugin A variant if link creation is unavailable or distribution is later required; do not assume an arbitrary sibling plugin reference works.
 - Bootstrap restores approved connections, not skill bodies. Do not silently fall back to copied skills when links fail. Block the affected future adapter or obtain approval for a native alternative. No bidirectional copy synchronization.
 
-This selection is a maintenance recommendation from the evidence, not a FINAL architecture decision.
+This native-first/single-source direction is approved by D-009. Future version-specific Windows links, permissions and non-Pi adapters remain unverified and require separate P3 approval.
 
 ## 6. Proposed folder structure and data flow
 
@@ -151,16 +151,30 @@ For Hermes, external_dirs does not guarantee read-only consumption. Before P3 ac
 
 ## 8. Implementation stages and approval gates
 
-1. **P2.1 now:** finish this evidence-backed proposal, a PROPOSED ADR and review entrypoint. Commit/push the documentation branch only. GPT/user choose the initial instruction-only workflow and confirm the per-harness strategy.
-2. **P2.2 after explicit approval:** add one approved real shared skill (or an explicitly approved harmless validation fixture), with portable frontmatter and bundled references only as needed. Add Pi's native relative connection. Do not move current user/community skills.
+1. **P2.1 completed (architecture approved):** evidence-backed proposal recorded on the design branch; the independent design audit is intentionally deferred and combined with P2.2 verification.
+2. **P2.2 approved now:** implement the selected real, instruction-only `agentco-delta-handoff` skill under the approved order below; connect via native Pi relative path and preserve all user/community skills.
 3. Reuse installed Pi's loader/diagnostics to validate format, discovery, name collisions and original package skills. Add only the minimum verification needed; do not write a second loader.
 4. Verify clone/bootstrap behavior. Because both asset and Pi reference are tracked, existing bootstrap may already suffice; change it only if an approved requirement proves a gap. Add a doctor check only if needed to report the approved discovery contract, preserving its read-only behavior.
-5. **P2.3:** Claude independently reviews the exact implementation SHA and reruns Pi acceptance checks. GPT/user resolve findings before merge or expansion.
+5. **P2.3:** after P2.2 push, Claude independently validates both P2.1 architecture evidence and P2.2 implementation at the exact final SHA in one review, then GPT/user decide PASS/rework before merge.
 6. **P3 or later authorized task:** select/pin actual Claude/Codex/Hermes versions, validate documentation against those versions and test each adapter. Only then create its real configuration or directories. Reopen this proposal if the native contract differs.
 
 ### Explicit P2.2 Codex implementation boundary
 
 Allowed only after approval: the selected shared asset, Pi `skills` path addition, minimal validation/tests/docs, and narrowly justified bootstrap/doctor adjustments. Initially keep existing npm packages, extensions, runtime and user-installed skills unchanged. No Claude/Codex/Hermes installation or adapter activation, community skill migration, reusable execution platform, Harbor/Commander work, broad source refactor or uncontrolled user-profile registration.
+
+### Approved P2.2 execution order (2026-10-12)
+
+**Assignee:** Codex. **Branch:** `feature/p2-shared-skills-design`. **Workspace:** canonical `C:\\Agentco` only. **First skill:** `agentco-delta-handoff`. The user approved combined Claude review *after* P2.2, not a separate pre-implementation audit.
+
+1. Sync and check the assigned Git branch, HEAD and clean status; do not overwrite dirty user work. Start at `docs/CURRENT_TASK.md` and read only listed context; do not reopen P0/P1 history.
+2. Create **only** `shared/skills/agentco-delta-handoff/SKILL.md` and `shared/skills/agentco-delta-handoff/references/report-format.md`, with portable Agent Skills frontmatter and relative reference. The skill is a **read-only delta-handoff procedure**, not an execution/commit tool: report branch/HEAD/origin, committed vs uncommitted changes (with a verifiable comparison base), changed paths, checks actually run and outcomes, unresolved risks and next owner/action. Never guess a diff base; never dump credentials, `.env`, sessions or local private contents. Avoid copying generic `AGENTS.md` rules into the skill or assuming a harness-specific shell/tool API. Keep automatic discovery description precise; explicit invocation should work.
+3. Add `"skills": ["../shared/skills"]` to existing `pi-dev/settings.json`. Preserve all other settings, packages, extensions and `hideThinkingBlock=true`. Neither move nor copy the existing `skill-creator` or `pi-lsp` packages; preserve the explicit-only `pi-lsp` policy.
+4. Validate standard frontmatter, missing/duplicate names and Pi native discovery: three expected skills total (new one plus existing two), with no unexpected diagnostics. Verify the skill can be explicitly invoked and loads `references/report-format.md` from both repo root and nested working directories. Differentiate loader discovery from genuine invocation—do not claim invocation PASS based on discovery alone.
+5. Run doctor (baseline 28 PASS / 0 WARN / 0 FAIL), existing smoke (baseline 14/14 PASS), and relevant regression. Check a clean fresh clone/bootstrap in an isolated path **containing spaces** without carrying over runtime, secrets or `node_modules`; do not execute destructive bootstrap against canonical workspace. If a check cannot be safely run, label **NOT RUN** with reason, not PASS. Save generated evidence only to ignored `results/`.
+6. Change only the skill files, `pi-dev/settings.json`, and minimal task/verification docs or narrowly justified validation fixes. Do not install future harnesses, link adapters or a custom loader; do not alter `bootstrap.ps1`/`doctor.ps1` unless a proven acceptance gap requires a minimal fix. No P3/Harbor/Commander implementation.
+7. Commit and push on the feature branch only, not `main`; preserve stash, auth, sessions and other local state. Delta-only report: `HEAD/ORIGIN; FILES; DISCOVERY; EXISTING SKILLS; REFERENCE/ROOT/NESTED INVOCATION; DOCTOR; SMOKE; FRESH CLONE; BLOCKERS; NEXT=CLAUDE JOINT VERIFICATION`.
+
+**Claude handoff (after implementation only):** independently inspect the original P2.1 claims plus the new P2.2 files against official/pinned-version support; verify no false equivalence between symlink support and Windows junction E2E, no skill body duplication or write exposure, acceptance results and rollback. Re-run independent targeted tests where useful, report PASS/CONDITIONAL PASS/FAIL and NOT RUN honestly. **Do not commit, push or merge** as verifier. GPT/user decide final technical/product disposition and main merge.
 
 ## 9. Acceptance criteria
 
@@ -170,7 +184,7 @@ Allowed only after approval: the selected shared asset, Pi `skills` path additio
 - Baseline and actual discovered skill paths recorded without secrets or fabricated files.
 - Capabilities have explicit evidence/status/version boundaries; unknown does not become confirmed through recommendation.
 - All three alternatives, ownership, Windows limitations, implementation gates and rollback are reviewable.
-- Proposed architecture remains unapproved; CURRENT_TASK points to design review, not automatic implementation.
+- P2.1 documents were proposed until approved on 2026-10-12; current CURRENT_TASK now explicitly authorizes the limited P2.2 order above.
 
 ### P2.2 implementation, after approval
 
@@ -193,7 +207,7 @@ Future adapters: unlink only an owned entry after checking its type and exact ta
 
 ## 11. Risks and decisions still needed
 
-- GPT/user approval, initial workflow and whether its first validation asset is a fixture or real procedure.
+- First workflow selection is settled: real `agentco-delta-handoff` procedure. Acceptance results and combined independent Claude review remain pending.
 - Exact future CLI versions and minimum versions for required discovery features; rolling documentation is not a pinned implementation guarantee.
 - Native Windows symlink capability, junction loader behavior and relocation semantics. No silent copy fallback.
 - Hermes write access to shared assets and the appropriate consumer permission/profile boundary.
@@ -201,4 +215,4 @@ Future adapters: unlink only an owned entry after checking its type and exact ta
 - Different frontmatter extensions, trust/precedence and tool surfaces; common Markdown does not make runtime behavior interchangeable.
 - License/provenance for any later third-party promotion and avoiding collisions with user/system/package skills.
 
-These unresolved design/implementation gates belong in this work order. Unrelated existing follow-ups remain in TASK_INBOX. No skill migration or P2.2 authorization is implied by this proposal.
+These remaining design/implementation gates belong in this work order. Unrelated existing follow-ups remain in TASK_INBOX. Only the explicitly approved P2.2 skill and Pi connection are authorized; no broader skill migration or future harness adapter is authorized.
