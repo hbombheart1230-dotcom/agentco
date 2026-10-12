@@ -1,31 +1,21 @@
 # Agentco Current Task
 
-This is the single local Codex developer/executor task entrypoint. Follow `AGENTS.md`; read only this file and its active work-order section. Confirm clean branch/origin before work. Do not reread completed P0–P3 or rerun passed CLI tests.
+Start with `AGENTS.md`, this file, and ONLY `docs/work-orders/P3_FAST_TRACK_ACCEPTANCE.md`. Confirm live Git feature branch/origin and clean status. Do not reread completed P0–P3/P3.4 work orders or rerun previous successful installations/checks.
 
-## Current result — P3.4 partial real-model smoke
+## ACTIVE — P3 Fast Track: ONE LARGE EXECUTION BATCH
 
-**P3.4 executor SHA `4d72b17`: PARTIAL PASS / KNOWN LIMITS (2026-10-12).** OpenRouter `nvidia/nemotron-3-super-120b-a12b:free` produced a Claude Code CLI 2.1.292 **basic text-only PASS**, `READY`, one reported CLI turn. Public model price $0, but actual OpenRouter billing and HTTP request count NOT VERIFIED; do not infer from Claude's unknown-basis client dollar estimate.
+User explicitly requested faster progress and **larger task units**, avoiding approval/test round-trips for each minor check. **This new active work order supersedes the offline-only P3.4b task.** Its narrow synthetic free-model calls, native Skill registration and mini benchmark are approved together with the stated privacy/free-only/tool containment boundaries.
 
-Codex Stable 0.162.1 and Hermes v0.21.7 each made **0 model calls**: both BLOCKED at their native no-tools/auxiliary safety checks, **not a model protocol failure**. Skill/Tool Calling/OS sandbox E2E NOT RUN, **WORKER READY = NO**. Existing source, settings, installed CLIs, runtime, Pi, two stashes, main and secrets preserved.
+**Reuse completed results:** Pi 1.0.4 native 3 Skills / diagnostics 0; Codex stable 0.162.1 + existing `.agents/skills/agentco-delta-handoff` link; installed Claude Code 2.1.292 and Hermes v0.21.7 verified; Claude/OpenRouter free NVIDIA Super one-turn `READY` text PASS; Codex/Hermes model tests NOT RUN because preflight tooling constraints, not failed protocols. `WORKER READY` still unproven.
 
-## ACTIVE — P3.4b approved offline native safety-gap review
+## Codex execution
 
-**READ-ONLY/OFFLINE ONLY.** No key presence/value check; **do not open the repository `.env`** (the previous user-authorized targeted secret use is not needed now). **Zero model calls**; no provider account, cost, login, network-facing agent session, upgrades, Code/Hermes configurations, Skill edits or adapter development.
+1. Safely fast-forward canonical `C:\Agentco` branch `feature/p3-worker-harness-design`; stop if dirty/diverged. Read active work order only.
+2. **Batch A:** bring Claude native project Skill view online with one repo-local symlink to the existing single shared Skill source (if officially supported), focused integrity checks. Hermes must not acquire a writable pointer to canonical Skills. Inventory native per-harness Extensions only.
+3. **Batch B:** re-use local narrowly authorized OpenRouter key safely (never log/expose). Use external synthetic workspace, exact free NVIDIA model, zero paid fallback. Run bounded native CLI model/text and safe toy-tool trials for Pi/Codex/Claude/Hermes **where real sandbox/tool containment is established**. Do not add a bespoke adapter or block all work when one CLI remains unsupported.
+4. **Batch C:** same two minimal toy tests across reachable harnesses; one compact results table with truthfully labeled PASS/PARTIAL/BLOCKED and latency/request counts when observed. Stop per failing lane after one focused check, continue remaining lanes.
+5. Change only approved one Claude Skill symlink if safe, and `docs/CURRENT_TASK.md` plus `docs/work-orders/P3_FAST_TRACK_ACCEPTANCE.md`. No new custom source/scripts. `git diff --check`, commit/push once on feature branch. No main merge. Preserve existing sessions, profiles/PATH, stashes, Pi and main.
 
-## Required context
+## Final handoff
 
-- `AGENTS.md`
-- `docs/work-orders/P3_FREE_MODEL_SMOKE.md` — **P3.4 review disposition and P3.4b — native Codex/Hermes safety-gap audit** and preceding resumed P3.4 outcomes only
-- Git feature branch/status/origin and exact pinned installed CLI source/help when necessary
-
-## Execute
-
-1. Safely sync `C:\Agentco` `feature/p3-worker-harness-design`, preserving current user changes; STOP if branch dirty or diverged.
-2. **Codex pinned 0.162.1:** offline exact-version help/schema/source check for actual all-built-in-tools disablement versus sandbox/read-only/MCP-only filtering.
-3. **Hermes v0.21.7:** offline exact-version source/CLI inspection of oneshot empty toolset fallback, `safe-mode`, MCP initialization, secondary/fallback model calls and whether official native flags/config really suppress them.
-4. No new scripts/wrappers/proxies. Determine one minimal safe next option per CLI: true native no-tools, or separately authorized **genuinely isolated synthetic normal-tool agent test**, or BLOCKED with exact missing capability. Treat absence of a feature as a factual result, not a reason to invent implementation.
-5. Update only this file and `docs/work-orders/P3_FREE_MODEL_SMOKE.md` with brief verified matrix / NOT RUN. `git diff --check`, commit/push docs on feature branch only. Leave main/runtime/auth/PATH/stashes alone; don't repeat Claude's successful API call.
-
-## Next handoff
-
-GPT/user judge the native CLI limitations and choose a *bounded practical* synthetic agent E2E (or keep blocked). No automatic fallback, paid model, credential exposure, private repo uploads or claims of WORKER READY.
+Claude independently reviews **once at end** against new commit SHA, without repeating paid/chargeable model calls or large regression suites; GPT adjudicates result. Any blocked lane is recorded for later **batch** follow-up, not a new micro-phase. Worker readiness must distinguish working text inference from tested tools/sandbox/Skills.
