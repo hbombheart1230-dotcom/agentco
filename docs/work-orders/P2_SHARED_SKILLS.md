@@ -164,7 +164,7 @@ Allowed only after approval: the selected shared asset, Pi `skills` path additio
 
 ### Approved P2.2 execution order (2026-10-12)
 
-**Assignee:** Codex. **Branch:** `feature/p2-shared-skills-design`. **Workspace:** canonical `C:\\Agentco` only. **First skill:** `agentco-delta-handoff`. The user approved combined Claude review *after* P2.2, not a separate pre-implementation audit.
+**Assignee:** Codex. **Branch:** `feature/p2-shared-skills-design`. **Workspace:** canonical `C:\Agentco` only. **First skill:** `agentco-delta-handoff`. The user approved combined Claude review *after* P2.2, not a separate pre-implementation audit.
 
 1. Sync and check the assigned Git branch, HEAD and clean status; do not overwrite dirty user work. Start at `docs/CURRENT_TASK.md` and read only listed context; do not reopen P0/P1 history.
 2. Create **only** `shared/skills/agentco-delta-handoff/SKILL.md` and `shared/skills/agentco-delta-handoff/references/report-format.md`, with portable Agent Skills frontmatter and relative reference. The skill is a **read-only delta-handoff procedure**, not an execution/commit tool: report branch/HEAD/origin, committed vs uncommitted changes (with a verifiable comparison base), changed paths, checks actually run and outcomes, unresolved risks and next owner/action. Never guess a diff base; never dump credentials, `.env`, sessions or local private contents. Avoid copying generic `AGENTS.md` rules into the skill or assuming a harness-specific shell/tool API. Keep automatic discovery description precise; explicit invocation should work.
