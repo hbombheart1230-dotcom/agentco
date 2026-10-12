@@ -1,5 +1,5 @@
 // Isolated Pi Commander -> text-only Claude Worker. No production settings changes.
-import { readFileSync, writeFileSync, mkdirSync, mkdtempSync, existsSync, copyFileSync } from 'node:fs';
+import { readFileSync, writeFileSync, mkdirSync, mkdtempSync, existsSync, copyFileSync, renameSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join, dirname, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
@@ -14,36 +14,67 @@ export function resolveClaudePath(override = process.env.AGENTCO_CLAUDE_CLI) {
   if (!existsSync(path) || !statSync(path).isFile() || !path.toLowerCase().endsWith('.exe')) throw Error('A trusted local Claude .exe is required.');
   return path;
 }
-export async function killTree(pid) {
-  if (!Number.isInteger(pid) || pid <= 0) return;
-  try { process.kill(pid, 0); } catch { return; }
-  if (process.platform !== 'win32') throw Error('Windows process-tree cleanup required.');
-  try { await promisify(execFile)(join(process.env.SystemRoot || process.env.WINDIR, 'System32/taskkill.exe'), ['/PID', String(pid), '/T', '/F'], { timeout: 5000, windowsHide: true }); }
-  catch { try { process.kill(pid, 0); } catch { return; } throw Error('Known child process-tree cleanup failed.'); }
+export function writeOwner(path, owner) {
+  writeFileSync(path+'.tmp',JSON.stringify({state:owner.state,pid:owner.pid,identity:owner.identity}));
+  renameSync(path+'.tmp',path);
 }
-export function runBounded(file, args, { timeout = 60000, maxBuffer = 1048576, signal, onSpawn, ...options } = {}) {
+export async function getProcessIdentity(pid) {
+  if (!Number.isInteger(pid) || pid <= 0 || process.platform !== 'win32') return { status: 'unknown' };
+  const command = `try {$p=Get-Process -Id ${pid} -ErrorAction Stop; @{status='found';pid=$p.Id;started=$p.StartTime.ToUniversalTime().Ticks.ToString()}|ConvertTo-Json -Compress} catch {'{"status":"unknown"}'}`;
+  try { const {stdout} = await promisify(execFile)(join(process.env.SystemRoot || process.env.WINDIR, 'System32/WindowsPowerShell/v1.0/powershell.exe'), ['-NoProfile','-NonInteractive','-Command',command], { timeout:5000, windowsHide:true }); return JSON.parse(stdout); }
+  catch { return { status: 'unknown' }; }
+}
+async function terminateTree(pid) {
+  await promisify(execFile)(join(process.env.SystemRoot || process.env.WINDIR, 'System32/taskkill.exe'), ['/PID', String(pid), '/T', '/F'], { timeout:5000, windowsHide:true });
+}
+export async function killTree(owner, { readIdentity = getProcessIdentity, terminate = terminateTree } = {}) {
+  if (owner?.state === 'closed') return 'retired';
+  if (!owner || !Number.isInteger(owner.pid) || owner.identity?.status !== 'found') throw Error('Cleanup skipped: process ownership unverifiable.');
+  const current = await readIdentity(owner.pid);
+  if (owner.state === 'closed') return 'retired';
+  if (current.status !== 'found' || current.pid !== owner.pid || current.started !== owner.identity.started) throw Error('Cleanup skipped: process identity stale or unverifiable.');
+  await terminate(owner.pid); return 'terminated';
+}
+export function runBounded(file, args, { timeout = 60000, maxBuffer = 1048576, signal, onSpawn, onIdentity, onRetire, ...options } = {}) {
   if (signal?.aborted) return Promise.reject(Error('Process aborted before launch.'));
   return new Promise((resolveRun, reject) => {
     const child = spawn(file, args, { ...options, windowsHide: true, stdio: ['ignore', 'pipe', 'pipe'] });
-    let stdout = '', bytes = 0, failure, cleanup;
+    const owner = { state:'spawned', pid:child.pid, identity:null };
+    let stdout = '', bytes = 0, failure, cleanup, identityReady;
+    const detach = () => { child.stdout.destroy(); child.stderr.destroy(); child.unref(); };
     const stop = reason => {
       failure ||= reason;
-      if (Number.isInteger(child.pid)) cleanup ||= killTree(child.pid).catch(() => { failure = 'Known child process-tree cleanup failed.'; child.kill(); });
+      if (identityReady && owner.state !== 'closed') cleanup ||= identityReady.then(() => killTree(owner)).catch(() => {
+        failure = 'Cleanup skipped: process ownership uncertain.'; clearTimeout(timer); signal?.removeEventListener('abort', abort); detach(); reject(Error(failure));
+      });
+    };
+    const retire = () => {
+      if (owner.state === 'closed') return;
+      owner.state = 'closed'; owner.pid = null; owner.identity = null;
+      try { onRetire?.(owner); } catch { failure = 'Lifecycle retirement failed.'; }
     };
     const abort = () => stop('Process aborted.');
     const timer = setTimeout(() => stop('Process timed out.'), timeout);
     signal?.addEventListener('abort', abort, { once: true });
-    child.once('spawn', () => { try { onSpawn?.(child.pid); if (failure || signal?.aborted) stop('Process aborted.'); } catch { stop('Spawn tracking failed.'); } });
+    child.once('spawn', () => {
+      owner.pid = child.pid;
+      try { onSpawn?.(child.pid, owner); } catch { failure = 'Spawn tracking failed.'; }
+      identityReady = getProcessIdentity(child.pid).then(identity => {
+        if (owner.state !== 'closed') { owner.identity = identity; owner.state = 'active'; onIdentity?.(owner); }
+      }).catch(() => { failure = 'Identity tracking failed.'; });
+      if (failure || signal?.aborted) stop(failure || 'Process aborted.');
+    });
     if (signal?.aborted) abort();
     for (const [stream, capture] of [[child.stdout, true], [child.stderr, false]]) stream.setEncoding('utf8').on('data', data => {
       bytes += Buffer.byteLength(data); if (bytes > maxBuffer) { stop('Process output limit exceeded.'); return; }
-      if (capture) stdout += data.toString('utf8');
+      if (capture) stdout += data;
     });
     child.once('error', () => stop('Process launch failed.'));
+    child.once('exit', retire);
     child.once('close', async code => {
-      clearTimeout(timer); signal?.removeEventListener('abort', abort);
-      try { if (cleanup) await cleanup; if (failure) reject(Error(failure)); else resolveRun({ status: code, stdout }); }
-      catch { reject(Error('Known child process-tree cleanup failed.')); }
+      retire(); clearTimeout(timer); signal?.removeEventListener('abort', abort);
+      try { if (cleanup) await cleanup; if (failure) reject(Error(failure)); else resolveRun({ status:code, stdout }); }
+      catch { reject(Error('Cleanup skipped: process ownership uncertain.')); }
     });
   });
 }
@@ -62,6 +93,7 @@ export function validatePipeline(e) {
 async function main() {
 const claude = resolveClaudePath();
 if (!existsSync(cli)) throw Error('Existing Pi CLI required; no installation performed.');
+if (process.env.AGENTCO_CLAUDE_CLI) console.warn('Trusted Claude executable override receives API authentication; select only a trusted local binary.');
 if (process.argv[2] === '--check') { console.log('Commander startup prerequisites: PASS; Claude: '+claude); return; }
 const request = process.argv.slice(2).join(' ');
 if (!request || request.length > 2000) throw Error('Provide a synthetic task of 1..2000 characters.');
@@ -85,8 +117,9 @@ writeFileSync(join(agent, 'settings.json'), JSON.stringify({ retry: { enabled: f
 writeFileSync(join(agent, 'models.json'), JSON.stringify({ providers: { openrouter: { modelOverrides: { [model]: { maxTokens: 512 } } } } }));
 const extension = join(toy, 'claude-worker.mjs');
 writeFileSync(extension, `
-import { runBounded } from ${JSON.stringify(import.meta.url)};
+import { runBounded, writeOwner } from ${JSON.stringify(import.meta.url)};
 import { writeFileSync } from 'node:fs';
+const saveOwner = owner => writeOwner(${JSON.stringify(join(toy,'worker-process.json'))},owner);
 export default function(pi) {
   let dispatched = false;
   pi.registerTool({name:'claude_worker', label:'Claude Worker', description:'Delegate one synthetic text-only task to Claude CLI. No file or shell tools.',
@@ -102,7 +135,7 @@ export default function(pi) {
       for (const name of ['ANTHROPIC_MODEL','ANTHROPIC_DEFAULT_FABLE_MODEL','ANTHROPIC_DEFAULT_OPUS_MODEL','ANTHROPIC_DEFAULT_SONNET_MODEL','ANTHROPIC_DEFAULT_HAIKU_MODEL','CLAUDE_CODE_SUBAGENT_MODEL']) env[name]=${JSON.stringify(model)};
       let result;
       try {
-        const run = await runBounded(${JSON.stringify(claude)}, ['--bare','--restricted','-p',task,'--model',${JSON.stringify(model)},'--tools','','--disallowedTools','*','--strict-mcp-config','--setting-sources','','--no-session-persistence','--no-chrome','--max-turns','1','--output-format','json','--system-prompt','Answer only the synthetic task briefly.','--settings','{}'], {cwd:${JSON.stringify(toy)},env,signal,timeout:30000,maxBuffer:262144,onSpawn:pid=>writeFileSync(${JSON.stringify(join(toy, 'worker.pid'))},String(pid))});
+        const run = await runBounded(${JSON.stringify(claude)}, ['--bare','--restricted','-p',task,'--model',${JSON.stringify(model)},'--tools','','--disallowedTools','*','--strict-mcp-config','--setting-sources','','--no-session-persistence','--no-chrome','--max-turns','1','--output-format','json','--system-prompt','Answer only the synthetic task briefly.','--settings','{}'], {cwd:${JSON.stringify(toy)},env,signal,timeout:30000,maxBuffer:262144,onSpawn:(pid,owner)=>saveOwner(owner),onIdentity:saveOwner,onRetire:saveOwner});
         if(run.status!==0) throw Error('Worker exit failed.');
         const data=JSON.parse(run.stdout.trim());
         const observedModels=Object.keys(data.modelUsage||{});
@@ -126,8 +159,8 @@ let run, failure;
 try { run = await runBounded(process.execPath, [cli,'--provider','openrouter','--model',model,'--thinking','off','--tools','claude_worker','--no-extensions','-e',extension,'--no-mcp','--no-skills','--no-prompt-templates','--no-context-files','--no-themes','--no-session','--system-prompt','You are a synthetic-task Commander. Call claude_worker exactly once with the user task. Return the Worker output verbatim, with no added explanation. Do not answer before delegating.','--mode','json','-p',request], {cwd:toy,env,signal:controller.signal,timeout:60000,maxBuffer:1048576}); }
 catch (error) { failure = error.message; run = {status:null,stdout:''}; }
 finally {
-  const pidFile = join(toy,'worker.pid');
-  if (existsSync(pidFile)) { try { await killTree(Number(readFileSync(pidFile,'utf8'))); } catch { failure = 'Known Worker cleanup failed.'; } }
+  const ownerFile = join(toy,'worker-process.json');
+  if (existsSync(ownerFile)) { try { await killTree(JSON.parse(readFileSync(ownerFile,'utf8'))); } catch { failure = 'Worker cleanup skipped: ownership uncertain.'; } }
   process.removeListener('SIGINT', interrupt); process.removeListener('SIGTERM', interrupt);
 }
 const events = (run.stdout || '').split('\n').flatMap(line => { try { return [JSON.parse(line)]; } catch { return []; } });
