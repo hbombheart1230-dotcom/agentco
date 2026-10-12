@@ -1,6 +1,6 @@
 # P3 Worker Harnesses — Windows-native common environment
 
-**Status:** PROPOSED / design review only (2026-10-12). **No installation or activation authorized.**
+**Status:** D-010 architecture PROPOSED. P3.2 inventory CLOSED; **P3.3a standalone Codex CLI install-only scope APPROVED 2026-10-12**. P3.3b, Claude/Hermes installs, Skill adapters and model calls NOT AUTHORIZED.
 **Base:** `main` at `1f928974c3fcfc70456fa06bc03064576a9fd51d`.
 **Roles:** User chooses product priorities and approves scope; GPT architects and adjudicates; Codex implements; Claude independently verifies.
 **Baseline:** existing Pi 1.0.4 and shared-skill P2 are CLOSED/PASS. Do not reopen completed phase history.
@@ -119,15 +119,15 @@ Record before/after command path, version, package ownership and every Agentco-c
 **Next approval gates:** GPT/user select reuse of the extension-bundled alpha versus a separately managed stable Codex channel; select exact Claude/Hermes channels/versions and setup order; approve safe auth/permission checks and provider/model budget separately (default no calls/charges); keep Hermes shared access deferred until write isolation is demonstrated. No P3.3 action or Claude verification has started.
 
 
-## P3.3a proposed standalone Codex setup (GPT architecture review, 2026-10-12)
+## P3.3a approved standalone Codex setup (2026-10-12)
 
-**Status: PROPOSED / NOT AUTHORIZED.** P3.2 inspection completed at executor SHA `d4b8ae5504ea5ab9f0047283b4438f1d655fc74f` with clean working tree. GPT independently confirmed the origin branch and reviewed the captured inventory. The existing VS Code-bundled `0.162.0-alpha.2` executable is signed and can serve as a reference, but **is not the independently pinned worker binary** for reproducible P4 evaluation. It may change when the editor extension updates.
+**Status: APPROVED / LIMITED TO INSTALLATION-ONLY.** User approved this P3.3a subtask on 2026-10-12. This does not accept D-010 overall or authorize any follow-on runtime integration. P3.2 inspection completed at executor SHA `d4b8ae5504ea5ab9f0047283b4438f1d655fc74f` with clean working tree. GPT independently confirmed the origin branch and reviewed the captured inventory. The existing VS Code-bundled `0.162.0-alpha.2` executable is signed and can serve as a reference, but **is not the independently pinned worker binary** for reproducible P4 evaluation. It may change when the editor extension updates.
 
 ### Recommendation and rationale
 
 **First approved installation should be one independently managed, official stable Codex CLI on native Windows**, before installing Claude/Hermes. Do not uninstall, overwrite, relink, shadow accidentally, or update the VS Code package. The current npm registry advertised stable `@openai/codex@0.162.1` (2026-10-12) and official OpenAI docs support versioned npm installations, standalone installers and Windows binaries: [official Codex CLI](https://learn.chatgpt.com/docs/codex/cli), [official repo](https://github.com/openai/codex), [npm package](https://www.npmjs.com/package/@openai/codex). There is a [Windows optional-platform-package report](https://github.com/openai/codex/issues/52683) concerning the `0.162.1` release; **do not blindly install `latest` or assume `0.162.1` will start**. Validate package and platform artifact availability on the actual installation date; choose a verifiably working stable exact version (e.g. `0.162.0` only if validated) and document the decision. An alpha is not the preferred target.
 
-### Proposed P3.3a Codex scope — requires explicit separate user approval
+### Approved P3.3a Codex scope — exact artifact and isolation gates
 
 1. Inspect current Git status, unexpected origin drift and current `codex` candidates; abort on conflicts or dirty work. Do not read any secrets or personal configuration bodies.
 2. Review the **actual** official distribution, Windows x64 payload, version/integrity metadata, install/update/uninstall/side effects and absence of unexpected postinstall/network bootstrap. Record the selected stable exact version, hash/provenance and expected disk/profile changes. If the requested version cannot be safely validated, stop **before install** for new approval rather than switching channel/version silently.
@@ -135,6 +135,15 @@ Record before/after command path, version, package ownership and every Agentco-c
 4. Use the explicit installed executable path for `--version` and `--help`, verify publisher/integrity and effective binary, and distinguish it from VS Code's alpha. Any startup/config write outside the approved install destination requires preflight/approval. Model invocation, login, account status reading and external tool execution are **not** in this stage.
 5. Summarize exact version/source/destination, install verification, rollback command, any unknown runtime behavior and worker readiness = **NOT READY** until auth, permissions/sandbox and shared-skill invocation pass later separately approved steps. Save sanitized local results only under ignored `results/p3/`.
 6. Update only this P3 work order and `docs/CURRENT_TASK.md`; commit/push feature branch, no main merge. Independently verify afterward when appropriate. If Windows install/update/install-privilege, hidden profile writes or version availability differs, STOP, preserve all unrelated state and report BLOCKED.
+
+
+### P3.3a implementation boundaries / specific installation approval
+
+- The **selection policy**, rather than a blindly assumed version number, is authorized: choose one official, stable, exact Windows x64 Codex CLI version whose availability, provenance and launchability can be verified at execution time. Inspect the vendor-maintained version metadata; do not treat `latest` as a reproducible pin, install alpha as a fallback, or switch to an alternative product. If there are conflicting release/package signals, absent platform binary, unverifiable provenance/integrity or unexpected installer side effects, **STOP before installation** and report exact version candidates for new approval.
+- Destination for this first machine-local evaluation: `<repo>/results/p3/tools/codex/<exact-version>/` (ignored; no tracked binaries). Explicit executable path only. Existing external `codex` PATH resolution is **not changed**. If this installation approach cannot be achieved without global package-manager changes or modifying user profiles, STOP; do not improvise.
+- An official prebuilt Windows binary, or a version-pinned package **extracted only into the dedicated destination**, is permissible after validating the artifact and dependency set; prohibit `npm install -g`, `winget install`, `irm|iex` remote scripts and arbitrary postinstall scripts. Record hashes/signature/checksum or other concrete authenticity evidence; do not assert Authenticode exists when absent. Never execute code from a source not sufficiently authenticated.
+- Compare installed `--version` and `--help` with the original VS Code-bundled alpha, and verify no silent PATH/profile/VS Code/Pi modifications or service/background runtime. Installation may create only the explicitly approved ignored destination and nonsecret ignored evidence. Avoid commands that could auto-login, contact models or update themselves.
+- Acceptance: stable pinned binary starts via explicit path, source/channel and version recorded, no installer side effects outside approved location, rollback is deletion of **only the Agentco-owned installed version directory after target verification**, working tree clean and branch pushed. Preserve all stash/runtime evidence; `WORKER READY` remains **NO / NOT TESTED** until separately approved P3.3b model/auth/sandbox/skills validation.
 
 ### Explicit non-goals and next gates
 
