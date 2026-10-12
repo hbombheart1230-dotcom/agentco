@@ -1,34 +1,22 @@
 # Agentco Current Task
 
-This file is the **only default execution entrypoint** for Codex/Claude.
-
-## Rule
-
-- Read this file first.
-- Read only the files explicitly listed under **Required context**.
-- Do **not** reread completed work-order sections, old validation reports, historical decisions, or prior phase notes unless this file explicitly asks for them.
-- Git and the actual working tree remain the source of truth.
-- If a referenced fact can be verified cheaply from Git/status/files, verify it directly instead of loading large historical documents.
-- Keep responses and reports concise; do not restate already-completed work.
+This is the **only default execution entrypoint** for Codex/Claude. Follow `AGENTS.md` for shared policy. Read only the context below; never reread completed work orders or historical validation by default.
 
 ## Current action
 
-P2.1 Shared Skills Architecture — design proposal ready for GPT/user review. P2.2 implementation remains unapproved.
+**P2.2 — implement the first shared skill (APPROVED 2026-10-12).** P2.1 architecture direction accepted; do **one combined Claude independent verification of P2.1 design + P2.2 implementation after Codex finishes**. Do not run a separate P2.1 verification now.
 
-### Required context
+## Required context
 
 - `AGENTS.md`
-- `docs/work-orders/P2_SHARED_SKILLS.md`
-- D-009 (PROPOSED) in `docs/DECISIONS.md`, only if decision context is needed
-- current Git status / branch
+- `docs/work-orders/P2_SHARED_SKILLS.md` — **Approved P2.2 execution order**, P2.2 acceptance criteria and rollback; consult other sections only to resolve a specific dependency
+- `docs/DECISIONS.md` — D-009 only if decision details are needed
+- Actual current Git status, tracked `pi-dev/settings.json` and the installed Pi loader as needed for implementation
 
-### Do not reread by default
+## Codex completion
 
-- earlier P0/P1 implementation sections
-- previous validation reports
-- historical Pi 1.0.2 baseline docs
-- already-completed single-workspace migration details
+Implement only the approved P2.2 scope, run the specified checks (label any unrun check NOT RUN), commit/push on `feature/p2-shared-skills-design`, leave `main` untouched. Report only changed paths, HEAD/origin, skill discovery, existing skills, root/nested reference invocation, doctor, smoke, portability, blockers and next Claude verification. Preserve secrets, credentials, runtime, stash and user changes.
 
-### Completion
+## Next handoff
 
-Await GPT/user approval of the proposed architecture, initial skill and P2.2 scope. Record requested design revisions as documentation changes. Do not install, copy, move or delete skills, change Pi configuration, or begin P2.2 before explicit approval.
+After Codex pushes, Claude independently verifies **P2.1 + P2.2 together** against the exact implementation SHA and acceptance criteria in the work order. Read-only verification; no merge. GPT/user then determine final PASS/rework and whether to merge `main`.
