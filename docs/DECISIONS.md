@@ -85,3 +85,12 @@ Evidence, staged acceptance and rollback: [P3_WORKER_HARNESSES.md](work-orders/P
 
 
 The active P3.3b1 limited inventory and corrected local-reuse premise are documented in [P3_LOCAL_RUNTIME_ROUTES.md](work-orders/P3_LOCAL_RUNTIME_ROUTES.md). The earlier P3.2 finding of no Claude executable on the searched PATH/default routes remains true only within that scan, and does not override the user's report of ongoing local Claude operation.
+
+## D-011 — Pipeline before perfection: Pi Commander and one Claude Worker
+**Status:** Accepted (2026-10-12); active implementation in `docs/work-orders/P5_PIPELINE_MVP.md`.
+
+User explicitly prioritizes delivering an actual end-to-end Pi -> Claude CLI -> Pi workflow before investigating all four harnesses, model selection/benchmarking, or fully uniform native Skill invocation. Pi is the Commander based on existing upstream functionality, and the first external Worker is the already installed Claude Code CLI. Codex/Hermes remain comparison/future integration candidates, not P5 blockers. P3 native tools/Skill read/write E2E can resume after the pipeline works.
+
+**Build last / leverage existing Extensions FIRST:** preserve the official Pi 1.0.4 baseline and inspect maintained existing external-CLI delegation Extensions in disposable isolation; prefer a pinned, supported community Extension if it offers an OpenRouter-free-compatible Claude route without duplicate `subagent` registration or account/profile changes. If none fits, use Pi native tools and official Claude CLI print mode directly; write at most a tiny transparent glue layer, never a separate orchestrator/Skill loader/SDK fork. Maintain one canonical `shared/skills` source with native views wherever supported. Do not treat same Skill text as identical runtime permissions.
+
+**MVP acceptance:** one human task -> actual Pi Commander -> actual Claude Code CLI Worker -> structured nonempty result returned to Pi -> human-visible response, with toy-only synthetic inputs and observed exact free-model routing. This can PASS before runtime Skill/file edit E2E, but cannot be called fully worker-ready. No paid fallback, private-code transmission or secret exposure. Comparisons, model tuning, Hermes/Codex production integration, autonomous services and UI are deferred until an operational first pipeline exists. Independent review occurs once at the end of a substantive batch.
