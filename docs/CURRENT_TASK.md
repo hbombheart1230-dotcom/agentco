@@ -8,7 +8,7 @@ Start here, follow `AGENTS.md`, check current Git status/origin, then read **onl
 
 ## ACTIVE P3.4 — NVIDIA OpenRouter free-only minimal native CLI smoke: APPROVED
 
-User priority: official CLI features first, zero custom integration/loader, one canonical shared Skill and harness-specific Extensions. Provider target exactly `nvidia/nemotron-3-super-120b-a12b:free` on OpenRouter. **Never send private Agentco/Samsung/user data to free model providers.**
+**P3.4 BLOCKED: OPENROUTER_API_KEY absent from the executing process environment.** Codex, Claude and Hermes each made 0 model requests; no fallback, provider/config change, external synthetic home or source transmission. Installation versions are preserved; inference/tool compatibility NOT RUN and WORKER READY = NO. Evidence and STOP outcome are recorded in the active work order.
 
 ## Required context for Codex
 
@@ -18,10 +18,8 @@ User priority: official CLI features first, zero custom integration/loader, one 
 
 ## Execute
 
-Run the work order's **bounded, synthetic-only, free-model** test sequence for the **independent pinned Codex 0.162.1 CLI**, **Claude 2.1.292 WinGet CLI**, and **Hermes v0.21.7**. Working directory for all model calls must be a newly owned external synthetic directory **outside `C:\Agentco`**. No repo reading by remote models, no model-accessible tools/subagents. Exact NVIDIA `:free` slug only; disable/avoid any auxiliary or paid fallback. Inherited `OPENROUTER_API_KEY` presence only; do NOT inspect or copy secrets. If absent, document BLOCKED and stop all model calls. Prioritize official per-run flags and child-scoped isolated homes, not global profile configuration. If a CLI is unsupported/unsafe, leave that one BLOCKED rather than improvise.
-
-Read-only prechecks and at most one short `READY` text-only call per CLI. Avoid redundant P2/installer tests, custom scripts/adapters, paid models, sandbox bypass, authentication changes, main merge or changes to existing sessions. Record exact PASS/FAIL/BLOCKED/NOT RUN and distinguish basic text inference from **Worker READY = NO**. Update only this file and the active work order, `git diff --check`, commit/push docs on current feature branch; keep sanitized evidence ignored.
+Credential-presence gate completed; live execution stopped as required. Commit/push only this task and P3_FREE_MODEL_SMOKE result documentation. Do not inspect other credential sources, log in, configure a provider or start a CLI/model while the key is absent. Preserve existing settings, sessions/runtime, installations, source Skill, PATH, stashes and main.
 
 ## Next handoff
 
-Claude independently verifies factual config/provider/free-only evidence and preserved state without rerunning model calls. GPT/user close the gate. Native shared Skill exposure for Claude/Hermes and tools/sandbox/E2E then follow based on proven compatibility; Hermes external Skill directories remain disconnected from writable canonical Skill source pending a real read-only boundary.
+GPT/user arrange inherited environment-key availability without exposing the value, then resume the bounded synthetic-only/free-only gate after native safety prechecks. Claude can independently review this zero-request STOP. Skill/tool/sandbox integration and worker readiness remain separate and unproven.
