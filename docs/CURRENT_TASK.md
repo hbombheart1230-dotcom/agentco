@@ -1,19 +1,20 @@
 # Agentco Current Task
 
-Start here and follow `AGENTS.md`. Read only the **Execution delta** in `docs/work-orders/P3_WORKER_E2E_BATCH.md` for the current handoff. Do not rerun completed installs, links or text benchmarks.
+Sole local executor entrypoint. Follow `AGENTS.md`, confirm live clean Git feature branch/origin and read only this file plus **Round 2 — consolidated native-tool recovery** in `docs/work-orders/P3_WORKER_E2E_BATCH.md`. Do not reread/retest completed P0–P3 installs, prior free-text benchmarks, old work orders or previous failed E2E calls.
 
-## Current state: P3 Worker E2E batch completed / PARTIAL, Worker readiness BLOCKED
+## Verified baseline — independent PARTIAL at `c113c0b`
 
-Base `ef12a54837f9b63ae3ee5100aa38602d382acb6d`. All approved lanes processed; only this file and the active work order change.
+Claude independently reviewed the latest P3 Worker E2E delta, found factual PARTIAL correct and no new blocking regression; its review did not run models or change Git. Claude native `--restricted` **really read** toy numbers inside permitted root and denied out-of-root read. However the effective tools list showed only `Read` twice; `Write` and toy `Skill` were unavailable and no `result.txt` exists. **Cause unproven**; do not claim `--bare --restricted` necessarily disables them. Pi toy Skill loader metadata PASS, runtime invoke NOT RUN. Codex/Hermes tool sandbox/auxiliary safety incomplete; neither is known to fail model protocol. Historic free allowance remaining 902/1000 is not a current rate limit. Actual provider billing and HTTP request totals NOT VERIFIED. **WORKER READY = NO for every harness.**
 
-- Pi: fresh synthetic native Skill metadata PASS (0 diagnostics); live invocation/file task NOT RUN because host-path confinement unproven.
-- Claude: actual restricted outside-root Read denial and in-root numbers.txt Read PASS on exact NVIDIA free model. Both bounded attempts exposed only Read, no synthetic Skill; Write/invocation BLOCKED and result.txt absent. No file-edit PASS. Second native option correction returned BLOCKED; no further calls.
-- Codex/Hermes: 0 new prompts; existing private-file/auxiliary/read-only Skill safety gaps remain. Expected Windows Sandbox executable absent; no system features enabled or isolation infrastructure developed.
-- Total 2 new synthetic CLI prompts, no repeated text benchmark, no actual project/source/credential transmission or existing setting/session/runtime/PATH/Skill/main/stash change.
-- Official sanitized key metadata after execution: free daily used 98 / limit 1000 / remaining 902 at observation time. Key-wide counter, not proof of batch HTTP count or billed charge. Individual provider billing NOT VERIFIED; client estimates are not actual cost.
+## ACTIVE — P3 Worker E2E Round 2, one sizable batch APPROVED
 
-**WORKER READY = NO for all four.** Evidence at ignored `results/p3/worker-e2e-ef12a54/`; precise partial/BLOCKED results are in the active work order.
+Execute the new **Round 2** in the active work order, all A/B/C in **one Codex session, one report and one feature push**:
 
-## Next handoff
+1. **Claude first:** isolate why the prior `system/init` advertised Read only. Official `--tools` chooses tools available while `--allowedTools` just preapproves; bare may suppress Skill reminders, and native `--add-dir` loads owned toy project Skills. Use exact installed-version supported options; verify native `Read,Write,Skill` availability in synthetic external cwd, real toy Read → Write → verification and external deny. No Bash/network tools or permission bypass. If unavailable, report exact blocker and move on.
+2. **Pi, Codex, Hermes:** finish smallest feasible native Skill/tool toy E2E using official permission/isolation features only. No private host source or auth reachable from a model tool session; no unproven fallback. Unsupported lanes BLOCKED with one line, not another multi-phase audit.
+3. Exact OpenRouter NVIDIA Super `:free` only, no paid/auxiliary fallback, no real Agentco/private/company source to free models, prior narrowly authorized local key access only, all toy data. **<=6 new prompt attempts total**, not repeated benchmark.
+4. Short final 4-harness matrix and honest statuses. Preserve existing Pi/CLI/Skill installs, PATH, settings, sessions, stashes, main. No new adapters, scripts, installers, Windows features or global configuration. Update only `docs/CURRENT_TASK.md` and the active work order, `git diff --check`, commit/push feature branch once. Evidence in ignored results.
 
-Claude independently reviews the single new delta/evidence without repeating inference or account queries. GPT/user decide one combined follow-up addressing native restricted Write/Skill availability and the other containment/auxiliary gaps. No further implementation/model calls or main merge are currently authorized by this completion pointer.
+## Final verification
+
+After executor returns, Claude performs **one independent delta review** with no model repeats; **모든 결과 보고는 한국어로만 작성**. GPT/user issue final PASS/PARTIAL judgement. No intermediate prompts or GPT Git writes during active execution.
