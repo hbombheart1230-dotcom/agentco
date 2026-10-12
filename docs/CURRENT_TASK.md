@@ -4,21 +4,17 @@ Sole active Codex/Claude entrypoint. Check `AGENTS.md` and current clean Git bra
 
 ## Active execution — P3.3b2d Windows-correct native Codex Skill registration APPROVED
 
-P3.3b2c diagnostic on `4d84aee0b9f164cea8b2d97dca8f5a67ef4c17f2` confirmed the original WinError 123 is caused by passing a forward-slash relative directory-symlink target to Python on Windows. Native backslash link reads successfully; Git normalizes its link blob to portable `../../shared/skills/agentco-delta-handoff` and a fresh Windows checkout creates a working native symlink. POSIX checkout remains NOT RUN. No previous persistent registration exists; `WORKER READY = NO`.
+**P3.3b2d implementation awaiting Claude independent verification.** One native repo Skill symlink registered; source/reference integrity, normal Git 120000/canonical blob, fresh local Windows test-commit checkout and Pi root/nested 3 Skills/0 diagnostics passed. Codex discovery/invocation and POSIX checkout NOT RUN. WORKER READY = NO; auth/provider/model and other worker setup remain separately gated.
 
 ## Required context
 
 - `AGENTS.md`
-- `docs/work-orders/P3_LOCAL_RUNTIME_ROUTES.md` — **P3.3b2d — APPROVED native repo Skill registration** only; supporting diagnostic results if needed
+- `docs/work-orders/P3_LOCAL_RUNTIME_ROUTES.md` — **P3.3b2d implementation findings** and remaining verification/approval boundaries only
 - live Git status, current branch/origin
 
 ## Codex instruction
 
-1. On canonical `C:\Agentco`, safely synchronize `feature/p3-worker-harness-design`; stop if dirty/diverged or the proposed target entry exists unexpectedly.
-2. Make **exactly one** native Windows relative directory symlink at `.agents/skills/agentco-delta-handoff` pointing to `..\..\shared\skills\agentco-delta-handoff` with actual Windows backslash characters (do not pass `/` to `os.symlink`). No copied Skill, bootstrap, adapter, junction or custom Extension.
-3. Verify file/reference read and source identity BEFORE stage; normal Git stage must produce mode `120000`, canonical forward-slash blob, Windows fresh-checkout usable symlink/clean status in an ignored disposable test tree. Minimal Pi root/nested 3 Skills/0 diagnostics/canonical dedup; no full regression.
-4. Codex native Skill discovery only if a safely nonmutating, non-model installed-version command is available, otherwise NOT RUN. No auth/status/login, model/OpenRouter call, sandbox activation, user profile/PATH/settings changes or other worker installations.
-5. Document short evidence; change only the one owned link and `docs/CURRENT_TASK.md` plus `docs/work-orders/P3_LOCAL_RUNTIME_ROUTES.md`. `git diff --check`; commit/push feature branch only. On failure remove only the newly owned link after identity checks, no recursive source removal, and report BLOCKED. Preserve all sessions, runtime, Pi, stashes, main, and ignored evidence.
+Implementation and focused acceptance are complete; findings/evidence/rollback are recorded in the active work order. Only the one owned `.agents/skills/agentco-delta-handoff` symlink and these two documents change in Git. Keep source, settings, sessions, runtime, stashes, main and ignored test evidence intact. No Codex/model/auth/sandbox execution or further integration is authorized by this completion.
 
 ## Next handoff
 

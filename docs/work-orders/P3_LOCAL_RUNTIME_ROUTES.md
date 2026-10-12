@@ -218,3 +218,25 @@ NVIDIA's OpenRouter free model page warns that free requests can be logged/used 
 7. **Claude independently reviews** staged/committed result, symlink safety, Git checkout, Pi dedup, accidental private/ignored content leaks and rollback scope; GPT/user adjudicate before opening live provider/model gates. `WORKER READY = NO / NOT TESTED` until a separately authorized OpenRouter NVIDIA-free synthetic task proves the actual native Codex invocation.
 
 **STOP boundaries:** no second fallback strategy, no links in user-global directories, no permissions escalation, no new deps/packages, no automatic auth/credential propagation, no profile/PATH/settings writes and **no OpenRouter, sandbox or model calls**. If tracked-link portable Windows checkout fails, document BLOCKED and safely remove only owned link; request another decision rather than improvising. The previous Windows link bug and rollback are historical evidence, not a mandate to redo the failure test.
+
+
+## P3.3b2d implementation findings (2026-10-12)
+
+**Base:** `8305e682552d5210ea3e58fcb3119d6fbe8a0c7e`. **Implementation checks PASS; awaiting Claude independent verification. WORKER READY = NO / NOT TESTED.** Only one native repo Skill link was registered; no loader/adapter/launcher or settings change.
+
+| Check | Result / scope |
+| --- | --- |
+| Prestage link/source/reference | PASS: previously absent `.agents/skills/agentco-delta-handoff`, native directory symlink with real backslash target `..\..\shared\skills\agentco-delta-handoff`; tag `0xA000000C`. Actual SKILL/reference reads, byte equality and samefile/realpath identity match the single canonical `shared/skills/agentco-delta-handoff` source. Source SHA256 values unchanged after tests. |
+| Normal Git registration | PASS: ordinary `git add` produces exactly one mode `120000` link; blob is `../../shared/skills/agentco-delta-handoff` without newline. No copied bodies, index forcing or Git config override. |
+| Fresh Windows checkout | PASS: proposed staged tree recorded as local test commit `e635a05fac177a822cfd24ed028ccb68b7623139` (feature/main refs not moved); new local clone checked out that commit in ignored `results/p3/p3-3b2d-registration-8305e68/fresh checkout with spaces`. Native relative symlink, file/reference identity, mode `120000`, expected blob and clean status confirmed with ambient `core.symlinks=true`. No network/model/bootstrap or copied runtime. This tests the proposed implementation tree, not a final pushed-SHA clone; final task-document edits do not alter its link/source. |
+| Pi root/nested native discovery | PASS: installed native loader returns 3 Skills, diagnostics 0 and exactly one shared Skill resolving to the canonical file. Original `skill-creator` automatic and `pi-lsp` explicit-only policies retained; extensions/context execution disabled. No full doctor/smoke rerun. |
+| Codex discovery / live invocation | NOT RUN: no demonstrably nonmutating/non-model installed-version discovery command established; no CLI session, exec, login, auth/status, sandbox or provider/model action. Filesystem/Pi checks are not Codex E2E. |
+| POSIX portability | NOT RUN: Windows acceptance only; no WSL/Linux/macOS execution. |
+
+**Evidence:** ignored `results/p3/p3-3b2d-registration-8305e68/{registration,fresh-checkout,pi-discovery}.json`; local test checkout and previous diagnostic artifacts retained. Code/runtime/source/Pi/settings/PATH/profiles/installations/sessions/stashes/main unchanged except the explicitly approved repository link. Only this link, CURRENT_TASK and this work order enter the feature commit.
+
+**Process contract:** future worker uses explicit `<repo>/results/p3/tools/codex/0.162.1/codex.exe`, root-derived cwd and separately approved child-scoped config/environment; existing PATH/editor route stays intact. No process adapter was implemented or executed here. Provider/auth/permissions/model costs remain separately gated.
+
+**Rollback recipe (NOT RUN):** verify this exact Git-owned link path, symlink type and canonical target, then remove only the link nonrecursively and record its removal through normal Git. Remove created parent directories only if empty and explicitly owned. Never recurse into or delete shared source, clone/evidence, user-global Skills or existing runtime; use a scoped revert/removal decision rather than cleanup. Actual rollback requires disposition approval.
+
+**Next:** Claude independently verify link/target, mode/blob, fresh Windows checkout evidence, Pi dedup, source integrity and absence of unauthorized changes; GPT/user adjudicate final registration PASS. OpenRouter free-only synthetic auth/provider/model E2E and Claude/Hermes setup remain unapproved. No model readiness is claimed.
