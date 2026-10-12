@@ -4,19 +4,17 @@ This file is the sole default entrypoint for Codex/Claude. Follow `AGENTS.md`, c
 
 ## Current action
 
-**P3.3b1 — existing local Codex + Claude invocation-route audit: APPROVED (2026-10-12).** The user confirmed that **both Codex and Claude are already in local use** for Agentco development and verification. Earlier failure to find `claude` on PATH/default locations does **not** mean Claude is absent. Do not reinstall either existing harness. Codex's separate, signed stable CLI 0.162.1 installation already passed Claude review, but worker readiness remains NOT TESTED. Main retains the completed P2 baseline.
+**P3.3b1 inventory complete, awaiting GPT/user integration choice.** Current Codex PATH/running route is VS Code ChatGPT 26.1002; additional 26.1007 and reviewed isolated Stable 0.162.1 exist separately. Claude local use is user-confirmed and Desktop/Code-path processes were passively observed; a supported independently callable CLI remains UNKNOWN (observed Code payload path unavailable on disk). No reinstall or readiness conclusion follows from PATH absence.
 
 ## Required context
 
 - `AGENTS.md`
-- `docs/work-orders/P3_LOCAL_RUNTIME_ROUTES.md` — the **only active P3.3b1 work order**
+- `docs/work-orders/P3_LOCAL_RUNTIME_ROUTES.md` — the **P3.3b1 findings** and subsequent gates only
 - actual Git branch/status/remote, passive OS and extension/executable metadata
 
 ## Codex action
 
-Run the approved **read-only system metadata audit** for the actual existing Codex and Claude execution routes, including two installed VS Code ChatGPT extension versions and the isolated stable Codex CLI. Distinguish user-confirmed local execution from confirmed standalone callable CLI. If Claude route remains unknown, report UNKNOWN; never infer that Claude needs installation from PATH alone. Avoid sessions, secrets, config contents and process arguments.
-
-Only append nonsecret results to the active work order and update this task status to awaiting GPT/user integration decision. `git diff --check`, commit/push documentation on feature branch, no main merge. Preserve working sessions, Pi, users' installations, ignored results, PATH, auth, runtime and all stashes. **No** install/upgrade, login, model call, user configuration change, Skill adapters, links, WSL startup, sandbox execution or other P3.3b implementation.
+Passive route/provenance findings and limitations are recorded in the active work order. Only this task and that work order changed; sanitized metadata remains ignored under `results/p3/`. No CLI/app launch, reinstall, login/status, model call, configuration/PATH change, adapter, link, WSL startup, sandbox or session disruption was performed. Preserve existing sessions/installations/runtime/stashes, Pi and main. Await integration selection and a separately approved execution gate.
 
 ## Next handoff
 
