@@ -197,6 +197,21 @@ Codex reported local `HEAD=ef9527cb5d7d3ad3ea234e316d9ab92d7023dedf` while `orig
 - Preliminary portability only: fresh space-path clone plus staged implementation snapshot bootstrapped, retained settings and discovered three skills with zero diagnostics; doctor **27 PASS / 1 WARN / 0 FAIL**, expected absent `.env`. This is not final committed-SHA evidence. After pushing the reconciled implementation, run a separate actual remote clone at that exact SHA in a new space-containing path, with no copied dependencies/runtime/credentials. Record the actual outcome in the final handoff and ignored `results/p2-2/final-*` evidence; never promote this preliminary trial to final-SHA PASS.
 - Next: Claude's **joint P2.1 + P2.2 independent verification** of the pushed implementation SHA. No main merge or future harness/junction claim is implied.
 
+## P2.3 conditional-pass evidence closure (Claude review 2026-10-12)
+
+**Reviewed implementation SHA:** `5037e417a5fa6a9cc29852d79204cf3c43d34592`. Claude verdict: **CONDITIONAL PASS** with **no new functional blocker**. Independently confirmed: scope, valid settings, three skills from root/nested cwd, no collisions/diagnostics, original package skill policy, shared single source, ignored secrets/results, doctor 28/28 and `git diff --check`. Claude did **not** rerun actual agent invocation, smoke, or final-SHA fresh clone. Future non-Pi adapters and Windows junction remain UNKNOWN/NOT RUN.
+
+**Codex closure task — evidence only, minimal credits:**
+
+1. Start at `docs/CURRENT_TASK.md`. Fetch the assigned feature branch, verify expected latest remote HEAD, and preserve any dirty work, ignored results and all stashes. Do not overwrite unrelated local work.
+2. Inspect **only existing relevant** local `results/p2-2/` test evidence, task logs and recorded command outcomes for the original actual root/nested Pi model invocation and bundled-reference read, plus the fresh space-path clone/bootstrap run claimed at exact `5037e417...`. Avoid reading secret contents, transcripts with sensitive data or massive raw log dumps. Identify each test's exact base SHA, execution scope, command class, PASS/FAIL/WARN and evidence file path. Do not claim that loader-only discovery is an actual invocation.
+3. Add a compact `P2.2 final evidence` subsection **in this work order** stating: `5037e417` implementation SHA; Codex-recorded versus Claude-independently-tested provenance; root/nested invocation and reference-read evidence; final clean clone of exact SHA vs earlier preliminary staged-snapshot test; doctor 28/28 and model-dependent smoke final 14/14 reused, with earlier Groq 13/14 marker omission; expected clean-clone `.env` WARN. Explicitly mark missing/unsupported evidence as NOT VERIFIED or NOT RUN rather than fabricating it. Keep local evidence files ignored and do not commit credentials/outputs.
+4. If exact-SHA fresh-clone evidence cannot be substantiated, repeat **only that isolated safe test** from exact `5037e417` in a new path containing spaces (no secrets copied; no canonical workspace bootstrap). If true model invocation evidence is absent, first report that gap and, only if safe/necessary, rerun a focused explicit-invocation check; do not repeat the full regression suite.
+5. Make **documentation-only changes** to this work order and `docs/CURRENT_TASK.md`. If code/settings changes appear needed, STOP and report rather than making them under this closure. `git diff --check`, commit/push on `feature/p2-shared-skills-design`, leave main untouched. A subsequent documentation-only commit does not change the implementation SHA for which the fresh-clone test ran.
+6. Claude's follow-up is limited to reviewing these evidence amendments and verifying that PASS/NOT RUN/provenance labels are accurate; it should **not** repeat the entire P2.1/P2.2 review. GPT/user then decide technical completion and main merge.
+
+**Retained recovery stash:** `0c43cbd1b330fad177cecfbc24a3d7a95f26c397`. Do not drop it or change other stashes without explicit approval. The Skill description's automatic-selection breadth is non-blocking; record as a future observation only if actual excessive selection emerges.
+
 ## 9. Acceptance criteria
 
 ### P2.1 design deliverable
