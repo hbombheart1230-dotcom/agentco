@@ -23,7 +23,7 @@ Future sibling areas: `shared/{skills,tools,mcp,prompts,docs}/`, `hermes-dev/`, 
 
 Portable Agent Skills belong canonically in `shared/skills/`. Harness-specific extensions/hooks/plugins remain in their harness area. Lift reusable execution logic into `shared/tools/` or later MCP only when justified. Do not duplicate skills into four harness directories. P1 preserves the community skill-creator package unchanged; actual shared-skill migration is P2.
 
-The [P2.1 proposal](work-orders/P2_SHARED_SKILLS.md) records current discovery, official compatibility and a native-reference/link strategy. D-009 is PROPOSED. Existing user/community package skills retain their ownership/location; no migration or P2.2 implementation is approved yet. Future harness activation remains separately gated by P3 scope and version-specific tests.
+The [shared-skills work order](work-orders/P2_SHARED_SKILLS.md) records discovery, compatibility and the accepted native-first architecture (D-009). The approved P2.2 scope is `agentco-delta-handoff` plus Pi's native path; joint P2.1+P2.2 independent Claude verification follows. Existing user/community package skills retain their ownership/location. Future harness activation remains separately gated by P3 scope and version-specific tests.
 
 ## Verification and portability
 

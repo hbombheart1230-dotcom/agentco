@@ -22,6 +22,9 @@
     "npm:@ian-pascoe/pi-lsp@0.8.0",
     "npm:@tmustier/pi-skill-creator@0.3.4"
   ],
+  "skills": [
+    "../shared/skills"
+  ],
   "lsp": {
     "timeouts": {
       "initializeMs": 60000,

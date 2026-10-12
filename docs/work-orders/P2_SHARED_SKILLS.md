@@ -13,7 +13,7 @@ Establish one editable, Git-managed source for Agentco-owned portable skills in 
 
 P2.1 changes documentation only. No skill installation, copying, relocation, deletion, Pi settings changes, bootstrap/doctor code changes, harness installation, runtime changes or P2.2 implementation. No upstream Pi patches, new skill loader, marketplace, general synchronization daemon or future placeholder folders.
 
-## 2. Observed current state
+## 2. P2.1 pre-implementation observations
 
 Git fetch confirmed main and origin/main at the stated base, with a clean working tree and no existing local/remote design branch. The design branch was created in the canonical workspace without another worktree.
 
@@ -187,6 +187,15 @@ Codex reported local `HEAD=ef9527cb5d7d3ad3ea234e316d9ab92d7023dedf` while `orig
 7. Commit and push on the feature branch only, not `main`; preserve stash, auth, sessions and other local state. Delta-only report: `HEAD/ORIGIN; FILES; DISCOVERY; EXISTING SKILLS; REFERENCE/ROOT/NESTED INVOCATION; DOCTOR; SMOKE; FRESH CLONE; BLOCKERS; NEXT=CLAUDE JOINT VERIFICATION`.
 
 **Claude handoff (after implementation only):** independently inspect the original P2.1 claims plus the new P2.2 files against official/pinned-version support; verify no false equivalence between symlink support and Windows junction E2E, no skill body duplication or write exposure, acceptance results and rollback. Re-run independent targeted tests where useful, report PASS/CONDITIONAL PASS/FAIL and NOT RUN honestly. **Do not commit, push or merge** as verifier. GPT/user decide final technical/product disposition and main merge.
+
+### P2.2 reconciled implementation evidence (2026-10-12)
+
+- Added one instruction-only, read-only `shared/skills/agentco-delta-handoff/SKILL.md` with standard frontmatter and relative `references/report-format.md`. Unknown baseline/ownership stays UNKNOWN/UNATTRIBUTED; reporting does not run new tests or mutate Git. Pi receives only `skills: ["../shared/skills"]`; other settings, `hideThinkingBlock=true`, packages and invocation policies are unchanged.
+- Recovery stash `0c43cbd1b330fad177cecfbc24a3d7a95f26c397` retained. Its index tree and index-to-working-tree binary diff matched the interrupted staged/unstaged state; new skill files were staged-new, with no separate untracked files at capture. The include-untracked, explicit-path capture left the existing stash intact. Fast-forward to approved task revision `e339a11240a5cddbb12a725ed833482952c4682a`; three documentation overlaps resolved in favor of approved upstream instructions, preserving implementation and contextual evidence.
+- Frontmatter/schema PASS. After reconciliation, installed Pi native loader and genuine explicit invocation PASS from repo root and nested skill cwd; bundled reference read confirmed in both locations, all three expected skills retained, zero loader diagnostics/collisions, tracked/untracked state unchanged by reporting. Known-baseline and UNKNOWN-baseline reports covered. Evidence: ignored `results/p2-2/checks.json` and root/nested evidence files.
+- Reuse prior canonical doctor **28 PASS / 0 WARN / 0 FAIL** and last smoke **14/14 PASS**: skill/config contents match the tested stash snapshot, and executable scripts, lockfiles and existing Pi configuration did not change during synchronization. The first smoke was **13/14**: Groq read the required marker but omitted it from its final response. The unchanged full retry passed; observed intermittent model-output assertion failure, not evidence of a loader/code regression. No bootstrap/doctor code changes.
+- Preliminary portability only: fresh space-path clone plus staged implementation snapshot bootstrapped, retained settings and discovered three skills with zero diagnostics; doctor **27 PASS / 1 WARN / 0 FAIL**, expected absent `.env`. This is not final committed-SHA evidence. After pushing the reconciled implementation, run a separate actual remote clone at that exact SHA in a new space-containing path, with no copied dependencies/runtime/credentials. Record the actual outcome in the final handoff and ignored `results/p2-2/final-*` evidence; never promote this preliminary trial to final-SHA PASS.
+- Next: Claude's **joint P2.1 + P2.2 independent verification** of the pushed implementation SHA. No main merge or future harness/junction claim is implied.
 
 ## 9. Acceptance criteria
 
