@@ -5,8 +5,8 @@ Current baseline: upstream Pi 1.0.4, exact-pinned. This plan supersedes the earl
 | Phase | Scope |
 |---|---|
 | P0/P1 | Audit, docs-first role governance, portable pi-dev workspace, bootstrap/doctor and regression verification |
-| P2 | P2.1 shared-skills design review; P2.2 implementation only after approval; P2.3 independent verification |
-| P3 | Install/evaluate Hermes, Claude Code and Codex CLI after a new work order |
+| P2 | **CLOSED / PASS (2026-10-12):** native Pi connection to a single shared skill, independent verification and main merge |
+| P3 | **PROPOSED:** inspect/reuse or install three worker CLIs on Windows, then validate readiness with permission and Skill ownership gates; separate approval for preflight and installs |
 | P4 | Harbor benchmark and reproducible evaluation evidence |
 | P5 | Pi Commander MVP using supported Pi control surfaces |
 | P6 | Benchmark-informed model/harness routing |
@@ -23,7 +23,7 @@ Future sibling areas: `shared/{skills,tools,mcp,prompts,docs}/`, `hermes-dev/`, 
 
 Portable Agent Skills belong canonically in `shared/skills/`. Harness-specific extensions/hooks/plugins remain in their harness area. Lift reusable execution logic into `shared/tools/` or later MCP only when justified. Do not duplicate skills into four harness directories. P1 preserves the community skill-creator package unchanged; actual shared-skill migration is P2.
 
-The [shared-skills work order](work-orders/P2_SHARED_SKILLS.md) records discovery, compatibility and the accepted native-first architecture (D-009). The approved P2.2 scope is `agentco-delta-handoff` plus Pi's native path; joint P2.1+P2.2 independent Claude verification follows. Existing user/community package skills retain their ownership/location. Future harness activation remains separately gated by P3 scope and version-specific tests.
+The [shared-skills work order](work-orders/P2_SHARED_SKILLS.md) and D-009 are closed/accepted: one shared `agentco-delta-handoff` skill with Pi native discovery, independently reviewed and merged. User/community packages keep their ownership. The [P3 worker-harness proposal](work-orders/P3_WORKER_HARNESSES.md) and D-010 are **PROPOSED**. No worker installation, profile changes or shared-skill adapter activation is authorized before separate scope and local-environment approval.
 
 ## Verification and portability
 
