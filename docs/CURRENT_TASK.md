@@ -1,22 +1,23 @@
 # Agentco Current Task
 
-This file is the sole default task entrypoint for Codex/Claude. Follow `AGENTS.md`; inspect Git/status directly, read only the referenced task context, and never preload old completed phases.
+This file is the sole default entrypoint for Codex/Claude. Follow `AGENTS.md`, inspect live Git/status and read only the listed current context. Do not reread P0–P2 history.
 
 ## Current action
 
-**P3.1 — Worker Harnesses architecture / scope proposal (2026-10-12).** P2 is CLOSED / PASS and merged into main at `1f928974c3fcfc70456fa06bc03064576a9fd51d`. Proposal branch: `feature/p3-worker-harness-design`. **P3.2 preflight and P3.3 installs are NOT APPROVED.**
+**P3.2 — Windows Worker Harness environment preflight: APPROVED (2026-10-12).** P3 architecture (D-010) remains PROPOSED and P3.3 installation/configuration is NOT APPROVED. Use the canonical `C:\Agentco` workspace on `feature/p3-worker-harness-design`; P2 main baseline is `1f928974c3fcfc70456fa06bc03064576a9fd51d`.
 
 ## Required context
 
-- `AGENTS.md` (common rules)
-- `docs/work-orders/P3_WORKER_HARNESSES.md` (the active proposal)
-- D-010 in `docs/DECISIONS.md` only if architectural decision context is needed
-- current Git status/branch/origin
+- `AGENTS.md` — common rules
+- `docs/work-orders/P3_WORKER_HARNESSES.md` — **Approved P3.2 inventory execution order** and its gates only
+- actual `git status`, branch, remote HEAD and local CLI metadata
 
-## Current authorization
+## Codex action
 
-**Documentation/design review only.** No harness install, shared-skill link creation, user-profile edits, credential reads, model calls, integration tests, worktree changes or modification of Pi. If the proposal needs refinement, edit documentation on the feature branch only after GPT/user approval and before Codex is dispatched.
+Run an inspection-only preflight for **Codex CLI, Claude Code and Hermes** as specified in the approved work order. No installs, upgrades, logins, model calls, new Skill links, user-profile changes, service starts, or Pi changes. Existing credentials and personal configuration must not be read or printed. A compact, sanitized inventory summary may be committed to the work order; raw nonsecret diagnostics belong under ignored `results/p3/`.
+
+First verify/fetch the exact feature branch and ensure no dirty/unexpected local or remote changes. If those checks fail, stop safely and report. Update only this current task and the P3 work order with preflight findings and next-step review status; check diff; commit/push to the feature branch, never main. Report only delta, tests NOT RUN and gates remaining.
 
 ## Next handoff
 
-User/GPT decide P3 scope and authorize a **read-only P3.2 environment inventory** (separate gate). After P3.2, name exact harness versions and approve each P3.3 installation/integration separately. Claude independently reviews implementation after Codex finishes; GPT/user final PASS/main merge.
+GPT/user review P3.2 findings, choose exact versions/install channels and approve each P3.3 worker setup separately. The architecture and worker Skill adapters remain unapproved until then.
