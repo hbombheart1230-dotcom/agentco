@@ -1,6 +1,6 @@
 # P5.6 — Four native Main TUIs: OpenRouter free-only routing and login/onboarding diagnosis
 
-**Status:** ASSIGNED / IMPLEMENTATION PENDING — 2026-10-13
+**Status:** IMPLEMENTED / PARTIAL - INDEPENDENT REVIEW PENDING — 2026-10-13
 **Base:** `main` `1ed95a3ff0432ca1b94e16d6d14506db0d710bac`
 **Feature:** `feature/p5-6-native-free-main`
 **Canonical workspace:** `C:\Agentco`, existing checkout, single workspace.
@@ -76,3 +76,43 @@ Modify only additive/very narrow launcher environment/config code and focused te
 ## Explicit exclusions
 
 Natural-language/general cross-harness delegation, P5.4 AUTO changes, Samsung POP browser, financial data, Skill adapter, account signup, auto login/OAuth flow, auth cache reset, repo-wide refactor, updating installed CLI versions, changing free model without approval.
+
+
+## Execution delta (2026-10-13)
+
+BASE_SHA: ed17a92b732cb15f1cd4b9ba5e2eb4e5cc3ef7f1; baseline origin/main 1ed95a3ff0432ca1b94e16d6d14506db0d710bac. Clean original workspace safely switched to the new tracking feature branch after fetch. No stash, worktree, reset, installation or main merge.
+
+### Phase A - diagnosis / official evidence
+
+KEY_PRESENT_BOOL: shell false; effective Agentco root .env true. Existing opaque whitelist loader was used; no credential values, lengths or token hashes were surfaced. Previously only Pi called that loader. Other native children inherited no OpenRouter key or explicit provider selection, so vendor defaults/setup were left in control. This is a verified launcher omission, not proof that every historical screen was OAuth.
+
+- Claude Code 2.1.292 (existing trusted executable): baseline first-run theme/onboarding is distinct from subscription authentication. Native gateway credentials can replace subscription credentials, but [official gateway documentation](https://code.claude.com/docs/en/llm-gateway) explicitly excludes non-Claude models. Therefore no NVIDIA gateway remapping, consent bypass or native profile change was attempted. Current guarded launch reports CLAUDE_UNSUPPORTED before a vendor/default session; recurring screen internals were not re-probed.
+- Codex 0.162.1 (existing pinned executable): inherited default provider/model did not select OpenRouter; native first-party auth would remain applicable to that default, though no recurring login was reproduced here. Installed --help confirms -c dotted TOML overrides and --no-daemon. [Official provider config](https://developers.openai.com/codex/config-reference/) supports env_key, requires_openai_auth=false, and Responses. [OpenRouter Responses](https://openrouter.ai/docs/api/reference/responses/overview) is stateless/OpenAI-compatible. [OpenRouter Codex guidance](https://openrouter.ai/blog/tutorials/codex-cli-openrouter/) notes env_key auth works but model catalog metadata may use fallback assumptions. No command-auth helper (which prints credentials) was added. This implementation uses native process arguments rather than a project-local provider file.
+- Hermes 0.21.7 / upstream 41cd7b64: installed --help and [official CLI docs](https://hermes-agent.nousresearch.com/docs/user-guide/cli) support --provider openrouter and -m. Lack of explicit provider/key leaves native setup/provider resolution in control; required consent is separate. Installed hermes_constants.py:get_config_path resolves native home/config.yaml. hermes_cli/cli_config_load.py exposes only vision/approval auxiliary env mappings and defaults compression enabled; agent/auxiliary_client.py has provider-specific/fast auxiliary model selection and configured fallback chains. The main provider/model flags alone cannot certify title/compression/other auxiliary and existing fallback safety. A full native HOME replacement would violate this task's interactive-state boundary; no temporary Worker home/profile or global edits were used. Hermes remains BLOCKED, not declared unsupported in general.
+
+[Public model metadata](https://openrouter.ai/api/v1/models) was fetched without credentials: exact nvidia/nemotron-3-super-120b-a12b:free prompt="0", completion="0"; tool parameters advertised. Unsuffixed candidate was not used. Metadata/protocol support is not live inference proof.
+
+### Phase B - minimal change and outcome
+
+scripts/native-free-main.mjs adds a thin launch gate (no adapter/proxy/framework). Pi and metadata-only help/version commands pass through untouched. Missing key fails closed for each non-Pi Main. Unsupported Claude and unresolved Hermes return safe statuses; neither inherits the repo key nor starts a paid/default fallback. Codex receives only the root OpenRouter key in its child environment and fixed native provider/model/review overrides. Requests use Responses, OpenAI auth disabled, no WebSockets or retries; web search, multi-agent v1/v2, voice, realtime, apps, memories and MCP endpoints are disabled for this child. Key is excluded from native shell-tool environment. No credentials in argv/logs or persistent configuration.
+
+Ambiguous model/provider/profile/remote/resume/subcommand/startup-prompt arguments fail closed rather than override the user's choice. Verified native options retained are --no-daemon, --no-alt-screen, -C/--cd and --add-dir with their values; metadata help/version passthrough is separate. Menu mapping, native stdio/exit behavior, Pi defaults, P5.4 delegation/AUTO and existing daemon/TERM correction remain unchanged. Other native option combinations require separate review; native interactive user commands are not a locked spending policy.
+
+| Main | Overall | TUI_OPEN | FIRST_RUN_UI | FREE_PROVIDER_CONFIG | DEFAULT_MODEL_BLOCKED | AUX/FALLBACK_BLOCKED | CHAT_TEST | LIMITATIONS |
+| --- | --- | --- | --- | --- | --- | --- | --- | --- |
+| Pi | Existing behavior preserved | NOT RUN (unchanged) | NOT RUN | Existing Ultra untouched | Unchanged | Unchanged | NOT RUN | Not part of this regression batch |
+| Claude | BLOCKED | NOT RUN (guarded) | Not bypassed | CLAUDE_UNSUPPORTED | PASS: no session spawned | PASS: no session spawned | NOT RUN | Official non-Claude gateway restriction; first-run human consent separate |
+| Codex | PARTIAL | PASS: actual menu 3, native TUI, exit 0 | None shown | PASS: exact :free footer / child-only provider config | PASS at launch | Configured child-only controls; live behavior unverified | NOT RUN | Responses/model metadata and tool/inference interoperability untested; native /model or user reconfiguration can change choices; prices can change after startup |
+| Hermes | BLOCKED | NOT RUN (guarded) | Not bypassed | Main flags confirmed, activation withheld | PASS: no session spawned | PASS: no session spawned | NOT RUN | Auxiliary/fallback route cannot be certified within current profile-preservation boundary |
+
+Actual bin/agentco.cmd menu 3 opened OpenAI Codex v0.162.1 showing nvidia/nemotron-3-super-120b-a12b:free, without subscription login or a prompt; Ctrl+D exited 0 and restored terminal. A second no-prompt direct Codex launch was justified solely by the profile-integrity anomaly below and also exited 0. Guarded actual --main claude and --main hermes invocations returned the expected safe statuses. No model/API inference was requested, no login/theme/consent action accepted. LIVE PROMPT NOT RUN; background native traffic unmeasured. Public pricing GETs are not model calls.
+
+### Checks / preservation / review boundary
+
+Six new focused offline tests PASS: missing-key all-harness gates; unsupported/unproven routes; exact Codex config and no argv token; conflicting options/prompts fail closed; exact-zero pricing and unavailable pricing; untouched Pi/metadata plans. Syntax and diff checks PASS. Previous P3-P5.5 suites/model calls were not repeated. Existing Worker, AUTO extension, Pi settings, env loader, batch entry and shared Skills verified to have no Git delta.
+
+Native profile metadata was checked without outputting contents: Claude and Hermes existing files were unchanged. Codex config.toml size stayed equal but mtime changed during the first smoke; writer/cause could not be established and no state was restored or overwritten. Local sanitized checks confirmed the pinned model/provider were NOT persisted. A subsequent opaque before/after integrity check around the second TUI smoke found byte-identical Codex global configuration. The first-run content baseline was not captured, so full first-smoke byte equality is UNKNOWN, not claimed PASS. Launcher has no profile-writing code. Native empty startup/session artifacts remain local; existing sessions/runtime/browser/stashes preserved.
+
+Changed files: scripts/agentco.mjs, scripts/native-free-main.mjs, scripts/native-free-main.test.mjs, docs/CURRENT_TASK.md, this work order. Sanitized evidence: results/p5-6/execution.json (ignored); no raw TUI logs/credentials in Git. Feature-only commit/push; no main merge.
+
+FOLLOWUP: Claude independent exact-SHA delta review, no fresh inference/login/profile changes. Full four-Main chat readiness is NOT claimed. Any later Codex synthetic inference requires explicit approval and a fresh zero-price check; any Hermes work must first prove all auxiliary/fallback controls using official native features without changing user state. Claude NVIDIA limitation requires a product decision, not an authentication hack.

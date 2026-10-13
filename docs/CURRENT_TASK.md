@@ -1,25 +1,13 @@
-# Agentco Current Task — P5.6 native Main free-only routing / recurring login screens
+# Agentco Current Task - P5.6 implementation complete / PARTIAL
 
-**ACTIVE / ASSIGNED (2026-10-13)**
+Workspace C:\Agentco; feature/p5-6-native-free-main; execution base ed17a92b732cb15f1cd4b9ba5e2eb4e5cc3ef7f1, main baseline 1ed95a3ff0432ca1b94e16d6d14506db0d710bac.
 
-## Minimum required context
+Read only Execution delta in docs/work-orders/P5_6_NATIVE_FREE_MAIN_LOGIN.md and scripts/native-free-main.mjs, its focused tests, and the small scripts/agentco.mjs delta. Claude independent exact-SHA verification is next; no new inference/API test, login, profile edit or main merge is authorized.
 
-1. This file.
-2. `docs/work-orders/P5_6_NATIVE_FREE_MAIN_LOGIN.md`.
-3. Only the live launcher/environment and current focused test code pointed to by the work order, plus minimal installed CLI nonsecret help/config metadata.
+Codex 0.162.1: child-only OpenRouter Responses provider and exact NVIDIA Super :free model; public prompt/completion zero-price gate; existing no-daemon/TERM kept. Actual menu 3 native TUI opened on the pinned free model and exited 0 without a prompt. Inference compatibility remains untested.
 
-Do **not** reread P3–P5.5 completed history or rerun historical full suites.
+Claude 2.1.292: CLAUDE_UNSUPPORTED (official gateway limitation for non-Claude models). Hermes 0.21.7: BLOCKED (OpenRouter main flags exist, but title/compression/auxiliary/fallback controls cannot yet be proven safe without native profile changes). Both fail closed before starting default/subscription routes. Missing key or ambiguous native arguments fail closed. Pi and P5.4/AUTO/Worker unchanged.
 
-## Current scope and safety
+Six new focused offline tests PASS. No model prompts entered; background native traffic unmeasured. Codex config timestamp anomaly is documented; the integrity follow-up found unchanged contents and no Agentco provider persisted. Existing local state retained.
 
-- Workspace: `C:\Agentco` (personal only). Base remote `main` is `1ed95a3ff0432ca1b94e16d6d14506db0d710bac`.
-- Assigned remote branch: `feature/p5-6-native-free-main`. GPT has committed this spec and pointer there.
-- User symptom: selecting Claude/Codex/Hermes native TUI may route to sign-in/first-run provider screens. They want **existing OpenRouter free model** via each installed official native CLI, **without** unnecessary subscription OAuth. No novel frontend, global config reset, auth bypass or provider login automation.
-- First diagnose each native CLI locally using non-secret metadata only. Root `.env` may not reach non-Pi sessions today because launcher only uses `piEnv()` for Pi; confirm rather than assume.
-- Apply the smallest official-supported child-only provider/model setup if safely possible. Preserve Pi default Ultra free, existing P5.4 Worker/AUTO and P5.5 menu/Codex no-daemon/TERM.
-- Claude Code's official docs do not support non-Claude model use behind gateways, so an incompatible login/provider setup may remain **PARTIAL/BLOCKED**. Do not bypass required onboarding.
-- Fix exact model/provider, no paid fallbacks or auxiliary model drift; no live model calls without specific user approval. If no safe route can be proven, report BLOCKED rather than pretending the CLI is usable.
-- Preserve dirty files, creds, stash, runtime, native profiles, browser profile and independent Samsung POP branch; **never inspect or print secret values**.
-- Codex: implement/test/commit/push only feature. Claude: independent review of actual implementation SHA. GPT/user: final PASS and main decision.
-
-P5.6 is separate from cross-harness natural-language delegation, which remains deferred.
+NEXT: Claude independent review of this implementation delta and truthful PARTIAL matrix; GPT/user decide subsequent limited Hermes investigation or explicitly approved synthetic Codex inference. Do not treat startup as full chat/free-only policy certification.

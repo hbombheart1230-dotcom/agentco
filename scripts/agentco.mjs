@@ -4,6 +4,7 @@ import { createInterface } from 'node:readline/promises';
 import { resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { root, cli, piEnv } from './env.mjs';
+import { nativeFreeMain } from './native-free-main.mjs';
 import { resolveClaudePath, resolveCodexPath, resolveHermesPath, runSyntheticClaude, runSyntheticCodex, runSyntheticHermes } from './commander.mjs';
 
 export const mains = ['pi','claude','codex','hermes'];
@@ -69,9 +70,11 @@ async function main() {
     finally{process.removeListener('SIGINT',abort);process.removeListener('SIGTERM',abort);if(previous===undefined)delete process.env.OPENROUTER_API_KEY;else process.env.OPENROUTER_API_KEY=previous;}
     return;
   }
-  const plan=mainPlan(entry.main,entry.args);
+  let plan=mainPlan(entry.main,entry.args);
   if(plan.status){console.log(JSON.stringify(plan));process.exitCode=1;return;}
-  const env=mainEnvironment(entry.main);
+  let env=mainEnvironment(entry.main);
+  ({plan,env}=await nativeFreeMain(plan,env));
+  if(plan.status){console.log(JSON.stringify(plan));process.exitCode=1;return;}
   process.exitCode=await launchNative(plan,env);
 }
 if(process.argv[1]&&resolve(process.argv[1])===fileURLToPath(import.meta.url))main().catch(()=>{console.error('Agentco launch failed; no fallback.');process.exitCode=1;});
