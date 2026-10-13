@@ -1,16 +1,26 @@
-# Agentco Current Task — P5.4 released baseline
+# Agentco Current Task — P5.5 Main Harness Selector + explicit delegation
 
-**P5 / P5.1 / P5.2 and P5.4 accepted (2026-10-13).** The existing normal Pi 1.0.4 interactive Extension now has native named **Claude + Codex + Hermes** fixed-synthetic `add42` Worker routes. `/harness auto add42` chooses Claude deliberately; `/harness claude add42`, `/harness codex add42`, `/harness hermes add42` name the actual installed native CLI and reject identity mismatch. `/harness status` reports installed executable/key availability, not a provider health check.
+**Status: task specification ready; Codex implementation pending (2026-10-13).**
 
-## Acceptance boundary
+## Required context — only these
 
-- P5.4 implementation source `7e4469aea78f2118e7e4c5a8c05492fe3e5266c0`; separate source/evidence reread reported no mandatory defect, **but the reviewer was also the original implementer, so the review is not independent-person verification**. No new model/API calls or tests in that review. Implementation reported 12/12 focused offline tests, 22/22 prior `commander.test.mjs` tests and a real normal Pi **RPC session** where native Codex/Hermes each returned `ADD42=42`.
-- Codex uses `features.view_image=false`, other I/O tool-feature disables, strict child-only official CLI config and an exact requested NVIDIA Super `:free` Responses route. **Response model not observed** (`observedModels=null`). A separate local mock verified no I/O tool execution.
-- Hermes uses the installed vendor venv native `hermes.exe -z`, child-only `custom` config, zero toolsets, no reported extra title/aux/memory/fallback in mock tests; structured usage plus exact text is required before PASS. Actual live network destination is not packet-captured; an earlier dummy-key 401 was not reproduced.
-- Public-price checks before live tasks require both prompt/completion price 0 for exact `nvidia/nemotron-3-super-120b-a12b:free`. Pi interactive default remains NVIDIA Ultra `:free`. Auth is opaque child-only, no arbitrary project/user/company content is sent. Actual HTTP counts and billing unverified.
-- **GENERAL WORKER READY = NO**. ONLY `add42` is accepted. No general coding delegation, freeform prompts, native Skill execution across new Workers, private project editing, Pi TUI interaction, Linux or other PCs has been validated. P5.1's separate fixed Claude `--toy-edit` entrypoint remains intact.
-- Follow-up quality items: `/harness status` should describe only executable/key presence; mock vs live evidence needs explicit labels; Codex git.exe stdio lingering, Hermes vendor venv dependence. Defer to next relevant change, not another whole research project.
+1. This file.
+2. `docs/work-orders/P5_5_MAIN_HARNESS_SELECTOR.md`.
+3. Minimal **live** entrypoint sources referenced by the work order, then only the local native CLI command metadata necessary to implement and validate.
 
-## Next work — user approval required
+Do **not** read old P3–P5.4 reports, baseline research or regression history. The old P5.4 synthetic `add42` implementation and AUTO decision policy remain unchanged.
 
-Favor one genuinely useful, precisely bounded personal Agentco task instead of more `add42` demonstrations; leave shared Skill contents canonical and use each harness's official native Skill/extension contracts rather than a common compatibility adapter. Any real files/user data or broadened tool permissions must have a new separately reviewed isolation/data-handling scope. Other original P3/P5 archival reports do not need to be reloaded. Read `docs/work-orders/P5_4_WORKER_RUNTIME_ROOT_CAUSE.md` final release closure for evidence and limitations. Work from feature branches, do not directly edit main; preserve auth, runtime, sessions, history and all stashes.
+## Current assignment
+
+- Canonical Windows workspace: `C:\Agentco`.
+- Base remote main: `cc6078fed3e1d9b4c0103a8de8d9c0a18ac1f37e`.
+- Assigned branch: `feature/p5-5-main-harness-selector`. GPT prepared this branch and work order.
+- First ensure an `agentco` 4-Main menu and backwards-compatible native CLI launcher.
+- Second add **only** the smallest safe named-target delegation surface supported by each CLI's official features. If safe native natural-language integration is missing, provide a reliable explicit invocation and report the exact gap. Do not claim any general delegation supported by the previous fixed `add42` tests.
+- Untargeted requests: preserve the selected Main's prior behavior and existing AUTO. No new AUTO algorithm.
+- Preserve local dirty work, stash, credentials, runtime, sessions, browser profiles and ignored outputs. Never disturb the distinct browser branch `feature/p5-5-samsungpop-readonly-browser`, which is postponed.
+- No corporate/cowork-cli context or files in personal Agentco.
+- Run focused offline tests and bounded safe local smoke only. No old Worker regressions or unexpected network/paid model invocations.
+- Codex implements/commits/pushes feature branch; Claude independently reviews exact SHA; GPT/user decide merge. Do not merge main in this task.
+
+Treat the **work order** as the only detailed task spec. Summarize results as delta-only and mark unrun tests honestly.
