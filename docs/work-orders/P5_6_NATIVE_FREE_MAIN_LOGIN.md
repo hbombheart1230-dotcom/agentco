@@ -1,6 +1,6 @@
 # P5.6 — Four native Main TUIs: OpenRouter free-only routing and login/onboarding diagnosis
 
-**Status:** IMPLEMENTED / PARTIAL - INDEPENDENT REVIEW PENDING — 2026-10-13
+**Status:** IMPLEMENTED / PARTIAL — Claude exact-SHA review PASS at `d368be13ee589e09aae52486af08000b44222d19`; **PRODUCT RELEASE HOLD** pending four-TUI regression resolution (2026-10-13)
 **Base:** `main` `1ed95a3ff0432ca1b94e16d6d14506db0d710bac`
 **Feature:** `feature/p5-6-native-free-main`
 **Canonical workspace:** `C:\Agentco`, existing checkout, single workspace.
@@ -116,3 +116,31 @@ Native profile metadata was checked without outputting contents: Claude and Herm
 Changed files: scripts/agentco.mjs, scripts/native-free-main.mjs, scripts/native-free-main.test.mjs, docs/CURRENT_TASK.md, this work order. Sanitized evidence: results/p5-6/execution.json (ignored); no raw TUI logs/credentials in Git. Feature-only commit/push; no main merge.
 
 FOLLOWUP: Claude independent exact-SHA delta review, no fresh inference/login/profile changes. Full four-Main chat readiness is NOT claimed. Any later Codex synthetic inference requires explicit approval and a fresh zero-price check; any Hermes work must first prove all auxiliary/fallback controls using official native features without changing user state. Claude NVIDIA limitation requires a product decision, not an authentication hack.
+
+
+## Release review and narrow correction — 2026-10-13
+
+### Verified review (do not re-review)
+
+- Claude independently inspected `d368be13ee589e09aae52486af08000b44222d19` and reported PASS for the **bounded code change**: Codex native OpenRouter Responses provider config takes effect, exact free route and public price gate, no default paid fallback at launcher entry, no P5.4 Worker/AUTO edits, no detected credential leak. Focused 6 MOCK tests cover the new gate. Live Codex inference has **NOT** been run.
+- Claude's runtime checks confirm no persistent Agentco provider in native Codex config. First TUI config.toml mtime change cannot be attributed or proven byte-identical; status UNKNOWN. No claim of price lock after user changes a model inside TUI, or of no native background traffic.
+- Accepted safety outcome **does not equal product release approval**. P5.6 currently makes P5.5 menu entries 2 Claude and 4 Hermes fail closed. The user previously approved an unchanged 4-native-TUI selector. Do not merge this feature to main yet.
+
+### New minimal corrective assignment (Codex only; review again after implementing)
+
+**Goal:** Preserve four-native-TUI product access **without any automatic selection of a paid/subscription/unknown-cost model**. Stay additive in P5.6 launcher only; no redesign of P5.4/P5.5, no vendor package patch.
+
+1. Preserve Pi unchanged and Codex free-only selection and provider isolation **exactly** as verified. Continue to fail closed on missing Codex key or unsafe/provider-changing arguments. Do not weaken free-only gates.
+2. Claude and Hermes: default automated/free mode remains `CLAUDE_UNSUPPORTED` / `BLOCKED` regardless of OpenRouter key presence (fix diagnostic ordering). These statuses should explain the reason and the explicit optional native-access path. Do not claim Claude Nvidia support or Hermes auxiliary/fallback safety.
+3. Restore **explicitly user-chosen native TUI access** for Claude/Hermes when the user has acknowledged the limitation. Prefer the smallest deterministic opt-in CLI interface such as `agentco --main claude --native-default` and `agentco --main hermes --native-default` (or `agentco --native-default --main ...`, but pick ONE documented form). In interactive `agentco` 2/4 selection, present a concise **second confirmation**: free-only setup unsupported/unverified; native provider may require login and may use paid services; default choice is CANCEL, explicit affirmative opens original native TUI. In non-interactive mode require the explicit flag, never infer approval. This only *allows* native TUI startup, and is not a workaround for vendor-required first-run terms or login. Do not auto-send an inference prompt, accept consent or make user auth/profile changes.
+4. Opt-in native TUI should reuse **the identical trusted installed executable, inherited ordinary env/native configuration, stdio, working directory, Ctrl+C and exit semantics from P5.5**. No Agentco OpenRouter key injection, temporary Worker HOME, forced model, hidden gateway, or automatic login. The explicit warning is important: unverified defaults may bill if the user later chats; launcher cannot guarantee free-only use inside an unrestricted native TUI.
+5. Keep normal `agentco` 1/3 menu paths, `--main pi|codex`, `--delegate ... add42`, 4-Main menu labels and old workflows intact. Ensure opt-in does not accidentally trigger Codex, Pi, or synthetic Worker routes; no profile/config writes from Agentco.
+6. Test controlled mocked menu prompt, default-cancel vs explicit-yes, non-TTY fail-closed/explicit flag, key diagnostic order, four Main routing, native argv/env inheritance and no auto-prompt/model call, no mistaken paid fallback. Existing narrow P5.6 MOCK tests and launcher smoke must pass; no P3-P5.5 full rerun.
+7. Do not install or upgrade anything. No real model calls, auth/profile inspection, consent acceptance or subscription use. All preexisting local files, stashes, sessions, ignored outputs and parked browser feature are preserved. If interactive confirmation in the existing simple entrypoint is disproportionately complex, implement the documented explicit CLI flag first and report menu confirmation as **PARTIAL**, not pretend it is done.
+8. Commit/push **only** `feature/p5-6-native-free-main`. Claude independently review the new delta; GPT/user then decide release. The current `d368be13` PASS is retained as historical evidence, not invalidated by the new small UX correction.
+
+### Distinct follow-ups, out of this correction
+
+- A genuine free-only Hermes Main requires proof of title/summary/compression/auxiliary/fallback choices and official provider config without global native profile modification; do not claim this from native-default opt-in.
+- Claude Code official gateway non-Claude model support limitation is unresolved; do not fake authentication or silently change models.
+- Any Codex live synthetic test requires an explicit separate user decision and current pricing check. General natural-language delegation is not included.
