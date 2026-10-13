@@ -1,19 +1,28 @@
-# Agentco Current Task — P5.6 released; no new implementation assigned
+# Agentco Current Task — P5.7 one root .env for native provider workflows
 
-**P5.6 CLOSED / PARTIAL PRODUCT ACCEPTANCE (2026-10-13)**
+**ACTIVE / ASSIGNED (2026-10-13)**
 
-## Release accepted
+Workspace: `C:\Agentco` (personal only).
+Git feature: `feature/p5-7-shared-env-native-providers`.
+Base remote main: `7fcefb4bb6fe1a576ca42e93b7ca5b872a1f22aa`.
 
-- **Reviewed runtime implementation:** `d368be13ee589e09aae52486af08000b44222d19` + final explicit native-default UX `2a4bab3042f9b4df5ede129184eac02170677908`. Both independently reviewed PASS, no required fixes. Focused opt-in correction tests: 11/11 PASS, no inference/API prompt/login during review.
-- Pi native default and P5.4 `add42` AUTO/Worker source unchanged.
-- Codex Main configured through native, child-only OpenRouter Responses overrides for exact `nvidia/nemotron-3-super-120b-a12b:free`; public prompt/completion price both 0 required at launch. Menu 3 starts Codex TUI with model shown. **Live inference compatibility is NOT RUN; model changes after startup and pricing changes are not globally locked.**
-- Claude Code does **not** officially support the non-Claude NVIDIA route in its gateway. Hermes free-only auxiliary/fallback behavior is unproven. Their automatic free routes therefore fail closed. To preserve P5.5 native TUI access, menu 2/4 prompts `[y/N]` with cost/login warning; only `y/yes` opens original native CLI. Explicit scripted form `agentco --main claude --native-default` or `agentco --main hermes --native-default`. **These native sessions may require login or incur charges if later used; they are not free-model readiness claims.**
-- Original profiles/auth/session/stashes/runtime and separately parked browser branch preserved by Git changes. User's canonical workspace remains `C:\Agentco` and remote main authoritative; do not disturb working local files.
+## Read minimum
 
-## Next priority is not assigned
+1. This file.
+2. `docs/work-orders/P5_7_SHARED_ENV_NATIVE_PROVIDERS.md`.
+3. Live `scripts/env.mjs`, `scripts/agentco.mjs`, `scripts/native-free-main.mjs` and only directly relevant tests and installed CLI help/config metadata.
 
-Potential future work (requires user direction): narrowly authorize a *synthetic*, non-sensitive Codex free inference smoke with fresh public zero-pricing check; investigate official Hermes auxiliary/fallback controls without global settings modification; separately decide an acceptable Claude Code provider/model strategy. Do **not** silently route to paid models or merge company coding-agent context. Natural-language general harness handoff and Samsung POP browser remain separate.
+Avoid P3–P5.6 historic work orders and old test suites.
 
-## Context discipline
+## User's exact direction
 
-Start here, then read only a new approved work order and needed live source files. Archived evidence: `docs/work-orders/P5_6_NATIVE_FREE_MAIN_LOGIN.md`. Avoid re-reading P3–P5.5 history and rerunning their accepted tests.
+The **single canonical OpenRouter credential source** is ignored `C:\Agentco\.env`, for **Claude Code, Codex CLI and Hermes**, not Hermes alone. Each native TUI requires **officially supported** provider selection as well as its child receiving the appropriate credential. No vendor OAuth signup, Nous subscription login, or global CLI profile copies merely to find the key.
+
+- **Pi:** existing root env + Ultra free unchanged.
+- **Codex:** P5.6 already reads root env, injects child-only OpenRouter key, sets exact NVIDIA Super `:free` model and zero-price launch gate. Preserve implementation; live chat NOT RUN.
+- **Hermes:** investigate native OpenRouter provider + free-model route, child-only root env; independently prove or disable ALL paid auxiliary/fallback routes. If impossible safely, keep guarded and explicit `--native-default` path.
+- **Claude Code:** official gateway does NOT support non-Claude NVIDIA; path/key alone cannot fix this. Never spoof compatibility or force a paid/subscription login. Keep transparent `CLAUDE_UNSUPPORTED` and optional explicit native-default unless an officially supported exact free Claude route is proven.
+- P5.4 AUTO/Worker, P5.5 TUI behavior, P5.6 opt-in and Codex free settings all preserved.
+- Preserve local creds/profiles/auth/stashes/browser and all dirty/untracked files. Never print or inspect secret values. Do not invoke models or run live inference without separate approval.
+
+Codex: minimal implementation or truthful diagnostic report, scoped focused tests, commit/push **feature only**. Claude: independent delta-only review. GPT/user: release decision; no main merge yet.
