@@ -51,7 +51,7 @@ test('selector: Windows batch argv with spaces, status and caller cwd preserved'
 
 test('TUI correction: all four Main tags preserve inherited native environment',()=>{
  const inherited={HOME:'existing home',USERPROFILE:'existing profile',NATIVE_SETTING:'keep',AGENTCO_MAIN:'old'};
- for(const main of mains){const env=mainEnvironment(main,inherited);assert.deepEqual(env,{...inherited,AGENTCO_MAIN:main,...(main==='codex'?{TERM:'xterm-256color'}:{})});assert.equal(inherited.AGENTCO_MAIN,'old');}
+ for(const main of mains){const env=mainEnvironment(main,inherited,()=>({OPENROUTER_API_KEY:'fixture'}));assert.deepEqual(env,{...inherited,AGENTCO_MAIN:main,...(main==='pi'?{}:{OPENROUTER_API_KEY:'fixture'}),...(main==='codex'?{TERM:'xterm-256color'}:{}),...(main==='claude'?{ANTHROPIC_BASE_URL:'https://openrouter.ai/api',ANTHROPIC_AUTH_TOKEN:'fixture',ANTHROPIC_API_KEY:''}:{})});assert.equal(inherited.AGENTCO_MAIN,'old');}
 });
 
 test('Codex menu fix: native default and custom options are preserved without duplicate flag',()=>{
@@ -62,7 +62,7 @@ test('Codex menu fix: native default and custom options are preserved without du
 });
 test('Codex menu fix: TERM fallback is child-only and valid native TERM remains',()=>{
  for(const term of [undefined,'','dumb','xterm-256color','vt100']){
-  const inherited={TERM:term,HOME:'native home'};const env=mainEnvironment('codex',inherited);assert.equal(env.TERM,!term||term==='dumb'?'xterm-256color':term);assert.equal(inherited.TERM,term);
-  for(const main of ['pi','claude','hermes'])assert.equal(mainEnvironment(main,inherited).TERM,term);
+  const inherited={TERM:term,HOME:'native home'};const env=mainEnvironment('codex',inherited,()=>({OPENROUTER_API_KEY:'fixture'}));assert.equal(env.TERM,!term||term==='dumb'?'xterm-256color':term);assert.equal(inherited.TERM,term);
+  for(const main of ['pi','claude','hermes'])assert.equal(mainEnvironment(main,inherited,()=>({OPENROUTER_API_KEY:'fixture'})).TERM,term);
  }
 });

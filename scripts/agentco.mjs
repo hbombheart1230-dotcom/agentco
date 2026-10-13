@@ -4,7 +4,6 @@ import { createInterface } from 'node:readline/promises';
 import { resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { root, cli, piEnv } from './env.mjs';
-import { nativeFreeMain } from './native-free-main.mjs';
 import { resolveClaudePath, resolveCodexPath, resolveHermesPath, runSyntheticClaude, runSyntheticCodex, runSyntheticHermes } from './commander.mjs';
 
 export const mains = ['pi','claude','codex','hermes'];
@@ -15,11 +14,6 @@ export function menuChoice(value) {
 }
 export async function menuEntry(question) {
   const main=menuChoice(await question('Main: 1 Pi [default] / 2 Claude Code / 3 Codex CLI / 4 Hermes\n> '));
-  if(['claude','hermes'].includes(main)) {
-    const answer=await question(`${main}: free-only use is not guaranteed; login may appear and later chat may incur charges. Open native TUI? [y/N] `);
-    if(!/^(y|yes)$/i.test(String(answer).trim()))return {kind:'cancel'};
-    return {kind:'main',main,args:[],nativeDefault:true};
-  }
   return {kind:'main',main,args:[]};
 }
 export function parseEntry(args, tty) {
@@ -45,8 +39,14 @@ export function mainPlan(main, args, lookup=resolvers) {
   if(main==='codex' && !args.slice(0,args.indexOf('--')<0?args.length:args.indexOf('--')).includes('--no-daemon'))args=['--no-daemon',...args];
   return {file,args,kind:'native',main};
 }
-export function mainEnvironment(main, inherited = main==='pi'?piEnv():process.env) {
+export function mainEnvironment(main, inherited = main==='pi'?piEnv():process.env, load=piEnv) {
   const env={...inherited,AGENTCO_MAIN:main};
+  if(main!=='pi') {
+    const key=load().OPENROUTER_API_KEY;
+    if(!key)throw Error('OpenRouter key unavailable; configure C:\\Agentco\\.env.');
+    env.OPENROUTER_API_KEY=key;
+    if(main==='claude')Object.assign(env,{ANTHROPIC_BASE_URL:'https://openrouter.ai/api',ANTHROPIC_AUTH_TOKEN:key,ANTHROPIC_API_KEY:''});
+  }
   if(main==='codex' && (!env.TERM || env.TERM==='dumb'))env.TERM='xterm-256color';
   return env;
 }
@@ -76,7 +76,6 @@ async function main() {
     input.on('SIGINT',()=>cancel.abort());input.once('close',()=>cancel.abort());
     try{while(entry.kind==='menu'){try{entry=await menuEntry(prompt=>input.question(prompt,{signal:cancel.signal}));}catch{if(cancel.signal.aborted){process.exitCode=130;return;}console.log('Choose 1..4; Enter selects Pi.');}}}finally{input.close();}
   }
-  if(entry.kind==='cancel')return;
   if(entry.kind==='delegate') {
     const controller=new AbortController(),abort=()=>controller.abort();process.on('SIGINT',abort);process.on('SIGTERM',abort);
     const previous=process.env.OPENROUTER_API_KEY;
@@ -84,11 +83,9 @@ async function main() {
     finally{process.removeListener('SIGINT',abort);process.removeListener('SIGTERM',abort);if(previous===undefined)delete process.env.OPENROUTER_API_KEY;else process.env.OPENROUTER_API_KEY=previous;}
     return;
   }
-  let plan=mainPlan(entry.main,entry.args);
+  const plan=mainPlan(entry.main,entry.args);
   if(plan.status){console.log(JSON.stringify(plan));process.exitCode=1;return;}
-  let env=mainEnvironment(entry.main);
-  ({plan,env}=await nativeFreeMain(plan,env,{nativeDefault:entry.nativeDefault===true}));
-  if(plan.status){console.log(JSON.stringify(plan));process.exitCode=1;return;}
+  let env;try{env=mainEnvironment(entry.main);}catch{console.error('OpenRouter key unavailable; configure the repository root .env.');process.exitCode=1;return;}
   process.exitCode=await launchNative(plan,env);
 }
 if(process.argv[1]&&resolve(process.argv[1])===fileURLToPath(import.meta.url))main().catch(()=>{console.error('Agentco launch failed; no fallback.');process.exitCode=1;});
