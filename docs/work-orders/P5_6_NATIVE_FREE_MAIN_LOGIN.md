@@ -1,6 +1,6 @@
 # P5.6 — Four native Main TUIs: OpenRouter free-only routing and login/onboarding diagnosis
 
-**Status:** IMPLEMENTED / PARTIAL — Claude exact-SHA review PASS at `d368be13ee589e09aae52486af08000b44222d19`; **PRODUCT RELEASE HOLD** pending four-TUI regression resolution (2026-10-13)
+**Status:** CLOSED / PARTIAL PRODUCT ACCEPTANCE — Claude reviewed both `d368be13ee589e09aae52486af08000b44222d19` and final correction `2a4bab3042f9b4df5ede129184eac02170677908`: PASS / no required fixes (2026-10-13).
 **Base:** `main` `1ed95a3ff0432ca1b94e16d6d14506db0d710bac`
 **Feature:** `feature/p5-6-native-free-main`
 **Canonical workspace:** `C:\Agentco`, existing checkout, single workspace.
@@ -169,3 +169,13 @@ Focused tests: 11 PASS (six existing P5.6 MOCK cases, with the one diagnostic-or
 Git/code checks preserve Codex pricing/config body and existing Main plan/env/native exit/delegation bodies exactly. Pi settings, env loader, Worker/AUTO, batch entry and shared Skills have no delta. Changed files: scripts/agentco.mjs, scripts/native-free-main.mjs, scripts/native-free-main.test.mjs, scripts/native-default.test.mjs, docs/CURRENT_TASK.md, this work order. Sanitized local evidence: results/p5-6/narrow-correction.json (ignored). Commit/push only this feature; no main merge.
 
 NEXT: Claude reviews this new delta only. Product release remains GPT/user-gated. Native-default user-selected sessions can require vendor onboarding and incur costs if the user later chats; no free-only guarantee or automatic model switch is claimed. Genuine Claude NVIDIA support, Hermes free auxiliary/fallback controls, and explicitly approved Codex inference remain out of scope.
+
+
+## Final review / release — 2026-10-13
+
+- **Accepted scope (PARTIAL):** Existing Pi Main and P5.4 AUTO/Worker unchanged. Codex native TUI is configured child-only with OpenRouter exact NVIDIA Super `:free` model and current public-zero-price launch gate. Claude/Hermes automatic free mode remains blocked, but their original native TUIs are accessible **only** with an explicit `y/yes` confirmation after a clear warning or `--main claude|hermes --native-default` CLI opt-in. The native-default path is NOT guaranteed free and may require vendor login; prompts sent later could incur charges. No automatic model calls.
+- **Independent code review:** Original limited Codex routing implementation `d368be13ee589e09aae52486af08000b44222d19`: PASS. Follow-up native opt-in correction `2a4bab3042f9b4df5ede129184eac02170677908`: PASS, 11/11 focused offline tests independently rerun. No critical findings or required fixes. Real interactive Claude/Hermes startup evidence comes from implementer's sanitized manual report, not reviewer replay.
+- **Known, intentionally unresolved:** Codex inference interoperability was NOT RUN; display of free model is not proof of successful response or immutable cost after startup. Claude Code official non-Claude gateway limitation remains. Hermes free-only auxiliary, title, summary, compression and fallback routing unproven. Unrestricted opted-in native TUI may run its own existing paid default and may prompt for sign-in. Background native networking not measured.
+- **Minor follow-ups, nonblocking:** Cancel currently exits without an explanatory message; script opt-in path does not emit a fresh warning although invocation is an explicit acknowledgment; native CLI cancellation may yield outer batch exit 1. All documented. No refactor or new tests mandated for this release.
+- **User's previously requested warning criterion:** the menu contains `free-only use is not guaranteed; login may appear and later chat may incur charges`; the independent review explicitly checked `not guaranteed`, `login`, `charges` and `[y/N]`. There was no additional missing requirement.
+- **Release policy:** Accept bounded PARTIAL product scope without altering reviewed code. Documentation-only closure commits after reviewed SHA are not additional runtime changes. Fast-forward remote main only if base remains ancestor; preserve local files/stashes/auth/runtime/parked browser branch. New next task requires separate scope.
