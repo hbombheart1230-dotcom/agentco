@@ -1,13 +1,16 @@
-# Agentco Current Task — P5.4 Codex/Hermes native Workers: implemented, awaiting independent review
+# Agentco Current Task — P5.4 released baseline
 
-Canonical `C:\Agentco`, branch `feature/p5-4-worker-root-cause`. Follow `AGENTS.md`. Read only the **Execution result** in `docs/work-orders/P5_4_WORKER_RUNTIME_ROOT_CAUSE.md` plus `pi-dev/extensions/harness-delegation.ts`, the P5.4 block of `scripts/commander.mjs` and `scripts/harness-delegation.test.mjs`.
+**P5 / P5.1 / P5.2 and P5.4 accepted (2026-10-13).** The existing normal Pi 1.0.4 interactive Extension now has native named **Claude + Codex + Hermes** fixed-synthetic `add42` Worker routes. `/harness auto add42` chooses Claude deliberately; `/harness claude add42`, `/harness codex add42`, `/harness hermes add42` name the actual installed native CLI and reject identity mismatch. `/harness status` reports installed executable/key availability, not a provider health check.
 
-## State
+## Acceptance boundary
 
-P5.4 PASS for the fixed synthetic `add42` job only. Codex 0.162.1 (`features.view_image=false` leaves zero I/O tools) and Hermes (installed venv `hermes.exe -z`, child config with `custom` provider, zero toolsets, no auxiliary/memory/fallback) each returned `ADD42=42` on the exact free `nvidia/nemotron-3-super-120b-a12b:free` route through the existing Pi `/harness` and `agentco_delegate`. Claude/AUTO is unchanged (`auto` selects Claude only). P5.3's blockers were a wrong Codex feature key and a Hermes launcher/venv mismatch, not model incompatibility.
+- P5.4 implementation source `7e4469aea78f2118e7e4c5a8c05492fe3e5266c0`; separate source/evidence reread reported no mandatory defect, **but the reviewer was also the original implementer, so the review is not independent-person verification**. No new model/API calls or tests in that review. Implementation reported 12/12 focused offline tests, 22/22 prior `commander.test.mjs` tests and a real normal Pi **RPC session** where native Codex/Hermes each returned `ADD42=42`.
+- Codex uses `features.view_image=false`, other I/O tool-feature disables, strict child-only official CLI config and an exact requested NVIDIA Super `:free` Responses route. **Response model not observed** (`observedModels=null`). A separate local mock verified no I/O tool execution.
+- Hermes uses the installed vendor venv native `hermes.exe -z`, child-only `custom` config, zero toolsets, no reported extra title/aux/memory/fallback in mock tests; structured usage plus exact text is required before PASS. Actual live network destination is not packet-captured; an earlier dummy-key 401 was not reproduced.
+- Public-price checks before live tasks require both prompt/completion price 0 for exact `nvidia/nemotron-3-super-120b-a12b:free`. Pi interactive default remains NVIDIA Ultra `:free`. Auth is opaque child-only, no arbitrary project/user/company content is sent. Actual HTTP counts and billing unverified.
+- **GENERAL WORKER READY = NO**. ONLY `add42` is accepted. No general coding delegation, freeform prompts, native Skill execution across new Workers, private project editing, Pi TUI interaction, Linux or other PCs has been validated. P5.1's separate fixed Claude `--toy-edit` entrypoint remains intact.
+- Follow-up quality items: `/harness status` should describe only executable/key presence; mock vs live evidence needs explicit labels; Codex git.exe stdio lingering, Hermes vendor venv dependence. Defer to next relevant change, not another whole research project.
 
-4 authenticated CLI prompts were used; physical HTTP counts and billing are unverified. TUI, Skills, edit tasks and other PCs are NOT RUN. General-project WORKER READY = NO.
+## Next work — user approval required
 
-## Next handoff
-
-One independent Claude offline review of this commit and ignored `results/p5-4/` (no provider calls). GPT/user decide release and main merge. The executor does not merge main.
+Favor one genuinely useful, precisely bounded personal Agentco task instead of more `add42` demonstrations; leave shared Skill contents canonical and use each harness's official native Skill/extension contracts rather than a common compatibility adapter. Any real files/user data or broadened tool permissions must have a new separately reviewed isolation/data-handling scope. Other original P3/P5 archival reports do not need to be reloaded. Read `docs/work-orders/P5_4_WORKER_RUNTIME_ROOT_CAUSE.md` final release closure for evidence and limitations. Work from feature branches, do not directly edit main; preserve auth, runtime, sessions, history and all stashes.
