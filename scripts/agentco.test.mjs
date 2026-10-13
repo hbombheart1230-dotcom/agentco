@@ -5,7 +5,7 @@ import { mkdtempSync,mkdirSync,writeFileSync,readFileSync,copyFileSync } from 'n
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { spawnSync } from 'node:child_process';
-import { mains,menuChoice,parseEntry,mainPlan,namedJob,launchNative } from './agentco.mjs';
+import { mains,menuChoice,parseEntry,mainPlan,mainEnvironment,namedJob,launchNative } from './agentco.mjs';
 
 test('selector: default, four choices, invalid, no-TTY and legacy Pi args',()=>{
  assert.equal(menuChoice(''),'pi');for(let i=1;i<=4;i++)assert.equal(menuChoice(String(i)),mains[i-1]);
@@ -14,12 +14,12 @@ test('selector: default, four choices, invalid, no-TTY and legacy Pi args',()=>{
  assert.deepEqual(parseEntry(['--version'],true),{kind:'main',main:'pi',args:['--version']});
  assert.equal(parseEntry(['--main','codex','--help'],true).main,'codex');assert.throws(()=>parseEntry(['--main','unknown'],false));
 });
-test('selector: exact executable, no fallback and model gate before conversation',()=>{
+test('TUI correction: all native empty/ordinary args launch without profile override',()=>{
  for(const main of mains.slice(1)){
   const lookup={[main]:()=>`C:/Installed tools/${main}.exe`};
   assert.equal(mainPlan(main,['--version'],lookup).file,lookup[main]());
-  assert.equal(mainPlan(main,[],lookup).status,'CONFIG_REQUIRED');
-  assert.equal(mainPlan(main,['--model','paid'],lookup).status,'CONFIG_REQUIRED');
+  assert.equal(mainPlan(main,[],lookup).file,lookup[main]());assert.deepEqual(mainPlan(main,[],lookup).args,[]);
+  const ordinary=['--help','argument with spaces'];assert.deepEqual(mainPlan(main,ordinary,lookup).args,ordinary);
   assert.equal(mainPlan(main,['--version'],{[main]:()=>{throw Error();}}).status,'NOT_READY');
  }
  const args=['--system-prompt','two words "quoted"','C:/path with spaces/x.js'];assert.deepEqual(mainPlan('pi',args).args.slice(1),args);
@@ -47,4 +47,9 @@ test('selector: Windows batch argv with spaces, status and caller cwd preserved'
  writeFileSync(join(area,'scripts','agentco.mjs'),"import {writeFileSync} from 'node:fs';writeFileSync('argv.json',JSON.stringify({args:process.argv.slice(2),cwd:process.cwd()}));process.exitCode=23;");
  const caller=process.cwd();const r=spawnSync(process.env.COMSPEC,['/d','/s','/c',`""${join(area,'bin','agentco.cmd')}" --main pi "two words" "C:\\path with spaces\\x.js""`],{cwd:caller,encoding:'utf8',windowsHide:true,windowsVerbatimArguments:true});
  assert.equal(r.status,23,r.stderr);const got=JSON.parse(readFileSync(join(area,'argv.json'),'utf8'));assert.deepEqual(got.args,['--main','pi','two words','C:\\path with spaces\\x.js']);assert.equal(got.cwd,area);assert.equal(process.cwd(),caller);
+});
+
+test('TUI correction: all four Main tags preserve inherited native environment',()=>{
+ const inherited={HOME:'existing home',USERPROFILE:'existing profile',NATIVE_SETTING:'keep',AGENTCO_MAIN:'old'};
+ for(const main of mains){const env=mainEnvironment(main,inherited);assert.deepEqual(env,{...inherited,AGENTCO_MAIN:main});assert.equal(inherited.AGENTCO_MAIN,'old');}
 });

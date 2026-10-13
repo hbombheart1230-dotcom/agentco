@@ -28,8 +28,10 @@ export function mainPlan(main, args, lookup=resolvers) {
   if(main==='pi')return {file:process.execPath,args:[cli,...args],kind:'native',main};
   if(!mains.includes(main))throw Error('Unknown Main; no fallback.');
   let file;try{file=lookup[main]();}catch{return {main,status:'NOT_READY',reason:'Installed trusted executable unavailable; no fallback.'};}
-  if(args.length!==1 || !['--help','--version'].includes(args[0]))return {main,status:'CONFIG_REQUIRED',reason:'General native Main free-only profile/context permissions not verified. Existing isolated add42 Worker settings are not a Main profile. Use --help/--version for metadata; no fallback.'};
-  return {file,args,kind:'native',main,metadataOnly:true};
+  return {file,args,kind:'native',main};
+}
+export function mainEnvironment(main, inherited = main==='pi'?piEnv():process.env) {
+  return {...inherited,AGENTCO_MAIN:main};
 }
 export async function namedJob(target, job, signal, invokers={claude:runSyntheticClaude,codex:runSyntheticCodex,hermes:runSyntheticHermes}, currentMain=process.env.AGENTCO_MAIN) {
   if(!mains.includes(target)||job!=='add42')throw Error('Only an explicit harness and fixed synthetic add42 are supported.');
@@ -66,7 +68,7 @@ async function main() {
   }
   const plan=mainPlan(entry.main,entry.args);
   if(plan.status){console.log(JSON.stringify(plan));process.exitCode=1;return;}
-  const env=entry.main==='pi'?{...piEnv(),AGENTCO_MAIN:'pi'}:{...process.env,DISABLE_AUTOUPDATER:'1',HERMES_SKIP_UPDATE_CHECK:'1',HERMES_DISABLE_LAZY_INSTALLS:'1'};
+  const env=mainEnvironment(entry.main);
   process.exitCode=await launchNative(plan,env);
 }
 if(process.argv[1]&&resolve(process.argv[1])===fileURLToPath(import.meta.url))main().catch(()=>{console.error('Agentco launch failed; no fallback.');process.exitCode=1;});

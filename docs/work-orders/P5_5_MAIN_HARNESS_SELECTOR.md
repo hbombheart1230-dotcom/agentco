@@ -123,3 +123,22 @@ Next: one Claude independent exact-SHA code/evidence review, no fresh model/API 
 6. Commit/push a minimal implementation correction on **the same feature branch**, then have Claude independently verify only the new SHA/delta. **Do not merge main until this correction is reviewed**; earlier PASS was accurate for the wrong narrower UX boundary.
 
 Existing documented Execution result is historical evidence for SHA `c167989`, not the final user-facing TUI acceptance.
+
+
+## Native TUI correction result (2026-10-13)
+
+Base a105ac8ed2eeef8600efbdd3dae81fa5c67754a0, clean feature fast-forward. Removed only metadata-only CONFIG_REQUIRED gating; no-argument and ordinary argument plans now invoke each trusted native executable. Four process-local AGENTCO_MAIN tags added through a small environment helper. Native environments inherited exactly, without the former non-Pi update/feature override variables. Menu/bin entry/argument forwarding/native exit handling and fixed delegation implementation unchanged; no P5.4/AUTO/settings/Skill edit.
+
+| Native TUI, no model prompt | Observed result |
+| --- | --- |
+| Pi 1.0.4 | Opened original TUI, existing Ultra free footer; Ctrl+D exit 0, terminal restored |
+| Claude 2.1.292 | Original onboarding/theme TUI opened; canceled without choosing theme/login, outer shell exit 1; full chat readiness unverified |
+| Codex 0.162.1 default | TERM=dumb initially refused; test-only TERM corrected, native default then exited 1: incomplete local background-server package |
+| Codex explicit --no-daemon | Original TUI opened with forwarded supported native argument, existing GPT-6.1-Sol displayed; Ctrl+D exit 0; launcher does not automatically add this flag |
+| Hermes 0.21.7 | Original consent/startup/TUI opened. Consent cancellation retained displayed default No thanks; provider setup skipped, no provider chosen. Native Ctrl+D Goodbye/terminal restore, outer shell exit 1; existing claude-opus-4.6/Nous displayed |
+
+No model prompt entered, no forced model/paid fallback, login, provider choice, theme selection, install or native profile edit by launcher. Native background network requests are unmeasured; do not claim zero physical HTTP traffic. Non-Pi free-model messaging remains UNVERIFIED, which does not suppress native TUI startup. Native first-run dialogs/defaults and empty startup/session artifacts remain machine-local and are not deleted. Pi's own changelog/EOF settings mutation was verified as the only semantic difference and restored to baseline. Existing credentials, sessions, browser profiles/runtime preserved.
+
+Two focused tests PASS: four native empty/ordinary argument plans plus unavailable-executable failure; all four env tags preserving inherited native variables without mutating parent. Syntax/diff/UTF-8/scope checks PASS. Previous menu/quoting/signal/delegation cases preserved, not rerun; P5.4 core/settings/Skills checked unchanged via Git. No new feature/refactor/framework. Live tests used deterministic --main paths; 1..4 menu mapping shares the same plan and remains unchanged.
+
+Changed files: scripts/agentco.mjs, scripts/agentco.test.mjs, docs/CURRENT_TASK.md, this work order. Sanitized local evidence: results/p5-5/native-tui-correction.json. One feature commit/push; no main merge. Next: Claude independent exact-SHA correction review, zero new provider/model prompts; GPT/user acceptance. Codex installed default daemon packaging/terminal requirement and native first-run/provider availability are distinct from launcher correctness and remain honest environment limitations.
