@@ -1,23 +1,19 @@
-# Agentco Current Task — released main baseline
+# Agentco Current Task — P5.2 Pi Interactive Harness Routing
 
-**P5 and P5.1 FINAL PASS / CLOSED (2026-10-13).** Pi 1.0.4 Commander -> official Claude Code CLI Worker -> Pi has two verified paths: (1) synthetic text/artifact delegation; (2) opt-in, fixed synthetic JS file correction with actual native Claude `Read/Edit`, independently checked host `node --test`, and exact Worker/toolResult/Pi final correspondence.
+Canonical Windows workspace `C:\Agentco`, **assigned branch `feature/p5-2-interactive-routing`**, based on released main `bb1ccc71a5b72446c93022c01876f0a24e9ac135`.
 
-## Verified usage
+Follow `AGENTS.md`. Read ONLY `docs/work-orders/P5_2_INTERACTIVE_HARNESS_ROUTING.md`, the actual `pi-dev/settings.json`, `scripts/pi.mjs` and `scripts/commander.mjs` as needed. Do NOT reload earlier P3/P5 task histories or rerun old 22-case process tests. Existing P5/P5.1 main release and source are validated.
 
-- `node scripts/commander.mjs --check` — local Windows CLI prerequisites, no model/auth query.
-- `node scripts/commander.mjs "Delegate this synthetic task to Claude: return exactly HARDENED_PAYLOAD=137. Return the worker output verbatim."` — original P5 synthetic text route.
-- `node scripts/commander.mjs --toy-edit` — P5.1 owned disposable `sum.js` correction and host test. Does not accept arbitrary real file/project paths. Default original text route preserved.
-- Both modes pin exact OpenRouter `nvidia/nemotron-3-super-120b-a12b:free` (public zero-price gate), require installed Node/Pi/official Windows Claude CLI and the existing approved local auth source. An opt-in `AGENTCO_CLAUDE_CLI` environment override must name a trusted executable; the binary receives auth.
-- Claude independently validated 22/22 offline tests on P5.1 `03e3fb0` and prior real native Read/Edit/host-test evidence, without rerunning models. First Pi mismatch was correctly rejected; second real roundtrip passed. Provider HTTP/billing not observed. **GENERAL WORKER READY = NO**; native Write, Skill, arbitrary projects and other operating systems NOT RUN.
+## ACTIVE — authorized one Codex execution batch (2026-10-13)
 
-## Source/release boundaries
+User explicitly requests (1) normal Pi interactive **automatic external Worker dispatch** and (2) a **named Worker override** choosing Claude, Codex or Hermes. The model-callable Pi extension tool and explicit `/harness <auto|claude|codex|hermes> add42` slash command must use one shared native delegation path. `/harness status` accurately reports readiness; auto selects ONLY safe verified Worker capabilities.
 
-Reviewed exact blobs of `scripts/commander.mjs` and `scripts/commander.test.mjs` from `feature/p5-1-file-edit` were selectively promoted to main with documentation closure. Historical unfinished P3 development history remains unmerged on `feature/p3-worker-harness-design`, preserving main as the stable release. See `docs/work-orders/P5_PIPELINE_MVP.md` and `docs/work-orders/P5_1_FILE_EDIT_VERTICAL.md`.
+REQUIRED: Real Pi session -> **Claude CLI** toy `add42` -> real same-session Pi toolResult; direct `/harness claude add42` must run real Claude CLI without nested Pi. Reuse installed official Pi `registerTool`/`registerCommand`, existing `scripts/commander.mjs` safe worker process logic and exact NVIDIA Super OpenRouter free route. Do not alter the usual Pi Ultra default model or existing native subagent/security/Skill settings.
 
-Use only synthetic owned fixtures; never route private Agentco/company/user data, credentials or real repositories through these free-model demonstration entrypoints. Do not relax filesystem tool permissions or treat cwd as an OS sandbox.
+IN THE SAME BATCH: inspect installed Codex and Hermes native help/safe child-only auth and exact free/model/auxiliary rules; when truly safe, implement and smoke their **text-only synthetic** named route and enable in auto READY list. If unsafe/unverified, respond honestly `NOT_READY` with one specific reason, no silent fallback, paid model, global auth/profile changes or added installs. No new common Skill execution adapter, daemon, general-purpose manager, server or new packages.
 
-## Next work — NOT YET AUTHORIZED
+**ONLY owned fixed synthetic jobs**, e.g. `add42` and optionally proven `edit42`. Pi must not send source, session text, user/company/private files or arbitrary freeform task contents into external model prompts. Reject unsupported direct jobs. No generalized user-code editing permission.
 
-Prioritize **normal Pi interactive-session integration of Claude Worker**, reusing existing Pi extension and official vendor native controls, then extend to other small synthetic tasks. No shared Skill execution adapter: keep one canonical `shared/skills` source while using each harness's official native discovery/invocation paths. Codex/Hermes three-worker orchestration, benchmarks, model comparisons, desktop UI and Linux portability are deferred.
+One substantial batch: limited focused offline tests; <=8 new top-level CLI model prompts; minimal real Pi auto and explicit smoke, truthful local ignored evidence; one scoped feature commit/push. Preserve all user data, local sessions, credentials, node/runtime, settings unrelated to the one new extension, two stashes, historical branches and main. Report PASS/PARTIAL/NOT_READY by harness entirely in Korean.
 
-Before coding, GPT/user approve a new scoped work order on a fresh feature branch. Never run new development tasks directly on main. Preserve local auth, sessions, PATH, ignored results, existing runtime and all stashes.
+After Codex completion: **freeze feature branch** until one independent Claude review (no fresh models), then GPT/user decide final acceptance. Do not main-merge without a later release decision.
