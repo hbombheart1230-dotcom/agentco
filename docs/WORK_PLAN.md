@@ -11,6 +11,7 @@ Current baseline: upstream Pi 1.0.4, exact-pinned. This plan supersedes the earl
 | P5 | **CLOSED / FINAL PASS (2026-10-13):** Pi -> Claude Code CLI -> Pi synthetic-text pipeline, reviewed and selectively promoted to main |
 | P5.1 | **CLOSED / FINAL PASS (2026-10-13):** native Read/Edit synthetic JS + host test + Pi result; main release |
 | P5.2 | **CLOSED / CLAUDE PASS (2026-10-13):** actual Pi auto + named Claude synthetic delegation; Codex/Hermes NOT_READY, full three-worker coverage PARTIAL |
+| P5.3 | **ACTIVE / APPROVED (2026-10-13):** verify official Codex+Hermes exact-free isolated synthetic native CLI and wire ready ones into Pi; no unsafe fallback |
 | P6 | Model/harness routing and comparisons deferred until useful product workflow runs |
 | P7 | Multi-harness workflows with explicit ownership and handoffs |
 | P8 | Fresh-machine portability across PCs/drives and Linux/cloud |
