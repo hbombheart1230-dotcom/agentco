@@ -130,6 +130,105 @@ export async function runSyntheticClaude(job, {signal} = {}) {
   const area=join(root,'results/p5-2');mkdirSync(area,{recursive:true});writeFileSync(join(area,`worker-${Date.now()}.json`),JSON.stringify(result,null,2));
   return result;
 }
+// ---- P5.4: native Codex / Hermes synthetic add42 Workers (exact free model, child-only home, zero I/O tools) ----
+const WORKER_ENV_ALLOW = ['SYSTEMROOT','WINDIR','COMSPEC','PATH','PATHEXT','LOCALAPPDATA','APPDATA','PROGRAMDATA','PROGRAMFILES','PROGRAMFILES(X86)'];
+const WORKER_TASK = 'Calculate only fabricated 7+11+24; output ADD42=42.';
+// Codex/Hermes start short-lived git.exe helpers that can hold the stdio pipes ~6s after the CLI itself exits; bound that wait explicitly (still fail-closed).
+const WORKER_CLOSE_GRACE_MS = 20000;
+export const codexDisabledFeatures = ['shell_tool','unified_exec','multi_agent','apps','browser_use','browser_use_external','browser_use_full_cdp_access','computer_use','code_mode_host','skill_search','sleep_tool','tool_suggest','goals','daemon_auto_start','enable_request_compression','view_image'];
+export function resolveCodexPath(path = join(root, 'results/p3/tools/codex/0.162.1/codex.exe')) {
+  if (!existsSync(path) || !statSync(path).isFile()) throw Error('Pinned Codex executable unavailable.');
+  return path;
+}
+export function codexArgs(baseUrl = 'https://openrouter.ai/api/v1') {
+  const config = ['model_provider="agentco"', `model="${model}"`, 'approval_policy="never"', 'sandbox_mode="read-only"', 'web_search="disabled"', 'project_doc_max_bytes=0',
+    'model_providers.agentco.name="Agentco OpenRouter free"', `model_providers.agentco.base_url=${JSON.stringify(baseUrl)}`, 'model_providers.agentco.env_key="AGENTCO_WORKER_KEY"',
+    'model_providers.agentco.wire_api="responses"', 'model_providers.agentco.requires_openai_auth=false', 'model_providers.agentco.supports_websockets=false',
+    'model_providers.agentco.request_max_retries=0', 'model_providers.agentco.stream_max_retries=0', ...codexDisabledFeatures.map(f => `features.${f}=false`)];
+  return ['exec', '--ignore-user-config', '--ignore-rules', '--strict-config', '--ephemeral', '--skip-git-repo-check', '--json', ...config.flatMap(c => ['-c', c]), WORKER_TASK];
+}
+const codexNoise = /^(Model metadata for .* not found\.|Under-development features enabled)/;
+// Structured judgement, never exit code alone: one completed turn, only a text answer, no tool/file/command items.
+export function validateCodexRun(status, stdout) {
+  const events = String(stdout).split('\n').flatMap(l => { try { return [JSON.parse(l)]; } catch { return []; } });
+  const items = events.filter(e => e.type === 'item.completed').map(e => e.item || {});
+  const answers = items.filter(i => i.type === 'agent_message').map(i => String(i.text || '').trim());
+  const bad = items.some(i => !['agent_message', 'reasoning'].includes(i.type) && !(i.type === 'error' && codexNoise.test(String(i.message || ''))));
+  const ok = status === 0 && events.filter(e => e.type === 'turn.completed').length === 1 && !events.some(e => e.type === 'turn.failed' || e.type === 'error')
+    && !bad && answers.length === 1 && answers[0] === 'ADD42=42';
+  return { ok, output: ok ? 'ADD42=42' : null, toolItems: items.filter(i => !['agent_message', 'reasoning', 'error'].includes(i.type)).length };
+}
+export function resolveHermesPath(localAppData = process.env.LOCALAPPDATA) {
+  const installs = join(localAppData || '', 'hermes', 'installs');
+  if (!existsSync(installs)) throw Error('Installed Hermes environment unavailable.');
+  for (const name of readdirSync(installs)) {
+    try {
+      const environment = JSON.parse(readFileSync(join(installs, name, 'facts.json'), 'utf8').replace(/^﻿/, '')).packages?.venv?.environment;
+      const exe = environment && join(environment, 'Scripts', 'hermes.exe');
+      if (exe && resolve(exe).toLowerCase().startsWith(resolve(installs).toLowerCase()) && existsSync(exe)) return exe;
+    } catch { /* try next installed environment */ }
+  }
+  throw Error('Installed Hermes environment unavailable.');
+}
+export function hermesConfigYaml(baseUrl = 'https://openrouter.ai/api/v1') {
+  return `model:\n  default: ${model}\n  provider: custom\n  base_url: ${baseUrl}\nplatform_toolsets:\n  cli: []\nauxiliary:\n  title_generation:\n    enabled: false\nmemory:\n  memory_enabled: false\n  user_profile_enabled: false\nfallback_providers: []\n`;
+}
+export function hermesArgs(usageFile) {
+  return ['-z', WORKER_TASK, '-m', model, '--provider', 'custom', '--ignore-rules', '--usage-file', usageFile];
+}
+export function validateHermesRun(status, stdout, usage) {
+  const aux = usage?.auxiliary?.by_task;
+  const ok = status === 0 && String(stdout).trim() === 'ADD42=42' && usage?.completed === true && usage.failed === false && usage.partial !== true && usage.interrupted !== true
+    && usage.provider === 'custom' && usage.model === model && usage.api_calls === 1 && (!aux || Object.keys(aux).length === 0);
+  return { ok, output: ok ? 'ADD42=42' : null };
+}
+async function assertFreePricing(signal) {
+  const pricing = (await (await fetch('https://openrouter.ai/api/v1/models', { signal: signal ? AbortSignal.any([signal, AbortSignal.timeout(10000)]) : AbortSignal.timeout(10000) })).json()).data?.find(m => m.id === model)?.pricing;
+  if (pricing?.prompt !== '0' || pricing?.completion !== '0') throw Error('Exact-free Worker pricing gate failed.');
+}
+function workerEnv(home, extra) {
+  const env = Object.fromEntries(Object.entries(process.env).filter(([k]) => WORKER_ENV_ALLOW.includes(k.toUpperCase())));
+  const temp = join(home, 'tmp'); mkdirSync(temp, { recursive: true });
+  return Object.assign(env, { HOME: home, USERPROFILE: home, TEMP: temp, TMP: temp }, extra);
+}
+function recordWorker(result) {
+  const area = join(root, 'results/p5-4'); mkdirSync(area, { recursive: true });
+  writeFileSync(join(area, `worker-${result.harness}-${Date.now()}.json`), JSON.stringify(result, null, 2));
+}
+// `options` exists for offline loopback tests only; the Pi tool/command surface never exposes it.
+export async function runSyntheticCodex(job, { signal, baseUrl, key = process.env.OPENROUTER_API_KEY, skipPricing = false } = {}) {
+  if (job !== 'add42') throw Error('Only fixed synthetic add42 is supported.');
+  if (!key) throw Error('Worker key unavailable.');
+  const exe = resolveCodexPath();
+  if (!skipPricing) await assertFreePricing(signal);
+  const toy = mkdtempSync(join(tmpdir(), 'agentco-p5-4-codex-')), cwd = join(toy, 'project'), home = join(toy, 'home'), codexHome = join(toy, 'codex');
+  for (const d of [cwd, home, codexHome]) mkdirSync(d);
+  const env = workerEnv(home, { CODEX_HOME: codexHome, CODEX_SQLITE_HOME: codexHome, AGENTCO_WORKER_KEY: key });
+  const run = await runBounded(exe, codexArgs(baseUrl), { cwd, env, signal, timeout: 60000, maxBuffer: 262144, closeTimeout: WORKER_CLOSE_GRACE_MS });
+  const verdict = validateCodexRun(run.status, run.stdout);
+  if (!verdict.ok) throw Error('Synthetic Codex Worker result/route failed.');
+  const result = { harness: 'codex', job, status: 'PASS', output: verdict.output, model, observedModels: null, modelEvidence: 'requested exact free model; Codex JSON output exposes no response model', exitCode: run.status, toolMode: 'none', toolItems: verdict.toolItems };
+  recordWorker(result);
+  return result;
+}
+export async function runSyntheticHermes(job, { signal, baseUrl, key = process.env.OPENROUTER_API_KEY, skipPricing = false } = {}) {
+  if (job !== 'add42') throw Error('Only fixed synthetic add42 is supported.');
+  if (!key) throw Error('Worker key unavailable.');
+  const exe = resolveHermesPath();
+  if (!skipPricing) await assertFreePricing(signal);
+  const toy = mkdtempSync(join(tmpdir(), 'agentco-p5-4-hermes-')), cwd = join(toy, 'project'), home = join(toy, 'home'), hermesHome = join(toy, 'hermes'), usageFile = join(toy, 'usage.json');
+  for (const d of [cwd, home, hermesHome]) mkdirSync(d);
+  writeFileSync(join(hermesHome, 'config.yaml'), hermesConfigYaml(baseUrl));
+  const env = workerEnv(home, { HERMES_HOME: hermesHome, OPENAI_API_KEY: key });
+  const run = await runBounded(exe, hermesArgs(usageFile), { cwd, env, signal, timeout: 90000, maxBuffer: 262144, closeTimeout: WORKER_CLOSE_GRACE_MS });
+  let usage = null;
+  try { usage = JSON.parse(readFileSync(usageFile, 'utf8')); } catch { /* validated below */ }
+  const verdict = validateHermesRun(run.status, run.stdout, usage);
+  if (!verdict.ok) throw Error('Synthetic Hermes Worker result/route failed.');
+  const result = { harness: 'hermes', job, status: 'PASS', output: verdict.output, model, observedModels: [usage.model], exitCode: run.status, toolMode: 'none', provider: usage.provider, apiCalls: usage.api_calls, auxiliaryCalls: 0, turnExit: usage.turn_exit_reason };
+  recordWorker(result);
+  return result;
+}
 // Fixed synthetic fixture; validate bytes before executing any model-edited code.
 export const toyBefore = 'module.exports = (a, b, c) => a - b - c;\n';
 export const toyAfter = 'module.exports = (a, b, c) => a + b + c;\n';

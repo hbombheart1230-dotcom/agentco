@@ -1,33 +1,46 @@
 import type { ExtensionAPI } from "@earendil-works/pi-coding-agent";
 import { Type } from "typebox";
-import { runSyntheticClaude, resolveClaudePath } from "../../scripts/commander.mjs";
+import { runSyntheticClaude, runSyntheticCodex, runSyntheticHermes, resolveClaudePath, resolveCodexPath, resolveHermesPath } from "../../scripts/commander.mjs";
 
-const blocked = {
-  codex: "NOT_READY: Windows unelevated sandbox cannot enforce split filesystem read restrictions; native view_image remains enabled.",
-  hermes: "NOT_READY: minimal CLI has zero tools but provider/auxiliary isolation is unverified; failed runtime can exit 0.",
-};
-export function selectHarness(harness: string, job: string) {
+type Lane = "claude" | "codex" | "hermes";
+type Invoker = (job: string, options: { signal?: AbortSignal }) => Promise<any>;
+const lanes: Lane[] = ["claude", "codex", "hermes"];
+const labels: Record<Lane, string> = { claude: "Claude Code", codex: "Codex", hermes: "Hermes" };
+const resolvers: Record<Lane, () => unknown> = { claude: resolveClaudePath, codex: resolveCodexPath, hermes: resolveHermesPath };
+export function selectHarness(harness: string, job: string): Lane {
   if (!["auto","claude","codex","hermes"].includes(harness) || job !== "add42") throw Error("Use auto|claude|codex|hermes with fixed synthetic add42 only; no private text/paths.");
-  return harness === "auto" ? "claude" : harness;
+  // auto stays deterministic: Claude is the accepted default lane; named Codex/Hermes are never chosen implicitly.
+  return harness === "auto" ? "claude" : harness as Lane;
 }
 export function readiness() {
-  let claude=process.env.OPENROUTER_API_KEY?"available: verified native free-only synthetic add42":"blocked: OPENROUTER_API_KEY unavailable";
-  try { resolveClaudePath(); } catch { claude="UNAVAILABLE: trusted Claude executable missing"; }
-  return {claude,codex:blocked.codex,hermes:blocked.hermes};
+  const key = Boolean(process.env.OPENROUTER_API_KEY);
+  const status = (lane: Lane) => {
+    try { resolvers[lane](); } catch { return `UNAVAILABLE: installed ${labels[lane]} executable not found`; }
+    return key ? `available: native free-only synthetic add42 (zero I/O tools, exact free model); named route only${lane === "claude" ? ", also auto default" : ""}` : "blocked: OPENROUTER_API_KEY unavailable";
+  };
+  return { claude: status("claude"), codex: status("codex"), hermes: status("hermes") };
 }
-export function registerHarness(pi: ExtensionAPI, invoke = runSyntheticClaude) {
+export function registerHarness(pi: ExtensionAPI, invoke: Invoker | Partial<Record<Lane, Invoker>> = { claude: runSyntheticClaude, codex: runSyntheticCodex, hermes: runSyntheticHermes }) {
+  const invokers = (typeof invoke === "function" ? { claude: invoke, codex: invoke, hermes: invoke } : invoke) as Partial<Record<Lane, Invoker>>;
   const active = new Map<AbortController, Promise<unknown>>();
   const delegate = async (harness: string, job: string, signal?: AbortSignal) => {
-    const selected=selectHarness(harness,job);
-    if(selected!=="claude")return {harness:selected,job,status:"NOT_READY",reason:blocked[selected],fallback:false};
-    const controller=new AbortController();
-    const abort=()=>controller.abort();signal?.addEventListener("abort",abort,{once:true});if(signal?.aborted)abort();
-    try { const pending=invoke(job,{signal:controller.signal});active.set(controller,pending);return await pending; }
-    catch { return {harness:selected,job,status:"FAIL",reason:"Claude execution/key/free-price/result gate failed; no fallback.",fallback:false}; }
-    finally { active.delete(controller);signal?.removeEventListener("abort",abort); }
+    const selected = selectHarness(harness, job);
+    const run = invokers[selected];
+    if (!run) return { harness: selected, job, status: "NOT_READY", reason: `NOT_READY: ${labels[selected]} route not configured.`, fallback: false };
+    const controller = new AbortController();
+    const abort = () => controller.abort(); signal?.addEventListener("abort", abort, { once: true }); if (signal?.aborted) abort();
+    try {
+      const pending = run(job, { signal: controller.signal }); active.set(controller, pending);
+      const result = await pending;
+      // Never accept another worker's PASS under this name, and never a non-PASS shape.
+      if (!result || result.harness !== selected || result.status !== "PASS") throw Error("identity or status mismatch");
+      return result;
+    }
+    catch { return { harness: selected, job, status: "FAIL", reason: `${labels[selected]} execution/key/free-price/result gate failed; no fallback.`, fallback: false }; }
+    finally { active.delete(controller); signal?.removeEventListener("abort", abort); }
   };
   pi.on("session_shutdown",async()=>{const pending=[...active];for(const [c] of pending)c.abort();await Promise.allSettled(pending.map(([,p])=>p));});
-  pi.registerTool({name:"agentco_delegate",label:"External Harness",description:"Delegate the fixed fabricated arithmetic job add42 to an external Worker. Auto selects verified Claude only. Never send private task text, paths, files or session context. Explicit unverified Codex/Hermes returns NOT_READY without fallback.",
+  pi.registerTool({name:"agentco_delegate",label:"External Harness",description:"Delegate the fixed fabricated arithmetic job add42 to an external Worker. Auto selects verified Claude only. Never send private task text, paths, files or session context. Named codex/hermes run only that CLI and fail closed without fallback.",
     parameters:Type.Object({harness:Type.Union([Type.Literal("auto"),Type.Literal("claude"),Type.Literal("codex"),Type.Literal("hermes")]),job:Type.Literal("add42")},{additionalProperties:false}),
     async execute(_id,params,signal){const result=await delegate(params.harness,params.job,signal);return {content:[{type:"text",text:JSON.stringify(result)}],details:result,isError:result.status!=="PASS"};}
   });

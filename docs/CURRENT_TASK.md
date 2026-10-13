@@ -1,15 +1,13 @@
-# Agentco Current Task — P5.4 Fix Codex/Hermes root causes before declaring model incompatibility
+# Agentco Current Task — P5.4 Codex/Hermes native Workers: implemented, awaiting independent review
 
-**ACTIVE / USER APPROVED (2026-10-13).** Canonical personal workspace `C:\Agentco`, branch `feature/p5-4-worker-root-cause` from released main `db0fc5b788a8d02602e25e7870cc42cb486165a0`. Follow `AGENTS.md`, read ONLY `docs/work-orders/P5_4_WORKER_RUNTIME_ROOT_CAUSE.md` and current code touched by task (normally `pi-dev/extensions/harness-delegation.ts`, `scripts/harness-delegation.test.mjs`, `scripts/commander.mjs`). Skip completed P3-P5.3 histories and tests; P5.3's key evidence is restated in this work order.
+Canonical `C:\Agentco`, branch `feature/p5-4-worker-root-cause`. Follow `AGENTS.md`. Read only the **Execution result** in `docs/work-orders/P5_4_WORKER_RUNTIME_ROOT_CAUSE.md` plus `pi-dev/extensions/harness-delegation.ts`, the P5.4 block of `scripts/commander.mjs` and `scripts/harness-delegation.test.mjs`.
 
-## Main hypotheses — do them FIRST
+## State
 
-- **Codex 0.162.1**: P5.3 tried UNKNOWN legacy `tools.view_image` but upstream's independently switchable *Feature* is `view_image` (or historical `view_image_tool`). Verify **installed features list** and `--disable view_image` or supported installed spelling; use mock Responses to prove actual tools inventory excludes I/O. Then evaluate whether the previously failing Windows split-read policy was an unnecessary stricter-than-needed choice for this **synthetic-only and toolless** job. Do NOT weaken security/unsandbox arbitrary real project tasks. Verify exact free Responses model/provider and ONLY then one safe real prompt.
-- **Hermes**: Child-only native runtime mismatch (`ruamel`, full vs minimal), and `--base-url` / `--provider` precedence seemingly routed dummy loopback query to OpenRouter causing 401. Compare native `custom` provider + local mock captured request and actual installed runtime/config. Must prove no extra models/tools/fallback, false exit0 doesn't count as success. If safe, one exact free synthetic real prompt.
-- **Model conclusion**: neither previous lane made authenticated successful external inference. No proven model failure. Company-side CLI/GLM/Qwen work must remain **strictly separate** from private Agentco; no internal sources/config/credentials moved across environments.
+P5.4 PASS for the fixed synthetic `add42` job only. Codex 0.162.1 (`features.view_image=false` leaves zero I/O tools) and Hermes (installed venv `hermes.exe -z`, child config with `custom` provider, zero toolsets, no auxiliary/memory/fallback) each returned `ADD42=42` on the exact free `nvidia/nemotron-3-super-120b-a12b:free` route through the existing Pi `/harness` and `agentco_delegate`. Claude/AUTO is unchanged (`auto` selects Claude only). P5.3's blockers were a wrong Codex feature key and a Hermes launcher/venv mismatch, not model incompatibility.
 
-## Execution & handoff
+4 authenticated CLI prompts were used; physical HTTP counts and billing are unverified. TUI, Skills, edit tasks and other PCs are NOT RUN. General-project WORKER READY = NO.
 
-One Codex implementation batch, **max 4 new authenticated model CLI prompts total** after strict price/security gates. Only fixed synthetic `add42`, no project files, no personal/company files or session data. Safe proven Codex/Hermes route(s) must be wired to existing Pi native `/harness` and `agentco_delegate`; any unproven route stays `NOT_READY` and preserves Claude AUTO/PASS without fallback. No new OS features, elevated permissions, WSL/Docker, installation, package upgrades, vendor patches, global config/auth/PATH edits, common Skill adapter, framework or daemon.
+## Next handoff
 
-Evidence under ignored `results/p5-4`; focused tests and no-repeat review. On clean tracking branch one scoped commit/push, report in **Korean**: model/config/CLI/sandbox/provider/runtime per lane, exact cause, observed request/tools/exits, authorized inference call count and price, real route PASS/NOT_READY, untouched state. Do **not** merge main. Freeze for one independent Claude offline verification; GPT/user final release decision.
+One independent Claude offline review of this commit and ignored `results/p5-4/` (no provider calls). GPT/user decide release and main merge. The executor does not merge main.

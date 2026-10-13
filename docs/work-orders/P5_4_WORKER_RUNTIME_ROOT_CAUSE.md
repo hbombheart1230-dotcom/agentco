@@ -67,3 +67,46 @@ Additional independently public evidence to inspect against the locally installe
 - Public reports of silently dropped provider or base URL confirm the *class of bug*, not that this machine has the same bug: https://github.com/NousResearch/hermes-agent/issues/2281 and https://github.com/NousResearch/hermes-agent/issues/107191
 
 When testing a custom localhost endpoint, use DUMMY credentials only and record authorization-header **presence**, not its value. Never send the real approved key to a localhost server. Test actual external destination from local request capture; stop the lane if the CLI unexpectedly reaches a real provider during dummy preflight. Classify any authenticated model attempt separately from offline/dummy preflight. If this investigation establishes a working native safe route, implement it in the same batch; otherwise report one actionable version-specific barrier per harness.
+
+
+## Execution result (2026-10-13)
+
+**P5.4 PASS for Codex and Hermes named Workers (fixed synthetic `add42`); Claude/AUTO unchanged. Independent Claude offline review pending; main not merged.** No new OS feature, elevation, WSL/Docker, install, upgrade, vendor patch, global config/auth/PATH change or framework. Corporate exact CLI E2E: NOT VERIFIED in this branch (no corporate data used).
+
+### Differential: model vs version vs provider vs tools vs sandbox vs runtime
+
+| Question | Finding (evidence under ignored `results/p5-4/`) |
+| --- | --- |
+| Was P5.3 Codex a model failure? | **No.** Wrong config key + overly strict test. Installed 0.162.1 `features list` has stable `view_image` (default true); P5.3 used unknown `tools.view_image`. `-c features.view_image=false` is strictly parsed and the actual model request inventory (loopback mock Responses) becomes only `request_user_input` (a non-I/O function). `codex-t1/t2.json`. |
+| Are the I/O tools really gone? | Yes. Forged model calls to `view_image`, `shell`, `shell_command`, `exec_command`, `apply_patch` all return `unsupported call`; outside canary and marker untouched (`codex-attack.json`). Prompt input has no repo/private text (only bundled `.system` skill list from child `CODEX_HOME`, permission note, synthetic cwd). |
+| Was the Windows split-read refusal a security gap? | It was a stricter-than-needed canary. It only fired because `view_image` existed and a custom permission profile was forced. With zero I/O tools there is nothing to read, so no split-read policy is required; `sandbox_mode="read-only"`, `approval_policy="never"` are kept. Nothing was weakened (no yolo, no full-access, no elevation). |
+| Codex live inference | Exact free model through `/api/v1/responses` **PASS** (`ADD42=42`, one completed turn, zero tool items). Observed CLI model metadata warning (fallback metadata) is non-fatal and whitelisted; the Codex JSON stream does not expose a response model, so `observedModels=null` (requested exact route only). |
+| Codex wrapper bug found live | Codex exits at ~1.5 s but its own `git.exe` helpers keep stdio pipes open ~5-6 s; `runBounded`'s 1 s exit-to-close grace correctly failed closed. Fixed with an explicit 20 s grace for both new CLIs. No process was left running. |
+| Hermes `ruamel` / "no dependency environment" | **Runtime-launcher mismatch, not a missing package.** `bin/hermes.exe` under a fresh child `HERMES_HOME` cannot select the committed environment. The vendor store already contains the venv (`installs/*/environments/*/venv`, `ruamel.yaml 0.18.16`, `openai 2.24.0`) listed in `installs/*/facts.json`; that venv's own `Scripts/hermes.exe` runs the full CLI with no install/repair. Resolved passively from `facts.json`. |
+| Hermes version display | `bin` launcher: v0.21.7 / local 71d34bad1045. Venv entry: `vunknown (2026.9.24)`; legacy `hermes-agent.exe`: `v0.0.0 (2026.9.24)`. Same build date; payload workspace has no git stamp. Version equivalence is NOT asserted; the Worker records the resolved venv entry and `provider/model/api_calls`. |
+| `base_url` / provider precedence | With child config `model.provider: custom` + `base_url`, both the full `-z` runner and the legacy minimal runner sent the request to the **observed loopback** endpoint (captured), with zero external egress (loopback HTTP proxy recorder). Custom provider key comes from child env `OPENAI_API_KEY`; config holds no key. P5.3's OpenRouter 401 was **not reproduced**: an unreachable URL makes the minimal runner retry/hang (>40 s, no egress seen in that window). Root cause of that 401 is UNPROVEN; it is not evidence of a model failure. |
+| Hidden extra calls | Default config produced a second model call (`title_generation`, same route). `auxiliary.title_generation.enabled: false`, `memory.*: false`, `fallback_providers: []` removes it: exactly one chat request, `tools: 0`, `api_calls: 1`, auxiliary `{}`. |
+| False exit 0 | Legacy minimal runner exits 0 even when incomplete. Installed `-z` maps incomplete/failed turns to exit 2 (observed with a mock HTTP 401: exit 2, `completed:false`, `failed:true`). The Worker additionally requires usage-file `completed/failed/provider/model/api_calls/auxiliary`, never exit code alone. |
+
+### Native implementation (only existing files + one test support file)
+
+`scripts/commander.mjs` adds `runSyntheticCodex` / `runSyntheticHermes` (+ pure arg/config/validator helpers) beside the accepted Claude helper and reuses `runBounded` lifecycle unchanged. `pi-dev/extensions/harness-delegation.ts` routes `claude|codex|hermes` by name through the same `delegate` used by `agentco_delegate` and `/harness`; the result must carry the selected harness identity and `PASS`, otherwise FAIL (no substitution, no fallback). `auto` still selects only Claude. `/harness status` resolves each executable and key presence (available / UNAVAILABLE / blocked) instead of a hard-coded verdict. Only fixed `add42` is accepted; no arbitrary task, private path or file is forwarded. `scripts/harness-mock-servers.mjs` is test-only loopback fixture code.
+
+- Codex child: pinned `results/p3/tools/codex/0.162.1/codex.exe`; `--ignore-user-config --ignore-rules --strict-config --ephemeral`; custom provider with `env_key`, retries 0; disabled features include `view_image`, shell/unified exec, multi-agent, apps, browser/computer use, code mode, skill search, tool suggest; off-repo cwd/home/`CODEX_HOME`.
+- Hermes child: installed venv `hermes.exe -z ... --provider custom --ignore-rules --usage-file`; child `HERMES_HOME` config as above; `platform_toolsets.cli: []`.
+
+### Authenticated usage and price
+
+Public OpenRouter pricing for `nvidia/nemotron-3-super-120b-a12b:free` was zero prompt/completion before every live run (also gated in code on every call). **4 authenticated CLI top-level prompts total** (Codex 3: first product run failed only on the close grace above, one timing diagnostic, one Pi-session run; Hermes 1: Pi-session run). Budget 4 respected. Physical HTTP request counts and provider billing remain unobserved/unverified (CLI prompt count is not request count). Dummy-credential probes used only loopback endpoints and a recording proxy.
+
+### Real Pi session
+
+`results/p5-4/session-evidence.json`: actual `scripts/pi.mjs` RPC session (Pi 1.0.4, ordinary settings, Ultra free commander model unchanged): `/harness status` -> three lanes `available`; `/harness codex add42` -> PASS from the real Codex CLI; `/harness hermes add42` -> PASS from the real Hermes CLI; 0 stderr bytes. TUI rendering/keyboard use NOT RUN.
+
+### Checks
+
+`scripts/harness-delegation.test.mjs`: 12 PASS (installed Pi loader registers one native subagent/`agentco_delegate`/`harness`; shared routing; wrong-identity/non-PASS/throw fail closed; private args rejected; shutdown cancellation; Codex feature/config; Codex and Hermes structured-result rejection incl. false exit 0; real pinned Codex against loopback Responses with forged I/O calls; real Hermes against loopback chat incl. provider failure; readiness). Unchanged `commander.test.mjs` 22 PASS, `commander.mjs --check` PASS, `git diff --check` clean. NOT RUN: Codex/Hermes Skills, file-edit tasks, TUI, other PCs, Linux/WSL.
+
+### Remaining limits
+
+Codex response model not observable from CLI output; Hermes `/api/show` and `/v1/models` probes also go to the configured provider host; `git.exe` helper latency adds ~6 s to Codex; Hermes runtime depends on the vendor-owned venv path discovered from `facts.json` (UNAVAILABLE if the install changes). Generalizing beyond fixed `add42`, editing, or Skills needs separate approval and its own isolation proof.
