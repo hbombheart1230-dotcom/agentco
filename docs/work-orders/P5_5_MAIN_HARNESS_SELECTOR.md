@@ -1,6 +1,6 @@
 # P5.5 - Select Main Harness + explicit named delegation
 
-**Status:** user-directed TUI activation correction pending; prior scoped Claude review PASS at c167989 (2026-10-13)
+**Status:** CLOSED / PARTIAL PRODUCT ACCEPTANCE — final launcher correction at `d827df06ab7f7f0d1f0aa177864e4ed9ce41c175` independently reviewed PASS (2026-10-13). The four native TUI startup scope is accepted; general task delegation, Claude/Hermes onboarding and free-model chat readiness are not accepted.
 **Base main:** `cc6078fed3e1d9b4c0103a8de8d9c0a18ac1f37e`
 **Assigned feature:** `feature/p5-5-main-harness-selector`
 
@@ -155,3 +155,12 @@ Actual bin/agentco.cmd invocation with no arguments displayed the existing selec
 Four focused tests PASS (two adjusted native-plan/environment tests and two new option/TERM cases); launcher syntax and diff checks PASS. Pi/Claude/Hermes live tests and historical P5.4 tests were not repeated. Frozen Worker, settings, Skill and batch entry files have no Git delta. Sanitized evidence: results/p5-5/codex-default-menu.json (ignored).
 
 Changed files: scripts/agentco.mjs, scripts/agentco.test.mjs, docs/CURRENT_TASK.md, this work order. Commit/push only this feature branch; main and existing stash/runtime preserved. Next: Claude independent review of the final implementation SHA.
+
+
+## Final release decision — 2026-10-13
+
+- **GPT technical acceptance:** PASS for the **minimal four-native-TUI selector only**. User's stated intent was to open existing installed CLIs unchanged, not create new chat frontends, new model profiles or overhaul routing.
+- **Reviewed implementation SHA:** `d827df06ab7f7f0d1f0aa177864e4ed9ce41c175`. Claude independently inspected the final Codex-specific delta vs `72a61299`: no required fixes; full 8/8 focused launcher tests (no model/API prompt). Menu-3 Codex TUI PASS relies on the implementer's recorded interactive evidence rather than reviewer replay.
+- **Accepted boundaries:** Pi native TUI exit 0; Claude native onboarding visible (chat not verified); Codex native TUI via launcher child-only `--no-daemon` and TERM fallback exit 0; Hermes native TUI visible (provider not configured). Fixed `add42` named connector is preserved. Original P5.4 AUTO remains unchanged (Claude for `add42` only). The release **does not** claim freeform/natural language cross-Main delegation, three non-Pi free-model chat profiles, or safe real financial workflows.
+- **Nonblocking follow-ups, separately scoped:** Claude/Hermes native first-run/provider configuration; non-Pi exact free model and default/fallback cost verification prior to inference; natural-language named general-task delegation with task isolation and permissions; browser work in parked, separate branch. Do not silently activate paid models or broaden bank-data access.
+- **Release method:** fast-forward only after confirming origin/main is still the accepted base; documentation closure commit follows reviewed implementation SHA and changes no runtime code. Keep local stashes, profiles and ignored artifacts unchanged.
