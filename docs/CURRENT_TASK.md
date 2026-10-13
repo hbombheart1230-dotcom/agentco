@@ -1,22 +1,13 @@
-# Agentco Current Task — P5.6 product UX correction after verified partial implementation
+# Agentco Current Task - P5.6 narrow native-access correction complete
 
-**2026-10-13: P5.6 code review PASS at `d368be13ee589e09aae52486af08000b44222d19`; PRODUCT RELEASE HOLD.**
+Workspace C:\Agentco; feature/p5-6-native-free-main; correction base 7d4bffb7f9b58d07d344f98bc2001666c7e24f98. Verified d368be13 Codex free-route implementation retained. New delta awaits Claude independent review; no main merge.
 
-## Required context — minimum only
+Read only Narrow correction execution result at the end of docs/work-orders/P5_6_NATIVE_FREE_MAIN_LOGIN.md and the current small launcher/gate/test delta. No completed history or model retests.
 
-1. This file.
-2. `docs/work-orders/P5_6_NATIVE_FREE_MAIN_LOGIN.md`, specifically the final section **Release review and narrow correction**.
-3. `scripts/agentco.mjs`, `scripts/native-free-main.mjs`, current focused tests, and the relevant current live native executable metadata if essential.
+Menu 2/4 now warns that native defaults are not guaranteed free, may require login and may incur charges on later chat. Enter/default/ambiguous answers cancel; y/yes alone opens the original installed native TUI. Script opt-in: agentco --main claude --native-default or agentco --main hermes --native-default [native arguments]. No repo key injection, model/gateway remapping, profile write or automatic prompt on this path.
 
-Do **not** reread old completed P3–P5.5 reports or revalidate P5.4 models.
+Default Claude/Hermes statuses remain CLAUDE_UNSUPPORTED/BLOCKED independent of key presence. Pi, Codex free configuration/pricing/daemon/TERM and P5.4 Worker/AUTO are unchanged. New explicit native access is not free-model readiness.
 
-## Current assignment
+Eleven focused offline tests PASS. Actual menus 2/4 default-cancel exit 0; explicit approval opened Claude onboarding and Hermes native TUI, then canceled without model prompts or configuration choices (outer batch cancellation exit 1). Pi/Codex live evidence reused, not repeated. No credential/auth/profile inspection or installation.
 
-- Canonical workspace: `C:\Agentco`; branch: `feature/p5-6-native-free-main`.
-- P5.6's Codex exact OpenRouter NVIDIA Super `:free` route was independently verified as a native *configuration*, with no actual inference. Preserve it, including pricing gate, credentials protections, `--no-daemon`, TERM and no paid fallback at launcher entry.
-- **Regression:** P5.5 had working four native TUI launch choices. P5.6 blocks Claude and Hermes options 2/4 entirely because free-mode compatibility/cost boundaries are not proven. Keep their automatic free paths blocked, but allow **an explicitly acknowledged native-default TUI path** while retaining old trusted native CLI execution semantics. For interactive 2/4 add default-cancel confirmation clearly stating free-only cannot be guaranteed and vendor login may appear; for script usage provide explicit opt-in flag. Never invoke inference or credentials automatically.
-- Correct diagnostic order: Claude unsupported/Hermes blocked reason should not misleadingly depend on whether an OpenRouter key is present.
-- No P5.4/Worker/AUTO/source changes, Pi changes, global native profile modifications, sign-in bypass, personal financial/browser work, model/API prompt, or unauthorized install. Preserve local changes/stashes/sessions/profiles and browser branch.
-- Codex implements and adds small offline tests; commit/push this feature only. Claude independently reviews **new delta only**; GPT/user decide main promotion. A new implementation SHA is required; no code changes are made by this documentation update.
-
-**Current `main` is still P5.5 `1ed95a3ff0432ca1b94e16d6d14506db0d710bac`**. Existing PARTIAL P5.6 implementation remains safely on feature.
+NEXT: Claude independent new-delta review only; GPT/user decide release. Claude NVIDIA support, Hermes auxiliary/fallback safety and any Codex live inference remain separate unresolved/approval-gated tasks.

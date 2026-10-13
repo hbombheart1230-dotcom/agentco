@@ -144,3 +144,28 @@ FOLLOWUP: Claude independent exact-SHA delta review, no fresh inference/login/pr
 - A genuine free-only Hermes Main requires proof of title/summary/compression/auxiliary/fallback choices and official provider config without global native profile modification; do not claim this from native-default opt-in.
 - Claude Code official gateway non-Claude model support limitation is unresolved; do not fake authentication or silently change models.
 - Any Codex live synthetic test requires an explicit separate user decision and current pricing check. General natural-language delegation is not included.
+
+
+## Narrow correction execution result (2026-10-13)
+
+Base 7d4bffb7f9b58d07d344f98bc2001666c7e24f98 synchronized by clean fast-forward. Prior d368be13 independent code PASS remains valid; Codex free configuration implementation is unchanged. Product access corrected; independent delta review / release decision pending.
+
+- Interactive menu 2 Claude / 4 Hermes: a second warning states free-only is not guaranteed, login may appear, and later chat may incur charges. Enter, no, and any ambiguous response cancel without spawning a CLI; only y/yes (case-insensitive) explicitly opts in. Menus 1/3 retain their original single-choice path.
+- One documented script form: `agentco --main claude --native-default [native arguments]` or `agentco --main hermes --native-default [native arguments]`. Flag must immediately follow the Main name and is removed before native argv forwarding. Pi/Codex reject that opt-in form; Worker delegation cannot enter this path. Non-TTY without the flag still fails closed for Claude/Hermes. No inferred authorization.
+- Native-default reuses the same trusted executable, original native argv/environment, repository cwd, inherited terminal and existing exit/Ctrl+C handling. It does not call the root key loader/pricing API, inject an Agentco key, force model/provider, create a Worker HOME, edit native profiles or accept vendor onboarding. Keys already supplied in the caller's ordinary environment remain inherited exactly as before. Native user defaults may be paid; this explicit choice is NOT a free-route fallback or proof of readiness.
+- Default diagnostics now return CLAUDE_UNSUPPORTED (official non-Claude gateway limitation) or BLOCKED (unproven Hermes auxiliary/fallback safety) before checking a key, and explain the optional native-access command. Codex missing-key, argument and price gates are unchanged. Metadata-only help/version behavior remains unchanged.
+
+| Main | Current TUI behavior / evidence | Free-model status |
+| --- | --- | --- |
+| Pi | Existing normal menu/default behavior unchanged; live NOT RUN, prior evidence reused | Existing Pi setup unchanged |
+| Claude | Actual menu 2 Enter canceled, exit 0. Actual menu 2 yes opened original v2.1.292 theme/onboarding. No theme/login chosen; canceled with native Ctrl+C, then Windows batch termination, outer exit 1 | CLAUDE_UNSUPPORTED; explicit native-default is not guaranteed free |
+| Codex | Existing free-route menu 3, daemon/TERM and native exit handling unchanged; live NOT RUN, verified existing evidence reused | Existing exact OpenRouter NVIDIA Super :free configuration preserved; inference still NOT RUN |
+| Hermes | Actual menu 4 Enter canceled, exit 0. Actual menu 4 y opened v0.21.7 startup/provider prompt, canceled provider selection; original native input TUI appeared, Ctrl+D produced Goodbye. Windows batch termination confirmed, outer exit 1 | BLOCKED for automatic free mode; explicit native-default is not guaranteed free |
+
+Model prompts entered: zero. No auth/profile inspection, model/API inference, installation, consent/theme/provider acceptance or manual existing-state changes. Native startup/session artifacts retained; background native traffic unmeasured. No cleanup of user/runtime/stash/browser data. Cancellation of the newly launched batch shells used their own termination prompts; no unrelated process termination.
+
+Focused tests: 11 PASS (six existing P5.6 MOCK cases, with the one diagnostic-order expectation corrected, plus five new controlled menu/argv/env/exit tests). New cases cover default cancel vs yes, unchanged 1/3 routing, explicit non-TTY flag and invalid Pi/Codex opt-in, key-independent reasons, no key/pricing access for native-default, trusted argv/env/stdio/cwd and Ctrl+C/native exit forwarding. Actual guarded no-opt-in statuses and opt-in --version launcher smokes PASS. Syntax, diff, UTF-8/scope checks PASS. No old full suite or live Pi/Codex/model rerun.
+
+Git/code checks preserve Codex pricing/config body and existing Main plan/env/native exit/delegation bodies exactly. Pi settings, env loader, Worker/AUTO, batch entry and shared Skills have no delta. Changed files: scripts/agentco.mjs, scripts/native-free-main.mjs, scripts/native-free-main.test.mjs, scripts/native-default.test.mjs, docs/CURRENT_TASK.md, this work order. Sanitized local evidence: results/p5-6/narrow-correction.json (ignored). Commit/push only this feature; no main merge.
+
+NEXT: Claude reviews this new delta only. Product release remains GPT/user-gated. Native-default user-selected sessions can require vendor onboarding and incur costs if the user later chats; no free-only guarantee or automatic model switch is claimed. Genuine Claude NVIDIA support, Hermes free auxiliary/fallback controls, and explicitly approved Codex inference remain out of scope.

@@ -7,15 +7,16 @@ export async function freeMainPricing(fetchMetadata=fetch) {
   const model=(await response.json()).data?.find(row=>row.id===freeMainModel);
   if(model?.pricing?.prompt!=='0'||model?.pricing?.completion!=='0')throw Error('Exact zero pricing unconfirmed.');
 }
-export async function nativeFreeMain(plan, env, {key=()=>piEnv().OPENROUTER_API_KEY,pricing=freeMainPricing}={}) {
+export async function nativeFreeMain(plan, env, {key=()=>piEnv().OPENROUTER_API_KEY,pricing=freeMainPricing,nativeDefault=false}={}) {
   if(plan.main==='pi'||plan.status)return {plan,env};
+  if(nativeDefault&&['claude','hermes'].includes(plan.main))return {plan,env};
   // Metadata-only commands do not initialize a provider or send a prompt.
   if(plan.args.every(arg=>['--help','-h','--version','-V','--no-daemon'].includes(arg))&&plan.args.some(arg=>['--help','-h','--version','-V'].includes(arg)))return {plan,env};
   const blocked=(status,reason)=>({plan:{main:plan.main,status,reason},env});
+  if(plan.main==='claude')return blocked('CLAUDE_UNSUPPORTED','Official Claude Code gateways do not support NVIDIA models. Optional native TUI: agentco --main claude --native-default (free use not guaranteed; login/paid usage possible).');
+  if(plan.main==='hermes')return blocked('BLOCKED','Native auxiliary/fallback free-only control unproven. Optional native TUI: agentco --main hermes --native-default (free use not guaranteed; login/paid usage possible).');
   const token=key();
   if(!token)return blocked('CONFIG_REQUIRED','OpenRouter key absent; default/subscription route not launched.');
-  if(plan.main==='claude')return blocked('CLAUDE_UNSUPPORTED','Official Claude Code gateways do not support NVIDIA models. Required first-run consent is not bypassed.');
-  if(plan.main==='hermes')return blocked('BLOCKED','OpenRouter flags supported; native auxiliary/fallback free-only control not proven without profile changes.');
   // Reject provider/model/profile changes, remote sessions, subcommands and startup prompts.
   // Other native option support can be approved separately; never silently replace a user choice.
   for(let i=0;i<plan.args.length;i++){

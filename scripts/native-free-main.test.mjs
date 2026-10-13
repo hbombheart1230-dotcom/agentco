@@ -2,8 +2,8 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import {nativeFreeMain,freeMainPricing,freeMainModel} from './native-free-main.mjs';
 const plan=main=>({main,file:'fixture.exe',args:main==='codex'?['--no-daemon']:[]});
-test('P5.6: absent key fails closed for all non-Pi and does not check prices',async()=>{
- for(const main of ['claude','codex','hermes']){let calls=0;const result=await nativeFreeMain(plan(main),{}, {key:()=>'',pricing:async()=>calls++});assert.equal(result.plan.status,'CONFIG_REQUIRED');assert.equal(calls,0);}
+test('P5.6: absent key fails closed with accurate per-Main reasons and no prices',async()=>{
+ for(const [main,status] of [['claude','CLAUDE_UNSUPPORTED'],['codex','CONFIG_REQUIRED'],['hermes','BLOCKED']]){let calls=0;const result=await nativeFreeMain(plan(main),{}, {key:()=>'',pricing:async()=>calls++});assert.equal(result.plan.status,status);assert.equal(calls,0);}
 });
 test('P5.6: unsupported Claude and unresolved Hermes never launch a paid default',async()=>{
  for(const [main,status] of [['claude','CLAUDE_UNSUPPORTED'],['hermes','BLOCKED']]){const r=await nativeFreeMain(plan(main),{}, {key:()=> 'fixture',pricing:()=>{throw Error();}});assert.equal(r.plan.status,status);assert.equal(r.env.OPENROUTER_API_KEY,undefined);assert.equal(r.plan.file,undefined);}

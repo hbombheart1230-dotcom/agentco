@@ -13,6 +13,15 @@ export function menuChoice(value) {
   if(!/^[1-4]$/.test(choice))throw Error('Choose 1..4; Enter selects Pi.');
   return mains[Number(choice)-1];
 }
+export async function menuEntry(question) {
+  const main=menuChoice(await question('Main: 1 Pi [default] / 2 Claude Code / 3 Codex CLI / 4 Hermes\n> '));
+  if(['claude','hermes'].includes(main)) {
+    const answer=await question(`${main}: free-only use is not guaranteed; login may appear and later chat may incur charges. Open native TUI? [y/N] `);
+    if(!/^(y|yes)$/i.test(String(answer).trim()))return {kind:'cancel'};
+    return {kind:'main',main,args:[],nativeDefault:true};
+  }
+  return {kind:'main',main,args:[]};
+}
 export function parseEntry(args, tty) {
   if(args[0]==='--delegate') {
     if(args.length!==3 || !mains.includes(args[1]) || args[2]!=='add42')throw Error('Usage: agentco --delegate pi|claude|codex|hermes add42 (fixed synthetic job only).');
@@ -20,6 +29,10 @@ export function parseEntry(args, tty) {
   }
   if(args[0]==='--main') {
     if(!mains.includes(args[1]))throw Error('Usage: agentco --main pi|claude|codex|hermes [native arguments].');
+    if(args[2]==='--native-default') {
+      if(!['claude','hermes'].includes(args[1]))throw Error('--native-default is only for Claude/Hermes native TUI access.');
+      return {kind:'main',main:args[1],args:args.slice(3),nativeDefault:true};
+    }
     return {kind:'main',main:args[1],args:args.slice(2)};
   }
   return args.length===0 && tty ? {kind:'menu'} : {kind:'main',main:'pi',args};
@@ -61,8 +74,9 @@ async function main() {
   if(entry.kind==='menu') {
     const input=createInterface({input:process.stdin,output:process.stdout}),cancel=new AbortController();
     input.on('SIGINT',()=>cancel.abort());input.once('close',()=>cancel.abort());
-    try{while(entry.kind==='menu'){try{entry={kind:'main',main:menuChoice(await input.question('Main: 1 Pi [default] / 2 Claude Code / 3 Codex CLI / 4 Hermes\n> ',{signal:cancel.signal})),args:[]};}catch{if(cancel.signal.aborted){process.exitCode=130;return;}console.log('Choose 1..4; Enter selects Pi.');}}}finally{input.close();}
+    try{while(entry.kind==='menu'){try{entry=await menuEntry(prompt=>input.question(prompt,{signal:cancel.signal}));}catch{if(cancel.signal.aborted){process.exitCode=130;return;}console.log('Choose 1..4; Enter selects Pi.');}}}finally{input.close();}
   }
+  if(entry.kind==='cancel')return;
   if(entry.kind==='delegate') {
     const controller=new AbortController(),abort=()=>controller.abort();process.on('SIGINT',abort);process.on('SIGTERM',abort);
     const previous=process.env.OPENROUTER_API_KEY;
@@ -73,7 +87,7 @@ async function main() {
   let plan=mainPlan(entry.main,entry.args);
   if(plan.status){console.log(JSON.stringify(plan));process.exitCode=1;return;}
   let env=mainEnvironment(entry.main);
-  ({plan,env}=await nativeFreeMain(plan,env));
+  ({plan,env}=await nativeFreeMain(plan,env,{nativeDefault:entry.nativeDefault===true}));
   if(plan.status){console.log(JSON.stringify(plan));process.exitCode=1;return;}
   process.exitCode=await launchNative(plan,env);
 }
