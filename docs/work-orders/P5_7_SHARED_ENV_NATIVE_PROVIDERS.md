@@ -1,6 +1,6 @@
 # P5.7 — One Agentco root .env, native provider verification for Claude / Codex / Hermes
 
-**Status:** ASSIGNED / IMPLEMENTATION PENDING (2026-10-13)
+**Status:** BOUNDED VERIFICATION COMPLETE / PARTIAL - REVIEW PENDING (2026-10-13)
 **Base:** `main` at `7fcefb4bb6fe1a576ca42e93b7ca5b872a1f22aa`.
 **Branch:** `feature/p5-7-shared-env-native-providers`.
 **Workspace:** `C:\Agentco`; private personal Agentco project ONLY (not company cowork-cli).
@@ -43,3 +43,44 @@ per-Claude, Codex, Hermes status:
 `FOCUSED_TESTS` / `CHANGED_FILES` / `PUSH` / `MAIN_UNCHANGED`.
 
 **Never claim three working free native chats from just an .env path.** Preserve the P5.6 accepted bounded release; separate feature and reviewer gate. No paid/default inference or stealth login.
+
+
+## Execution delta (2026-10-13)
+
+BASE_SHA: 6120e89a7ea446fc3bfe4431ad822839cffec4df. Remote main baseline 7fcefb4bb6fe1a576ca42e93b7ca5b872a1f22aa. Fetched with clean original tree and safely created the tracking feature branch; no worktree/stash/reset/cleanup. Initial sanitized three-harness matrix was written before new tests in ignored results/p5-7/initial-matrix.json.
+
+KEY_PRESENT_BOOL: true. Canonical file is ignored C:\Agentco\.env (not C:\Agentco.env). Existing opaque whitelist loader supplied only a presence boolean to this investigation. Original credential file was not moved/copied/hashed/displayed; no additional real key store was created. Existing loader precedence (inherited shell value before root file) is preserved rather than changing Pi/Codex policy; canonical-store management does not erase unrelated user credentials.
+
+### Three-CLI truth matrix
+
+| CLI_VERSION | OPENROUTER_CHILD_ENV | EXACT_FREE_MODEL | AUX_FALLBACK | NATIVE_TUI | VENDOR_LOGIN / reason | CHAT_TEST |
+| --- | --- | --- | --- | --- | --- | --- |
+| Claude Code 2.1.292 | NOT_USED | NOT_SUPPORTED for NVIDIA | UNPROVEN; free mode blocked before spawn | Preserved explicit native-default access; live NOT RUN | NATIVE-DEFAULT may show required onboarding/login. Root OpenRouter key is not an Anthropic credential by itself; no official NVIDIA gateway route | NOT_RUN |
+| Codex 0.162.1 | CONNECTED: existing root loader / child-only path verified with dummy fixtures | VERIFIED configuration: nvidia/nemotron-3-super-120b-a12b:free; inference untested | Existing disabled/pinned child controls preserved, not re-certified through inference | Existing verified native route preserved; live NOT RUN | Custom provider requires_openai_auth=false; first-party login not needed for this configured API route, no new live login observation | NOT_RUN |
+| Hermes 0.21.7 / upstream 41cd7b64 | BLOCKED: no repo-key injection into unsafe free mode | BLOCKED pending complete cost gate; official main flags supported | UNPROVEN across title/compression/other auxiliary and configured fallback chains | Preserved explicit native-default access; live NOT RUN | NATIVE-DEFAULT retains native setup/provider selection; a missing key or unspecified provider can leave vendor defaults in control. Consent is separate | NOT_RUN |
+
+No claim of three working free chats. Claude/Hermes explicit native-default inherits existing ordinary caller env/profile and can require login or incur costs if the user later chats. It does not load the root key or select a provider automatically. Menu confirmation/default-cancel and exact --main claude|hermes --native-default form are unchanged.
+
+### Official/install evidence and conditional decision
+
+- Claude: [official gateway overview](https://code.claude.com/docs/en/llm-gateway) excludes non-Claude models; [gateway connection](https://code.claude.com/docs/en/llm-gateway-connect) uses ANTHROPIC_BASE_URL plus ANTHROPIC_AUTH_TOKEN/API_KEY. Neither certifies NVIDIA compatibility. Public OpenRouter metadata listed no anthropic/ model with both prompt and completion prices zero at this check; no officially supported, approved free Claude route was established. CLAUDE_UNSUPPORTED remains accurate independent of key presence. No unused key injection, model spoofing, subscription choice or credential-file inspection.
+- Codex: existing nativeFreeMain implementation already centralizes the whitelist loader and child-only OpenRouter Responses provider/model/price gate. No duplicate implementation or runtime code edit. The new isolated fixtures execute byte-copied existing env.mjs/native-free-main.mjs with their DEFAULT key-loading callback, mocked pricing and only newly generated dummy data. They prove root-file present/absent behavior, exact model selection, no token in argv, unchanged parent env, and no unrelated root secret injection. No original .env or native profile is copied into fixtures.
+- Hermes: installed --help confirms --provider openrouter and -m; [official providers](https://hermes-agent.nousresearch.com/docs/integrations/providers) supports API-key routing. But [official fallback documentation](https://hermes-agent.nousresearch.com/docs/user-guide/features/fallback-providers) explicitly has no environment override for the primary fallback chain; changes use config.yaml or hermes fallback. [Official configuration](https://hermes-agent.nousresearch.com/docs/user-guide/configuration) puts title disabling and compression/auxiliary choices in YAML. Installed hermes_cli/cli_config_load.py:102 exposes only vision/approval auxiliary env mapping; :199 defaults compression enabled; load_cli_config:258 loads native-home config and bundled defaults. --ignore-user-config is not an all-auxiliary disable switch. hermes_constants.py:get_config_path resolves native home/config.yaml. No supported standalone main flags were found that disable every cost-bearing side route while preserving native user state.
+- A further official alternative was checked: [managed scope](https://hermes-agent.nousresearch.com/docs/user-guide/managed-scope) supports HERMES_MANAGED_DIR relocation. Installed hermes_cli/managed_scope.py:get_managed_dir honors the existing directory; _cached_read explicitly fails open on parse failures. This is NOT recorded as nonexistent or generally unsupported. Official native Windows managed locations remain outside v1's scope, and relocated policy coverage across all native CLI/auxiliary consumers has not been certified here. Repointing policy without proving full consumer coverage and fail-closed activation would not satisfy this work order; no policy directory/config or runtime change was deployed. This is the concrete unverified candidate for any separately scoped follow-up, not proof of a safe route today.
+
+[Public unauthenticated metadata](https://openrouter.ai/api/v1/models) confirmed the exact NVIDIA Super :free prompt and completion prices both zero. Existing Codex launch gate is untouched. No model/API inference or account query was performed; public metadata GET is not a chat test. Native network behavior is not re-measured or represented as zero HTTP traffic.
+
+### Focused validation / preservation
+
+Four new focused offline tests PASS in scripts/shared-env-native.test.mjs:
+
+1. Existing default Codex loader reads only a dummy fixture-root key, matches the exact free model, keeps it out of argv and parent environment, and does not forward unrelated fixture secrets.
+2. Missing fixture-root key fails closed before pricing/provider requests.
+3. Unsupported Claude and unproven Hermes never invoke root-key/pricing callbacks or spawn a default paid provider.
+4. All four menu routes and explicit native-default argv/env inheritance remain intact without repo-key loading on unapproved native routes.
+
+Fixtures are newly generated under ignored results/p5-7/dummy-root-*; only source code is copied and only synthetic .env files are created. Original ignored runtime/results and user files remain untouched; fixtures are retained. No old suite, live TUI, model call, native auth/profile read, provider setup or consent acceptance. Installed --version/--help are metadata-only. Syntax, diff, UTF-8/line-ending and exact file-scope checks PASS; .env is ignored/untracked by Git. Pi, Worker/AUTO, launcher, native-free configuration/price gate, env loader, native-default implementation, batch entry and Skills have zero Git delta.
+
+Changed files: scripts/shared-env-native.test.mjs, docs/CURRENT_TASK.md, this work order. Sanitized evidence: results/p5-7/initial-matrix.json and results/p5-7/execution.json (ignored). Runtime implementation was deliberately preserved because automatic Hermes activation did not meet the conditional safety criteria. Feature-only commit/push; main and stashes unchanged.
+
+NEXT: Claude independent new-SHA/delta review. GPT/user decide the truthful PARTIAL result. Hermes needs native relocated-policy/consumer coverage and failure-path proof before any key injection or automatic free launch; no full-HOME replacement/proxy/vendor patch is authorized. Claude needs an officially supported approved zero-priced Claude-compatible route; unsupported NVIDIA mapping is not an option. Any Codex live synthetic inference still requires separate approval and current zero pricing.
