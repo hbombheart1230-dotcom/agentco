@@ -1,6 +1,6 @@
-# P5.5 — Select Main Harness + explicit named delegation (preserve existing AUTO)
+# P5.5 - Select Main Harness + explicit named delegation
 
-**Status:** task specification, implementation pending (2026-10-13)
+**Status:** selector implemented / readiness and delegation PARTIAL / review pending (2026-10-13)
 **Base main:** `cc6078fed3e1d9b4c0103a8de8d9c0a18ac1f37e`
 **Assigned feature:** `feature/p5-5-main-harness-selector`
 
@@ -54,3 +54,56 @@ Read only relevant live files: `bin/agentco.cmd`, `pi.cmd`, `scripts/pi.mjs`, `s
 3. **Explicit named delegation:** offline test proves requested identity is invoked, task is scoped/sanitized, failure has no fallback, no-target leaves same Main/default-AUTO, and P5.4 `add42` implementation was unchanged. For each Main, report **NATIVE-CHAT VERIFIED / EXPLICIT-COMMAND ONLY / NOT_READY**. Never claim natural language recognition works without a live authorized test.
 4. **Regression boundary:** narrow tests only; old P5.4 suites do not need rerun if files unchanged. Verify P5.4 core files unchanged with Git diff. No browser/finance code diff.
 5. **Handoff**: show `BRANCH`, `BASE_SHA`, `IMPLEMENTATION_SHA`, `MAIN_LAUNCH_MATRIX`, `EXPLICIT_DELEGATION_MATRIX`, `AUTO_UNCHANGED`, `MODEL_COST_GATE`, `TESTS_LIVE_VS_MOCK`, `CHANGED_FILES`, `KNOWN_GAPS`, `PUSH`. NEVER mark a capability PASS merely because the command exists.
+
+## Execution result (2026-10-13)
+
+BRANCH: feature/p5-5-main-harness-selector. BASE_SHA: 031391225edfbe2adc6fc438d7c9dc183a1dd66c (prepared feature), released main cc6078fed3e1d9b4c0103a8de8d9c0a18ac1f37e. Clean safe fetch/switch; no stash/reset/force/worktree/browser branch change. IMPLEMENTATION_SHA is the feature commit reported at handoff. **Overall PARTIAL**, with implemented selector and bounded explicit fixed-job connector; no claim of four general Main-ready profiles.
+
+### Native entry / model readiness
+
+bin/agentco.cmd now launches scripts/agentco.mjs, still pushd repository root/popd caller, using setlocal to preserve caller environment and native exit code. TTY/no-argument menu: 1 Pi default, 2 Claude, 3 Codex, 4 Hermes. Enter chooses Pi; invalid input repeats; cancellation exits without spawning. No-TTY defaults to legacy Pi without blocking. --main pi|claude|codex|hermes selects explicitly; legacy --version and Pi args stay Pi. Argument arrays, shell=false and inherited stdin/stdout/stderr preserve native CLI surfaces, without a common chat UI or nested Pi. Native Main Ctrl+C is delivered through the shared console; parent waits rather than separately killing a recycled PID. Native TUI terminal modes are restored on exit.
+
+Trusted existing resolver functions locate exact installed CLIs. Pi launches the same upstream bundle with piEnv and existing model/settings. Other CLIs support native --help/--version metadata, but general conversation is fail-closed CONFIG_REQUIRED until a separate general Main free-only profile/context boundary is verified. No existing native auth/profile contents inspected or edited to bypass that gate. This implementation deliberately cannot enable arbitrary non-Pi Main conversations merely by installing their executable. No paid/default model guessed, no fallback, no synthetic TEMP Worker profile presented as Main.
+
+| MAIN_LAUNCH_MATRIX | Metadata | General conversation |
+| --- | --- | --- |
+| Pi | LIVE 1.0.4; legacy agentco --version exit 0 | LIVE TTY: Enter opens native Pi, existing NVIDIA Ultra free footer; no model prompt; Ctrl+D clean exit 0 |
+| Claude Code | LIVE 2.1.292 | CONFIG_REQUIRED; native general free-only profile/context not verified |
+| Codex CLI | LIVE 0.162.1 | CONFIG_REQUIRED; native general free-only profile/context not verified |
+| Hermes | LIVE 0.21.7 | CONFIG_REQUIRED; native general free-only profile/context not verified |
+
+TTY menu selection 2 correctly reports Claude CONFIG_REQUIRED without another Main. TTY menu Ctrl+C cancels without child; outer PowerShell reports exit 1, while mocked native signal propagation maps SIGINT to 130. Pi TUI Ctrl+C is left to Pi (clear/interrupt behavior); Ctrl+D exits and restores terminal. This is not a claim of full Ctrl+C behavior across three gated native conversations.
+
+Pi startup itself updated lastChangelogVersion 1.0.2 -> 1.0.4 and removed settings EOF newline. Verified this was the only settings semantic change, then restored the baseline bytes. Existing settings/model/policy remain unchanged. The new empty smoke session is retained; no session/runtime cleanup. Startup update notice was not acted on.
+
+### Explicit named contract / native investigation
+
+New deterministic external invocation: agentco --delegate claude|codex|hermes add42. Existing P5.4 runSynthetic functions are called directly, with their exact free pricing/native provider/sandbox/timeout/Abort/result gates, no nested Commander or copied worker code. Only literal add42 accepted; extra/private task text and arbitrary paths rejected. Returned identity/status/output must match requested harness, otherwise FAIL; no alternate helper/model. CLI cancellation forwards to existing safe execution. Child Pi Main gets a process-local AGENTCO_MAIN tag; known self-target requests refuse self-spawn and direct local native handling. External Pi Worker is NOT_READY because no verified additional scoped Pi path was added.
+
+This fixed synthetic connector is **not** generalized explicit-task execution or natural-language recognition. No real source task, model-driven chain, native Skill adapter, new hooks/plugins or regex parser. Existing Pi /harness commands remain the native in-chat fixed-job route; no configuration changes are necessary. In other native Mains, the deterministic invocation is documented for the terminal or an already available native shell facility, not automatically installed as an in-chat command.
+
+| EXPLICIT_DELEGATION_MATRIX (new surface) | Result |
+| --- | --- |
+| Pi Main | EXPLICIT-COMMAND ONLY for new entry; existing /harness fixed-job interface unchanged |
+| Claude / Codex / Hermes Main | EXPLICIT-COMMAND ONLY outside chat; general Main blocked, native-chat recognition NOT RUN |
+| Named Claude/Codex/Hermes add42 | MOCK wiring/identity PASS; existing frozen native route reused; new entry live inference NOT RUN |
+| Pi external target / known self-target | NOT_READY/local handling; no self-spawn or substitute |
+| Arbitrary task / sequential chain | NOT_READY / unsupported; no safe general scope contract added |
+
+Official capability references inspected: [Pi Extension API](https://pi.dev/docs/latest/extensions), [Claude CLI](https://code.claude.com/docs/en/cli-reference), [Codex CLI](https://developers.openai.com/codex/cli/reference/), [Hermes CLI](https://hermes-agent.nousresearch.com/docs/reference/cli-commands). They expose native extension/tool/command mechanisms, but their existence does not prove a universal safe named free-task bridge. Installing hooks/Skills or replacing contexts/permissions would require a separate scoped configuration/integration; no such claim or change here. Scope B therefore PARTIAL, following the work order's permitted safe narrow outcome.
+
+AUTO_UNCHANGED: frozen harness-delegation.ts/commander.mjs, settings, Skill files, pi.cmd and scripts/pi.mjs/env.mjs have no Git diff. New explicit --delegate branch never runs for untargeted input. Existing AUTO remains Claude for add42; no rotation or algorithm.
+
+### Tests / cost / handoff
+
+Five focused new tests PASS: menu/default/four choices/invalid/no-TTY/legacy args; exact resolver/readiness gates and argument forwarding; inherited terminal/shell=false/mock exit and Ctrl+C; fixed named identity/failure/no fallback/self guard; actual Windows batch fixture with spaces/quoted argv/exit 23/caller cwd. Initial Windows fixture driver quoted cmd.exe incorrectly; added Windows verbatim argument handling to that test only, then reran that failed case PASS. No old suite/model test repeated.
+
+TESTS_LIVE_VS_MOCK: LIVE four native versions, real agentco --version, TTY menu/Claude gate/cancel/Pi native UI/clean exit, three CONFIG_REQUIRED no-prompt guards, Windows cmd fixture. MOCK invocation identity, fake/wrong Worker outputs, exit/signal forwarding, menu mapping and no-TTY choice. NOT RUN: new connector provider inference, arbitrary delegation, non-Pi conversational TUI, natural-language recognition or chains.
+
+MODEL_COST_GATE: no model prompt or authenticated inference in this batch. Non-Pi general Main does not launch unverified model/profile; the explicit fixed-job connector keeps the unchanged P5.4 immediate public-zero pricing gates. No new live price check was needed/performed. Main Pi model unchanged, no private data sent. Native help/version UI startup is not model readiness or provider billing proof.
+
+CHANGED_FILES: bin/agentco.cmd; scripts/agentco.mjs; scripts/agentco.test.mjs; docs/CURRENT_TASK.md; this work order. Evidence only ignored results/p5-5/implementation-summary.json, no raw UI/session/auth/env output. UTF-8/line endings, syntax, diff-check, frozen-source comparison, intended five-file scope, stash/main/history/browser preservation and secret/path review checked. One feature commit/push; no main merge.
+
+KNOWN_GAPS: three non-Pi general Main profiles need separately verified free provider/auxiliary/context boundaries and launcher activation; broad natural-language/scoped real tasks need official native integrations and a safe task contract. Current connector is only add42, external Pi/self-target is not implemented as a worker. Review these exact limitations, not the completed P5.4 tests.
+
+Next: one Claude independent exact-SHA code/evidence review, no fresh model/API calls; GPT/user acceptance/release decision. Freeze feature until review; parked browser branch untouched.
