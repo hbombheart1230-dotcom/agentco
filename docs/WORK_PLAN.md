@@ -9,7 +9,9 @@ Current baseline: upstream Pi 1.0.4, exact-pinned. This plan supersedes the earl
 | P3 | CLI/Skill research performed on `feature/p3-worker-harness-design`; detailed four-harness E2E remains PARTIAL and is deferred |
 | P4 | Harbor benchmark and reproducible evaluation evidence |
 | P5 | **CLOSED / FINAL PASS (2026-10-13):** Pi -> Claude Code CLI -> Pi synthetic-text pipeline, reviewed and selectively promoted to main |
-| P5.1 | **NEXT:** Scoped synthetic file editing by Claude Worker through existing Pi pipeline, official native tools first |\n| P6 | Model/harness routing and comparisons deferred until useful product workflow runs |
+| P5.1 | **CLOSED / FINAL PASS (2026-10-13):** native Read/Edit synthetic JS + host test + Pi result; main release |
+| P5.2 | **NEXT / NOT APPROVED:** interactive Pi session delegation using existing native Extension mechanism |
+| P6 | Model/harness routing and comparisons deferred until useful product workflow runs |
 | P7 | Multi-harness workflows with explicit ownership and handoffs |
 | P8 | Fresh-machine portability across PCs/drives and Linux/cloud |
 

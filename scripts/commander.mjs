@@ -1,10 +1,12 @@
-// Isolated Pi Commander -> text-only Claude Worker. No production settings changes.
+// Isolated Pi Commander -> Claude Worker: text default, explicit synthetic --toy-edit.
 import { readFileSync, writeFileSync, mkdirSync, mkdtempSync, existsSync, copyFileSync, renameSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join, dirname, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { spawn, execFile } from 'node:child_process';
 import { promisify } from 'node:util';
+import { createHash } from 'node:crypto';
+import { readdirSync, lstatSync } from 'node:fs';
 import { statSync } from 'node:fs';
 const root = resolve(dirname(fileURLToPath(import.meta.url)), '..');
 const cli = join(root, 'node_modules/@earendil-works/pi-coding-agent/dist/cli.js');
@@ -107,12 +109,35 @@ export function validatePipeline(e) {
     return result.exitCode === 0 && result.model === model && clean(result.output) === clean(e.worker.output) && clean(e.final) === clean(e.worker.output);
   } catch { return false; }
 }
+// Fixed synthetic fixture; validate bytes before executing any model-edited code.
+export const toyBefore = 'module.exports = (a, b, c) => a - b - c;\n';
+export const toyAfter = 'module.exports = (a, b, c) => a + b + c;\n';
+export const toyTest = "import test from 'node:test';import assert from 'node:assert/strict';import sum from './sum.js';test('synthetic sum equals 42',()=>assert.equal(sum(7,11,24),42));\n";
+export function checkToyEdit(before, after, testSource, files, tools, status) {
+  return before === toyBefore && before !== after && after.trim() === toyAfter.trim() && testSource === toyTest
+    && files.length === 2 && files.every(f => ['sum.js','sum.test.mjs'].includes(f))
+    && tools.every(t=>['Read','Edit','Write'].includes(t.name) && t.file==='sum.js' && t.success)
+    && tools.some(t=>t.name==='Read' && t.success) && status === 0 && tools.some(t => ['Edit','Write'].includes(t.name) && t.file === 'sum.js' && t.success);
+}
+export async function verifyToyEdit(project, tools, signal) {
+  const files=readdirSync(project);
+  if (files.some(f=>!lstatSync(join(project,f)).isFile() || lstatSync(join(project,f)).isSymbolicLink())) throw Error('Unexpected fixture entry.');
+  const after=readFileSync(join(project,'sum.js'),'utf8'), source=readFileSync(join(project,'sum.test.mjs'),'utf8');
+  if (!checkToyEdit(toyBefore,after,source,files,tools,0)) throw Error('Native edit or fixture integrity failed.');
+  const env=Object.fromEntries(Object.entries(process.env).filter(([k])=>['SYSTEMROOT','WINDIR','COMSPEC','PATH','PATHEXT','TEMP','TMP'].includes(k.toUpperCase())));
+  const run=await runBounded(process.execPath,['--test','sum.test.mjs'],{cwd:project,env,signal,timeout:10000,maxBuffer:65536});
+  if (!checkToyEdit(toyBefore,after,source,files,tools,run.status)) throw Error('Host Node test failed.');
+  const hash=text=>createHash('sha256').update(text).digest('hex');
+  return {changed:true,beforeHash:hash(toyBefore),afterHash:hash(after),testExitCode:run.status,testsPassed:1,nativeTools:tools};
+}
 async function main() {
 const claude = resolveClaudePath();
 if (!existsSync(cli)) throw Error('Existing Pi CLI required; no installation performed.');
 if (process.env.AGENTCO_CLAUDE_CLI) console.warn('Trusted Claude executable override receives API authentication; select only a trusted local binary.');
 if (process.argv[2] === '--check') { console.log('Commander startup prerequisites: PASS; Claude: '+claude); return; }
-const request = process.argv.slice(2).join(' ');
+const toyEdit=process.argv[2]==='--toy-edit';
+const toyTask='Fix the fabricated sum.js using native file tools. Replace its content with exactly: module.exports = (a, b, c) => a + b + c; Do not change any other file. Read sum.js first. Return only EDIT_DONE after editing.';
+const request = toyEdit ? 'Delegate the fabricated sum.js repair to claude_worker exactly once. The tool performs the file edit and Node test. Then respond with ONLY the exact value of the output property in its JSON result. Do not describe files or use the Worker internal EDIT_DONE response.' : process.argv.slice(2).join(' ');
 if (!request || request.length > 2000) throw Error('Provide a synthetic task of 1..2000 characters.');
 let key = process.env.OPENROUTER_API_KEY;
 if (!key && existsSync(join(root, '.env'))) {
@@ -130,35 +155,47 @@ for (let parent = toy; ; parent = dirname(parent)) {
 }
 const agent = join(toy, 'pi-home'), workerHome = join(toy, 'claude-home');
 mkdirSync(agent); mkdirSync(workerHome);
+const project=toyEdit?join(toy,'project'):toy;
+if(toyEdit){mkdirSync(project);writeFileSync(join(project,'sum.js'),toyBefore);writeFileSync(join(project,'sum.test.mjs'),toyTest);}
 writeFileSync(join(agent, 'settings.json'), JSON.stringify({ retry: { enabled: false } }));
 writeFileSync(join(agent, 'models.json'), JSON.stringify({ providers: { openrouter: { modelOverrides: { [model]: { maxTokens: 512 } } } } }));
 const extension = join(toy, 'claude-worker.mjs');
 writeFileSync(extension, `
-import { runBounded, writeOwner } from ${JSON.stringify(import.meta.url)};
+import { runBounded, writeOwner, verifyToyEdit } from ${JSON.stringify(import.meta.url)};
 import { writeFileSync } from 'node:fs';
+import { resolve } from 'node:path';
 const saveOwner = owner => writeOwner(${JSON.stringify(join(toy,'worker-process.json'))},owner);
 export default function(pi) {
   let dispatched = false;
-  pi.registerTool({name:'claude_worker', label:'Claude Worker', description:'Delegate one synthetic text-only task to Claude CLI. No file or shell tools.',
+  pi.registerTool({name:'claude_worker', label:'Claude Worker', description:${JSON.stringify(toyEdit?'Fix one fabricated JS file with native Claude file tools; host verifies Node test. No shell tools.':'Delegate one synthetic text-only task to Claude CLI. No file or shell tools.')},
     parameters:{type:'object',properties:{task:{type:'string',minLength:1,maxLength:2000}},required:['task'],additionalProperties:false},
     async execute(id, {task}, signal) {
       if (dispatched) throw Error('Only one worker dispatch is allowed per run.');
       dispatched = true;
       const env = {...process.env, HOME:${JSON.stringify(workerHome)}, USERPROFILE:${JSON.stringify(workerHome)}, CLAUDE_CONFIG_DIR:${JSON.stringify(workerHome)},
         ANTHROPIC_BASE_URL:'https://openrouter.ai/api', ANTHROPIC_AUTH_TOKEN:process.env.OPENROUTER_API_KEY, ANTHROPIC_API_KEY:'',
-        CLAUDE_CODE_SIMPLE:'1', CLAUDE_CODE_DISABLE_NONESSENTIAL_TRAFFIC:'1', CLAUDE_CODE_MAX_RETRIES:'0', API_TIMEOUT_MS:'20000',
-        CLAUDE_CODE_MAX_OUTPUT_TOKENS:'256', DISABLE_AUTOUPDATER:'1', DISABLE_TELEMETRY:'1', DISABLE_ERROR_REPORTING:'1', DISABLE_AUTO_COMPACT:'1'};
+        CLAUDE_CODE_SIMPLE:${JSON.stringify(toyEdit?'':'1')}, CLAUDE_CODE_DISABLE_NONESSENTIAL_TRAFFIC:'1', CLAUDE_CODE_MAX_RETRIES:'0', API_TIMEOUT_MS:'20000',
+        CLAUDE_CODE_MAX_OUTPUT_TOKENS:${JSON.stringify(toyEdit?'512':'256')}, DISABLE_AUTOUPDATER:'1', DISABLE_TELEMETRY:'1', DISABLE_ERROR_REPORTING:'1', DISABLE_AUTO_COMPACT:'1'};
       delete env.OPENROUTER_API_KEY;
       for (const name of ['ANTHROPIC_MODEL','ANTHROPIC_DEFAULT_FABLE_MODEL','ANTHROPIC_DEFAULT_OPUS_MODEL','ANTHROPIC_DEFAULT_SONNET_MODEL','ANTHROPIC_DEFAULT_HAIKU_MODEL','CLAUDE_CODE_SUBAGENT_MODEL']) env[name]=${JSON.stringify(model)};
       let result;
+      if (${toyEdit}) { delete env.CLAUDE_CODE_SIMPLE; env.CLAUDE_CODE_SAFE_MODE='1'; }
       try {
-        const run = await runBounded(${JSON.stringify(claude)}, ['--bare','--restricted','-p',task,'--model',${JSON.stringify(model)},'--tools','','--disallowedTools','*','--strict-mcp-config','--setting-sources','','--no-session-persistence','--no-chrome','--max-turns','1','--output-format','json','--system-prompt','Answer only the synthetic task briefly.','--settings','{}'], {cwd:${JSON.stringify(toy)},env,signal,timeout:30000,maxBuffer:262144,onSpawn:(pid,owner)=>saveOwner(owner),onIdentity:saveOwner,onRetire:saveOwner});
+        const args=${toyEdit} ? ['--safe-mode','--restricted','-p',${JSON.stringify(toyTask)},'--model',${JSON.stringify(model)},'--tools','Read,Edit,Write','--allowedTools','Read(./sum.js),Edit(./sum.js)','--permission-mode','dontAsk','--strict-mcp-config','--setting-sources','','--disable-slash-commands','--no-session-persistence','--no-chrome','--max-turns','4','--output-format','stream-json','--verbose','--system-prompt','Edit only the synthetic sum.js as instructed. No other tasks.','--settings',${JSON.stringify(JSON.stringify({permissions:{deny:['Edit(./sum.test.mjs)']}}))}] : ['--bare','--restricted','-p',task,'--model',${JSON.stringify(model)},'--tools','','--disallowedTools','*','--strict-mcp-config','--setting-sources','','--no-session-persistence','--no-chrome','--max-turns','1','--output-format','json','--system-prompt','Answer only the synthetic task briefly.','--settings','{}'];
+        const run = await runBounded(${JSON.stringify(claude)}, args, {cwd:${JSON.stringify(project)},env,signal,timeout:${toyEdit?90000:30000},maxBuffer:${toyEdit?524288:262144},onSpawn:(pid,owner)=>saveOwner(owner),onIdentity:saveOwner,onRetire:saveOwner});
         if(run.status!==0) throw Error('Worker exit failed.');
-        const data=JSON.parse(run.stdout.trim());
-        const observedModels=Object.keys(data.modelUsage||{});
-        if(data.is_error || !data.result || observedModels.length!==1 || observedModels[0]!==${JSON.stringify(model)}) throw Error('Worker result failed.');
+        const events=${toyEdit}?run.stdout.split('\\n').flatMap(line=>{try{return [JSON.parse(line)];}catch{return [];}}):[];
+        const data=${toyEdit}?events.findLast(e=>e.type==='result'):JSON.parse(run.stdout.trim());
+        const observedModels=Object.keys(data?.modelUsage||{});
+        if(!data || data.is_error || !data.result || observedModels.length!==1 || observedModels[0]!==${JSON.stringify(model)}) throw Error('Worker result failed.');
         const text=String(data.result).replaceAll(process.env.OPENROUTER_API_KEY,'[REDACTED]');
-        result={model:${JSON.stringify(model)},observedModels,output:text,exitCode:run.status,turns:data.num_turns,toolMode:'none'};
+        result={model:${JSON.stringify(model)},observedModels,output:text,exitCode:run.status,turns:data.num_turns,toolMode:${JSON.stringify(toyEdit?'Read,Edit,Write':'none')}};
+        if (${toyEdit}) {
+          const replies=events.flatMap(e=>e.type==='user'?e.message?.content||[]:[]).filter(c=>c.type==='tool_result');
+          const tools=events.flatMap(e=>e.type==='assistant'?e.message?.content||[]:[]).filter(c=>c.type==='tool_use').map(c=>({name:c.name,file:resolve(${JSON.stringify(project)},c.input?.file_path||'')===${JSON.stringify(join(project,'sum.js'))}?'sum.js':'other',success:replies.some(r=>r.tool_use_id===c.id&&!r.is_error)}));
+          result.fileEdit=await verifyToyEdit(${JSON.stringify(project)},tools,signal);
+          result.output='FILE_EDIT_RESULT=PASS; sum(7,11,24)=42; NODE_TEST=PASS';
+        }
       } catch { throw Error('Claude worker failed or timed out; no retry/fallback.'); }
       writeFileSync(${JSON.stringify(join(toy, 'worker.json'))},JSON.stringify(result,null,2));
       return {content:[{type:'text',text:JSON.stringify(result)}],details:{worker:'Claude Code CLI',model:result.model}};
@@ -173,7 +210,7 @@ const controller = new AbortController();
 const interrupt = () => controller.abort();
 process.on('SIGINT', interrupt); process.on('SIGTERM', interrupt);
 let run, failure;
-try { run = await runBounded(process.execPath, [cli,'--provider','openrouter','--model',model,'--thinking','off','--tools','claude_worker','--no-extensions','-e',extension,'--no-mcp','--no-skills','--no-prompt-templates','--no-context-files','--no-themes','--no-session','--system-prompt','You are a synthetic-task Commander. Call claude_worker exactly once with the user task. Return the Worker output verbatim, with no added explanation. Do not answer before delegating.','--mode','json','-p',request], {cwd:toy,env,signal:controller.signal,timeout:60000,maxBuffer:1048576}); }
+try { run = await runBounded(process.execPath, [cli,'--provider','openrouter','--model',model,'--thinking','off','--tools','claude_worker','--no-extensions','-e',extension,'--no-mcp','--no-skills','--no-prompt-templates','--no-context-files','--no-themes','--no-session','--system-prompt','You are a synthetic-task Commander. Call claude_worker exactly once with the user task. Return the Worker output verbatim, with no added explanation. Do not answer before delegating.','--mode','json','-p',request], {cwd:toy,env,signal:controller.signal,timeout:toyEdit?150000:60000,maxBuffer:1048576}); }
 catch (error) { failure = error.message; run = {status:null,stdout:''}; }
 finally {
   const ownerFile = join(toy,'worker-process.json');
@@ -190,9 +227,15 @@ const evidence = { model, commanderModels:[...new Set(messages.map(m=>m.model))]
 evidence.pipelineSuccess = !failure && validatePipeline(evidence);
 evidence.correspondence = evidence.pipelineSuccess ? 'exact after outer-whitespace/CRLF normalization' : 'NOT VERIFIED';
 evidence.failure = failure || (evidence.pipelineSuccess ? null : 'Worker/toolResult/final correspondence or route failed.');
-const output = join(root, 'results/p5', `pipeline-${Date.now()}`); mkdirSync(output, {recursive:true});
+const output = join(root, toyEdit?'results/p5-1':'results/p5', `pipeline-${Date.now()}`); mkdirSync(output, {recursive:true});
 writeFileSync(join(output, 'evidence.json'), JSON.stringify(evidence,null,2).replaceAll(key,'[REDACTED]'));
 if (existsSync(workerFile)) copyFileSync(workerFile,join(output,'worker.json'));
+if (toyEdit && evidence.worker?.fileEdit?.changed) {
+  const after=readFileSync(join(project,'sum.js'),'utf8');
+  if (createHash('sha256').update(after).digest('hex')===evidence.worker.fileEdit.afterHash && after.trim()===toyAfter.trim()) {
+    writeFileSync(join(output,'fixture-before.js'),toyBefore);writeFileSync(join(output,'fixture-after.js'),after);writeFileSync(join(output,'sum.test.mjs'),toyTest);
+  }
+}
 console.log(final.replaceAll(key,'[REDACTED]') || 'Pipeline failed before final Commander response.');
 console.log('Evidence: '+output);
 if (!evidence.pipelineSuccess) { console.error(evidence.failure); process.exitCode = 1; }
