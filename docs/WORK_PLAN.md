@@ -5,11 +5,11 @@ Current baseline: upstream Pi 1.0.4, exact-pinned. This plan supersedes the earl
 | Phase | Scope |
 |---|---|
 | P0/P1 | Audit, docs-first role governance, portable pi-dev workspace, bootstrap/doctor and regression verification |
-| P2 | P2.1 shared-skills design review; P2.2 implementation only after approval; P2.3 independent verification |
-| P3 | Install/evaluate Hermes, Claude Code and Codex CLI after a new work order |
+| P2 | **CLOSED / PASS:** shared canonical Skill source and Pi integration, merged to main |
+| P3 | CLI/Skill research performed on `feature/p3-worker-harness-design`; detailed four-harness E2E remains PARTIAL and is deferred |
 | P4 | Harbor benchmark and reproducible evaluation evidence |
-| P5 | Pi Commander MVP using supported Pi control surfaces |
-| P6 | Benchmark-informed model/harness routing |
+| P5 | **CLOSED / FINAL PASS (2026-10-13):** Pi -> Claude Code CLI -> Pi synthetic-text pipeline, reviewed and selectively promoted to main |
+| P5.1 | **NEXT:** Scoped synthetic file editing by Claude Worker through existing Pi pipeline, official native tools first |\n| P6 | Model/harness routing and comparisons deferred until useful product workflow runs |
 | P7 | Multi-harness workflows with explicit ownership and handoffs |
 | P8 | Fresh-machine portability across PCs/drives and Linux/cloud |
 

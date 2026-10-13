@@ -1,24 +1,18 @@
-# Agentco Current Task
+# Agentco Current Task — main release baseline
 
-This is the default execution entrypoint for Codex/Claude. Follow `AGENTS.md`; inspect live Git/status first, and read only the minimum current context.
+**P5 Pi Commander -> Claude Code CLI -> Pi pipeline CLOSED / FINAL PASS (2026-10-13).**
 
-## Current action
+Main is the stable promotion of two exact reviewed scripts from feature commit `dc56eb5`, not a merge of the P3 feature branch's 88 experimental/documentation commits. Detailed P3 experiments remain only on `feature/p3-worker-harness-design`; no four-harness worker readiness or native Skill/file-edit success is implied.
 
-**P2 FINAL PASS (2026-10-12) — approved fast-forward merge to main.** GPT reviewed Claude's evidence-only PASS at implementation `5037e417a5fa6a9cc29852d79204cf3c43d34592` and documentation evidence `e1a0f60027ce59e62aa298d6f7a042bf03e382a7`. No functional blockers. Reused model-dependent smoke was 14/14 on second run after a Groq marker omission on first run; it was not independently rerun. Exact-SHA fresh-clone and live invocation provenance/limits are recorded in the work order.
+## Production entrypoint
 
-## Required context
+- Existing Pi baseline is unchanged (`pi-dev`, pinned upstream Pi 1.0.4).
+- `scripts/commander.mjs` is a standalone **synthetic-text-only** Pi -> Claude CLI -> Pi invocation, pinning OpenRouter `nvidia/nemotron-3-super-120b-a12b:free`. Requires preinstalled Node/dependencies and official Claude Windows CLI; default WinGet or process-only `AGENTCO_CLAUDE_CLI`.
+- `node scripts/commander.mjs --check` checks local CLI prerequisites without API/key use. Do NOT send real private code, secrets, files or company content into this prototype.
+- This implementation has independent Claude PASS after 18/18 focused offline tests; previously recorded Pi->Claude->Pi real inference output `HARDENED_PAYLOAD=137` was not re-run after final process-cleanup changes. `WORKER READY = NO` for native file editing and Skill invocation.
 
-- `AGENTS.md`
-- `docs/work-orders/P2_SHARED_SKILLS.md` — final evidence and completion/merge notes only if needed
-- actual local/remote Git HEAD, branch, status, ancestry
+Historical release evidence and residual limitations: `docs/work-orders/P5_PIPELINE_MVP.md`.
 
-## Codex merge action
+## Next work
 
-1. In canonical `C:\Agentco`, check branch, fetch, status and current `origin/main` / `origin/feature/p2-shared-skills-design`. Check there are **only authorized documentation-only commits** after independently verified implementation `5037e417...` and evidence `e1a0f600...`. If dirty work, unexpected commits, origin drift, or a non-fast-forward is detected, STOP and report; do not reset, force-push, clean or overwrite.
-2. Fast-forward the approved feature branch into `main` with `--ff-only`; push `origin/main`, verify remote SHA equals the fast-forwarded HEAD. Never rebase/squash/change verified implementation files as part of merging.
-3. Preserve the feature branch, ignored results, runtime, auth, user work and **all existing stashes**, including retained recovery stash `0c43cbd1b330fad177cecfbc24a3d7a95f26c397`. Do not delete anything or run a new model/smoke/bootstrap regression merely for the docs-only finalization.
-4. Report only `MAIN SHA / ORIGIN SHA / MERGE METHOD / GIT STATUS / NEXT`. If this approved P2 merge is already completed by another actor, verify and report without a new merge.
-
-## After merge
-
-P2 is CLOSED. **Next: P3 worker-harness installation/evaluation work-order design, pending user/GPT scope approval. Do not install Hermes, Claude Code or Codex CLI or begin P3 implementation until a new work order is approved.**
+Use a separate feature branch and dedicated work order for **P5.1: native official Claude CLI file edits on disposable synthetic files through the working Pi pipeline**. Prioritize built-ins/official tools and no new framework or model/harness comparison. Do not execute development tasks on main without a new approved work order; preserve local sessions, runtime, auth and stashes.
