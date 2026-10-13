@@ -3,8 +3,8 @@ import { Type } from "typebox";
 import { runSyntheticClaude, resolveClaudePath } from "../../scripts/commander.mjs";
 
 const blocked = {
-  codex: "NOT_READY: native exec tool-free/file-read boundary and exact OpenRouter Responses route not verified.",
-  hermes: "NOT_READY: isolated native launch failed; tool-free auxiliary/fallback-free route not verified.",
+  codex: "NOT_READY: Windows unelevated sandbox cannot enforce split filesystem read restrictions; native view_image remains enabled.",
+  hermes: "NOT_READY: minimal CLI has zero tools but provider/auxiliary isolation is unverified; failed runtime can exit 0.",
 };
 export function selectHarness(harness: string, job: string) {
   if (!["auto","claude","codex","hermes"].includes(harness) || job !== "add42") throw Error("Use auto|claude|codex|hermes with fixed synthetic add42 only; no private text/paths.");

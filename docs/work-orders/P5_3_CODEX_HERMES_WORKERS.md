@@ -1,6 +1,6 @@
-# P5.3 — Complete named native Codex + Hermes Worker routes in Pi
+# P5.3 - Complete named native Codex + Hermes Worker routes in Pi
 
-**Status: USER APPROVED / ACTIVE (2026-10-13).** One combined substantial Codex implementation batch followed by one independent Claude review. User requested proceeding to full 1 Commander + 3 named Worker wiring. **No new generic agent framework, Skill adapter, dependency or model comparison.**
+**Status: SCOPED INVESTIGATION COMPLETE / BOTH NEW LANES NOT_READY / REVIEW PENDING (2026-10-13).** One combined substantial Codex implementation batch followed by one independent Claude review. User requested proceeding to full 1 Commander + 3 named Worker wiring. **No new generic agent framework, Skill adapter, dependency or model comparison.**
 
 ## Accepted baseline — do not rediscover or rerun
 
@@ -59,3 +59,48 @@ Model-callable `agentco_delegate({harness:'codex'|'hermes',job:'add42'})` must u
 - **P5.3 full PASS:** native Codex and Hermes both run named synthetic `add42` via Pi, each with bounded safe child environment and exact free-model route evidence, independently reviewed, while Claude continues to work unchanged; `auto` only ready routes.
 - **P5.3 PARTIAL / scoped PASS:** one extra native Worker works, the other remains honestly blocked with concise specific reason, or both remain NOT_READY after one combined conclusive native capability investigation. No silent provider/tool bypass.
 - **Not in scope:** private project edits, arbitrary code tasks, common Skill adapter, real TUI interaction, performance benchmarking, model auto-selection beyond verified static capability, WSL/Docker/Linux, paid subscriptions, UI/scheduler.
+
+## Execution result (2026-10-13)
+
+**P5.3 PARTIAL; CODEX NOT_READY; HERMES NOT_READY.** No unsafe native route activated. Clean fetch/new tracking branch base 1e17467151548fec88843001eb506a3859c81d0c. Existing Claude/AUTO PASS reused, not called live. Only two blocked-reason strings, two focused mock tests and these two active documents changed. commander/settings/Skills untouched.
+
+### Codex - exact native request and Windows canary
+
+Pinned installed version/exec help/features inspected once under fresh child HOME/CODEX_HOME/CODEX_SQLITE_HOME/TEMP, no user auth. Native custom Responses provider accepts exact Super free model, env_key, requires_openai_auth=false, supports_websockets=false and zero request/stream retries. A loopback-only local HTTP fixture captured actual POST /api/v1/responses; configured model remains nvidia/nemotron-3-super-120b-a12b:free. This is protocol construction evidence, NOT an OpenRouter live-model PASS.
+
+Native strict config initially rejects tools.view_image as unknown despite current docs listing it. Removed the unsupported key for observation, not as a production workaround. Turning off shell/unified_exec/agents/apps/browser/computer/code-mode/skill-search leaves request_user_input and view_image in actual request tools. Newer documentation cannot establish installed-version tool removal.
+
+One nonsecret native canary: official default_permissions=toy with only :minimal and :workspace_roots read, no inherited broad read-only profile. Local mock Responses SSE asks view_image to read a fresh 1px PNG outside cwd. The native read fails before image data is returned: Windows unelevated restricted-token sandbox cannot enforce split filesystem read restrictions directly and refuses to run unsandboxed. Mock second request contains no image. Canary unchanged; native process exit 1. No actual private file was targeted. Do not weaken the profile, grant broad read access, elevate/install Windows features or switch model to get PASS.
+
+Evidence: results/p5-3/codex-version.txt, codex-exec-help.txt, codex-features.txt, codex-native-preflight.json, codex-read-canary.json. Local mock fixtures are ignored acceptance code, not a provider proxy/product adapter. Source: [OpenAI configuration](https://developers.openai.com/codex/config-reference), particularly provider and custom filesystem profile fields; installed strict parsing/canary takes precedence. [OpenRouter Responses endpoint](https://openrouter.ai/docs/api/api-reference/responses/create-responses) supports the documented protocol, but this model/version live compatibility NOT RUN after boundary failure. Fallback metadata warning is model-capability metadata, not evidence of a different inference model; captured requests kept the exact requested model.
+
+### Hermes - resolve launch diagnosis; minimal runner remains unready
+
+Initial isolated hermes.exe chat --help fails: no dependency environment committed for the new isolated home. Installed pm/environments.py documents HERMES_RUNTIME_DIR; using the existing installed dependency store resolves that selection error without copying/installing dependencies. Full CLI then fails ModuleNotFoundError for ruamel. Lazy installation disabled; no pm repair, upgrade or configuration rewrite.
+
+The existing official environment also contains hermes-agent.exe, whose --help succeeds. Its --version reports v0.0.0 (2026.9.24), differing from the work-order v0.21.7 baseline; record actual output, not assumed version. Native minimal query with fixed fabricated input and --enabled-toolsets none / --disabled-toolsets all reports zero loaded tools, so a blanket claim that Hermes cannot disable tools would be incorrect.
+
+This preflight had no real credential: only a dummy nonsecret key, new home/cwd and a supplied loopback port-9 base URL. Native execution nevertheless reported an OpenRouter HTTP 401 Missing Authentication header, completed=false, and process exit 0. Actual transport endpoint was not captured; do not claim the base-url flag guarantees isolation or a failed native exit means success. One rejected unauthenticated API attempt is reported, not hidden as zero API traffic. No authenticated inference/paid route or real key use. Do not expose this incomplete route in Pi.
+
+Installed run_agent.py/agent.legacy_cli.py and agent/agent_init.py show the minimal CLI lacks the constructor's explicit skip-context/skip-memory/skip-background-review controls; provider/fallback/auxiliary behavior is not yet proven safe through supported CLI/child config. No common adapter or library-based replacement is added. Next missing gate: supported coherent native runtime with verifiable child-only provider/auxiliary isolation, not another blind model call.
+
+Evidence: results/p5-3/hermes-launch-diagnosis.json, hermes-runtime-help.txt, hermes-agent-help.txt, hermes-version.json, hermes-runtime-gate.json. [Official CLI reference](https://hermes-agent.nousresearch.com/docs/reference/cli-commands) documents the minimal runner and flags; [configuration](https://hermes-agent.nousresearch.com/docs/user-guide/configuration) documents auxiliary/provider settings. Installed behavior/version wins. No personal vendor config/auth/session contents read.
+
+### Checks, budgets and preserved surfaces
+
+| Surface | Result |
+| --- | --- |
+| Claude / AUTO | Accepted PASS preserved; no live rerun; auto still chooses Claude only |
+| Codex | NOT_READY - unavailable Windows split-read enforcement with exposed image tool |
+| Hermes | NOT_READY - minimal no-tools demonstrated, safe provider/auxiliary runtime unverified |
+| Pi named tool/command rejection | PASS - truthful native reason, same identity, no fallback/launch |
+| New focused offline cases | 2 PASS - fake paid/PASS result cannot activate blocked routes; unsupported jobs reject; auto excludes unready lanes |
+| Installed Pi extension loader | PASS - one agentco_delegate/harness alongside native subagent, no collision |
+| Old process/editing/model tests | NOT RUN |
+| Authenticated free-model inference / live named routes | NOT RUN - safety gates failed |
+
+Four new native CLI query attempts total: 3 Codex fixture attempts (one strict-parse refusal, one request inventory, one canary) + 1 Hermes dummy-auth preflight; within six. Help/version/features are not prompts. Real key use and authenticated inference zero; Hermes native reported one API attempt rejected with 401. Codex HTTP requests went only to local fixtures (one inventory request, two canary requests). Physical provider usage/billing unverified; no account lookup. New real-key pricing preflight NOT RUN because no lane passed safety; no inference authorized on price assumptions.
+
+Only fixed synthetic data/canary were used; no actual repository/company/private file sent. Local diagnostics are sanitized, no real secrets/raw environment/full real session log. All new evidence under ignored results/p5-3, disposable home/cwd artifacts machine-local. No package/framework/Skill adapter, vendor repair/install/login, global PATH/auth/profile edit, main merge or stash/history deletion. Helper and settings blobs unchanged; original text/toy-edit and accepted child safety preserved.
+
+UTF-8/syntax, focused installed-loader/mock checks, diff-check, four-file scope, secret/path review, main/history/two stash preservation verified. Update native NOT_READY reasons only; do not commit a half-enabled Worker. Freeze feature after one commit/push for Claude independent code/evidence review, no fresh providers; GPT/user decide next approved native capability/runtime action.

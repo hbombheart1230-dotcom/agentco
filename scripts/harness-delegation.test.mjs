@@ -26,3 +26,21 @@ test('routing: shutdown propagates cancellation and waits for owned worker',asyn
  let finished=false;const h=host((_job,{signal})=>new Promise((resolve)=>signal.addEventListener('abort',()=>setTimeout(()=>{finished=true;resolve({status:'FAIL'});},10),{once:true})));
  const pending=h.tools.get('agentco_delegate').execute('a',{harness:'auto',job:'add42'});await h.hooks.get('session_shutdown')();assert.equal(finished,true);await pending;
 });
+
+test('P5.3: named blocked lanes keep native reason and never invoke another worker',async()=>{
+ let invocations=0;const h=host(async()=>{invocations++;return {harness:'wrong',status:'PASS',model:'paid',output:'ADD42=42'};});
+ for(const harness of ['codex','hermes']){
+  const r=await h.tools.get('agentco_delegate').execute('blocked',{harness,job:'add42'});
+  assert.equal(r.details.harness,harness);assert.equal(r.details.status,'NOT_READY');assert.equal(r.details.fallback,false);assert.equal(r.details.output,undefined);assert.equal(r.isError,true);
+  assert.match(r.details.reason,harness==='codex'?/split filesystem read restrictions/:/provider\/auxiliary isolation/);
+  await h.commands.get('harness').handler(`${harness} add42`,{});assert.deepEqual(h.messages.at(-1).details,r.details);
+ }
+ assert.equal(invocations,0);
+});
+test('P5.3: auto excludes blocked lanes and unsupported jobs cannot reach CLI',async()=>{
+ const calls=[];const h=host(async(job)=>{calls.push(job);return {harness:'claude',job,status:'PASS',output:'ADD42=42'};});
+ for(const harness of ['codex','hermes'])await assert.rejects(h.tools.get('agentco_delegate').execute('bad',{harness,job:'private/source.js'}));
+ assert.equal(calls.length,0);assert.equal(selectHarness('auto','add42'),'claude');
+ // Mock only: accepted Claude is not called live again.
+ const r=await h.tools.get('agentco_delegate').execute('auto',{harness:'auto',job:'add42'});assert.equal(r.details.harness,'claude');assert.deepEqual(calls,['add42']);
+});

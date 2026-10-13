@@ -1,21 +1,17 @@
-# Agentco Current Task — P5.3 Native Codex + Hermes Workers
+# Agentco Current Task - P5.3 investigation complete; review pending
 
-**ACTIVE / APPROVED (2026-10-13).** `C:\Agentco`, feature branch `feature/p5-3-codex-hermes-workers`, based on released main `2f8efe60a5aa8a97109dc3aff97237f40bdc0a8a`.
+Canonical workspace C:\Agentco; branch feature/p5-3-codex-hermes-workers. Base 1e17467151548fec88843001eb506a3859c81d0c; released main 2f8efe60a5aa8a97109dc3aff97237f40bdc0a8a. Follow AGENTS.md. Read only Execution result in docs/work-orders/P5_3_CODEX_HERMES_WORKERS.md and the two-string extension/two-test delta.
 
-Follow `AGENTS.md`. Read **ONLY** `docs/work-orders/P5_3_CODEX_HERMES_WORKERS.md`, current implementation `pi-dev/extensions/harness-delegation.ts`, `scripts/commander.mjs` and focused `scripts/harness-delegation.test.mjs` as actually needed. Prefer installed CLI `--help`/version and minimal direct file checks. **Do not reload P3 experimental history, completed P5.x records or rerun earlier 22-case regression and model comparisons.**
+## P5.3 PARTIAL - both new lanes remain NOT_READY
 
-## Accepted state — DO NOT repeat
+Both official native lanes investigated in one batch. Codex 0.162.1 constructs exact-model Responses requests, but view_image remains enabled; a synthetic outside-cwd canary under a minimal/workspace-only filesystem profile was refused because the Windows unelevated sandbox cannot enforce split read restrictions. No unsafe read bypass or authenticated model call.
 
-- P5/P5.1 verified synthetic text/file-tool delegation is final PASS.
-- P5.2 Pi interactive **auto and named Claude synthetic add42** has independent final PASS and main merge: native `agentco_delegate`, `/harness`, Claude exact Super `:free`; default Pi Ultra `:free`. Codex/Hermes name slots still `NOT_READY`. No general/private-project Worker READY.
-- Installed official Codex 0.162.1 under `results/p3/tools/codex/0.162.1/`, Hermes v0.21.7 under existing vendor user-scope installation; **installation not runtime proof**. No new installation/reinstalls or account/profile/login reads/writes.
+Hermes full CLI isolation was diagnosed: HERMES_RUNTIME_DIR selects existing dependencies; full CLI then fails on missing ruamel. Official minimal hermes-agent help works and tool flags produced zero tools. However its reported version is v0.0.0 (2026.9.24), native query reported an OpenRouter 401 despite a supplied loopback URL, and failed completion exited 0. Safe provider/auxiliary isolation remains unverified. One unauthenticated rejected native API attempt, no real key/no successful inference. No install/repair.
 
-## Execute NOW — one combined batch
+Codex/Hermes NOT_READY reasons refined; no partial live routes exposed. Claude/AUTO remain accepted PASS, no live rerun. Two new focused mock cases and installed Pi loader PASS. Four native CLI query attempts total (3 Codex local fixtures, 1 Hermes unauthenticated preflight), within six; authenticated inference zero. Old process/model comparisons NOT RUN. Settings, commander, Skills, main, historical branches, stashes and existing configurations untouched.
 
-Goal: use native official CLI to **verify and connect each independently** as a safe exact-free synthetic `add42` Worker within the real Pi Extension, while retaining named command, tool-call path, clean failure and no fallback. Public docs show Codex supports custom Responses provider and OpenRouter has Responses endpoint, but version-specific compatibility needs real validation. Hermes one-shot `-z` and `hermes-agent` native toolsets, auxiliary/fallback config must be examined on the installed version. Focused offline preflight, at most 6 new Codex+Hermes model CLI prompts COMBINED, no paid/other-provider, no personal/project data/read exposure. If unsupported, keep `NOT_READY` with one exact missing gate; don't repeatedly redesign tools or force model calls.
+## NEXT - Claude independent code/evidence review, zero model calls
 
-Existing Claude auto/manual and original text/toy edit must continue unchanged; preserve `pi-dev/settings.json`, `shared/skills`, all vendor/global/user configs, runtime, secrets, sessions, PATH, main, archived branches and both stashes. No generic Skill compatibility adapter, new framework, daemon, server, dependencies, WSL/Docker or arbitrary private work.
+Freeze feature. Review implementation SHA, active work-order Execution result and ignored results/p5-3 evidence: codex-native-preflight.json, codex-read-canary.json, Hermes help/version/runtime diagnostics and implementation-summary.json. Verify exact native blocking conditions, no fabricated PASS/fallback, prompt/API count distinction and unchanged accepted Claude paths. Do not rerun providers, inspect credentials/real sessions, edit, commit/push or merge main.
 
-Do scoped native CLI wiring, focused mock tests, actual named Pi route for ready lanes, sanitized ignored `results/p5-3/` evidence, **one feature-branch commit/push** and concise **한국어** matrix PASS/NOT_READY with exact reasons. Do not merge main.
-
-After implementation: freeze branch for ONE independent Claude code+evidence review with zero additional model/API calls; GPT/user acceptance/merge decision.
+GPT/user decides acceptance and any separately approved vendor/runtime action. Codex needs an available official Windows read boundary or genuine no-file-tool mode; Hermes needs supported verified child-only provider/auxiliary behavior and coherent native runtime. No repair, elevation, packages or general/private-project work authorized here.
