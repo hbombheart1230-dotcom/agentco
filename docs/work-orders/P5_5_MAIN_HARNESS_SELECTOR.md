@@ -142,3 +142,16 @@ No model prompt entered, no forced model/paid fallback, login, provider choice, 
 Two focused tests PASS: four native empty/ordinary argument plans plus unavailable-executable failure; all four env tags preserving inherited native variables without mutating parent. Syntax/diff/UTF-8/scope checks PASS. Previous menu/quoting/signal/delegation cases preserved, not rerun; P5.4 core/settings/Skills checked unchanged via Git. No new feature/refactor/framework. Live tests used deterministic --main paths; 1..4 menu mapping shares the same plan and remains unchanged.
 
 Changed files: scripts/agentco.mjs, scripts/agentco.test.mjs, docs/CURRENT_TASK.md, this work order. Sanitized local evidence: results/p5-5/native-tui-correction.json. One feature commit/push; no main merge. Next: Claude independent exact-SHA correction review, zero new provider/model prompts; GPT/user acceptance. Codex installed default daemon packaging/terminal requirement and native first-run/provider availability are distinct from launcher correctness and remain honest environment limitations.
+
+
+## Codex default-menu completion (2026-10-13)
+
+Base 72a61299ce7a5545844119dd98bc80ec7e02325e; clean feature branch synchronized before implementation. The pinned official Codex 0.162.1 install contains a standalone codex.exe without the complete local background-server package required by default startup. Its installed --help explicitly supports --no-daemon (run without the shared background server). No installation or native configuration changes were needed.
+
+Codex Main alone now prepends --no-daemon unless already supplied as an option before --. All original arguments retain their order and values, including positional data after --; caller arrays are not mutated. Codex child TERM defaults to xterm-256color only when missing, empty or dumb; valid TERM and the parent environment remain unchanged. Other Main and P5.4 Worker/AUTO implementations are untouched. TUI launch remains separate from free-model messaging validation; no model or provider is overridden.
+
+Actual bin/agentco.cmd invocation with no arguments displayed the existing selector. Selecting 3 opened the original OpenAI Codex v0.162.1 TUI without shell TERM overrides or explicit CLI flags; Ctrl+D exited 0 and restored the terminal. Existing native GPT-6.1-Sol metadata was displayed, but no model prompt was entered and no paid-model fallback was introduced. Native background traffic is unmeasured. Native startup artifacts remain local and are preserved.
+
+Four focused tests PASS (two adjusted native-plan/environment tests and two new option/TERM cases); launcher syntax and diff checks PASS. Pi/Claude/Hermes live tests and historical P5.4 tests were not repeated. Frozen Worker, settings, Skill and batch entry files have no Git delta. Sanitized evidence: results/p5-5/codex-default-menu.json (ignored).
+
+Changed files: scripts/agentco.mjs, scripts/agentco.test.mjs, docs/CURRENT_TASK.md, this work order. Commit/push only this feature branch; main and existing stash/runtime preserved. Next: Claude independent review of the final implementation SHA.

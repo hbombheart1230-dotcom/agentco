@@ -18,8 +18,8 @@ test('TUI correction: all native empty/ordinary args launch without profile over
  for(const main of mains.slice(1)){
   const lookup={[main]:()=>`C:/Installed tools/${main}.exe`};
   assert.equal(mainPlan(main,['--version'],lookup).file,lookup[main]());
-  assert.equal(mainPlan(main,[],lookup).file,lookup[main]());assert.deepEqual(mainPlan(main,[],lookup).args,[]);
-  const ordinary=['--help','argument with spaces'];assert.deepEqual(mainPlan(main,ordinary,lookup).args,ordinary);
+  assert.equal(mainPlan(main,[],lookup).file,lookup[main]());assert.deepEqual(mainPlan(main,[],lookup).args,main==='codex'?['--no-daemon']:[]);
+  const ordinary=['--help','argument with spaces'];assert.deepEqual(mainPlan(main,ordinary,lookup).args,main==='codex'?['--no-daemon',...ordinary]:ordinary);
   assert.equal(mainPlan(main,['--version'],{[main]:()=>{throw Error();}}).status,'NOT_READY');
  }
  const args=['--system-prompt','two words "quoted"','C:/path with spaces/x.js'];assert.deepEqual(mainPlan('pi',args).args.slice(1),args);
@@ -51,5 +51,18 @@ test('selector: Windows batch argv with spaces, status and caller cwd preserved'
 
 test('TUI correction: all four Main tags preserve inherited native environment',()=>{
  const inherited={HOME:'existing home',USERPROFILE:'existing profile',NATIVE_SETTING:'keep',AGENTCO_MAIN:'old'};
- for(const main of mains){const env=mainEnvironment(main,inherited);assert.deepEqual(env,{...inherited,AGENTCO_MAIN:main});assert.equal(inherited.AGENTCO_MAIN,'old');}
+ for(const main of mains){const env=mainEnvironment(main,inherited);assert.deepEqual(env,{...inherited,AGENTCO_MAIN:main,...(main==='codex'?{TERM:'xterm-256color'}:{})});assert.equal(inherited.AGENTCO_MAIN,'old');}
+});
+
+test('Codex menu fix: native default and custom options are preserved without duplicate flag',()=>{
+ const lookup={codex:()=> 'C:/pinned codex/codex.exe'};
+ assert.deepEqual(mainPlan(menuChoice('3'),[],lookup).args,['--no-daemon']);
+ const custom=['--no-daemon','--model','user-choice','--cd','C:/path with spaces'];assert.deepEqual(mainPlan('codex',custom,lookup).args,custom);assert.equal(custom.length,5);
+ assert.deepEqual(mainPlan('codex',['--','--no-daemon'],lookup).args,['--no-daemon','--','--no-daemon']);
+});
+test('Codex menu fix: TERM fallback is child-only and valid native TERM remains',()=>{
+ for(const term of [undefined,'','dumb','xterm-256color','vt100']){
+  const inherited={TERM:term,HOME:'native home'};const env=mainEnvironment('codex',inherited);assert.equal(env.TERM,!term||term==='dumb'?'xterm-256color':term);assert.equal(inherited.TERM,term);
+  for(const main of ['pi','claude','hermes'])assert.equal(mainEnvironment(main,inherited).TERM,term);
+ }
 });

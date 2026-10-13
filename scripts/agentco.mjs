@@ -28,10 +28,13 @@ export function mainPlan(main, args, lookup=resolvers) {
   if(main==='pi')return {file:process.execPath,args:[cli,...args],kind:'native',main};
   if(!mains.includes(main))throw Error('Unknown Main; no fallback.');
   let file;try{file=lookup[main]();}catch{return {main,status:'NOT_READY',reason:'Installed trusted executable unavailable; no fallback.'};}
+  if(main==='codex' && !args.slice(0,args.indexOf('--')<0?args.length:args.indexOf('--')).includes('--no-daemon'))args=['--no-daemon',...args];
   return {file,args,kind:'native',main};
 }
 export function mainEnvironment(main, inherited = main==='pi'?piEnv():process.env) {
-  return {...inherited,AGENTCO_MAIN:main};
+  const env={...inherited,AGENTCO_MAIN:main};
+  if(main==='codex' && (!env.TERM || env.TERM==='dumb'))env.TERM='xterm-256color';
+  return env;
 }
 export async function namedJob(target, job, signal, invokers={claude:runSyntheticClaude,codex:runSyntheticCodex,hermes:runSyntheticHermes}, currentMain=process.env.AGENTCO_MAIN) {
   if(!mains.includes(target)||job!=='add42')throw Error('Only an explicit harness and fixed synthetic add42 are supported.');

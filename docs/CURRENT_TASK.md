@@ -1,11 +1,9 @@
-# Agentco Current Task - P5.5 native TUI correction complete
+# Agentco Current Task - P5.5 Codex default-menu fix complete
 
-Workspace C:\Agentco; feature/p5-5-main-harness-selector; correction base a105ac8ed2eeef8600efbdd3dae81fa5c67754a0. User correction implemented; independent review pending. Read only Native TUI correction result at the end of docs/work-orders/P5_5_MAIN_HARNESS_SELECTOR.md and the current small launcher/test delta.
+Workspace C:\Agentco; branch feature/p5-5-main-harness-selector; implementation base 72a61299ce7a5545844119dd98bc80ec7e02325e. User-approved minimal correction complete; Claude independent review pending.
 
-Non-Pi CONFIG_REQUIRED launch block removed. Existing native empty/ordinary arguments and inherited native configuration preserved. AGENTCO_MAIN now tags Pi/Claude/Codex/Hermes. No Worker HOME/config reuse, forced model/profile, login, auto prompt or replacement. P5.4/AUTO/Worker and menu/args/exit behavior unchanged.
+Read only Codex default-menu completion at the end of docs/work-orders/P5_5_MAIN_HARNESS_SELECTOR.md and the current launcher/test delta. Codex Main adds the installed official --no-daemon option and a child-only TERM fallback for missing/empty/dumb values. Existing native arguments, valid TERM and configuration remain intact. Pi/Claude/Hermes and P5.4 AUTO/Worker code are unchanged.
 
-Live no-prompt checks: Pi TUI opened/exited 0; Claude native onboarding opened and canceled (outer shell exit 1); Hermes native TUI opened, provider setup skipped/canceled, then native Goodbye (outer shell exit 1). Codex default startup displayed a missing local background-server package error; explicitly forwarding native --no-daemon under test-only TERM=xterm-256color opened/exited TUI 0. No automatic workaround in launcher. Free model messaging remains separate: Pi shows Ultra free, Claude unknown, Codex shows existing GPT-6.1-Sol, Hermes shows existing claude-opus-4.6/Nous; non-Pi free status UNVERIFIED. No inference prompt sent; background native network traffic unmeasured.
+Actual bin/agentco.cmd menu option 3 opened Codex 0.162.1 TUI with no shell overrides; Ctrl+D exited 0 and restored the terminal. No model prompt entered; native background traffic unmeasured. Four focused tests PASS; no historical pipeline or other Main live tests repeated.
 
-Two changed-scope offline tests PASS. Pi changelog-only startup delta was checked/restored; frozen settings/source/Skills clean. No manual native profile edits/provider/theme/login accepted. Hermes consent cancellation retained its displayed default No thanks. New empty native session/startup artifacts retained; no existing sessions/runtime/stash/browser cleanup.
-
-NEXT: Claude independent correction-only review, no fresh prompts/API probes or edits. Verify native launch/args/env tags and exact live outcomes. GPT/user gates release/main merge. General delegation remains the previous separate limitation, not implemented in this correction.
+NEXT: Claude independent exact-commit review of this minimal delta. No model/API retest or configuration edits. GPT/user approval gates main merge; do not merge main now.
