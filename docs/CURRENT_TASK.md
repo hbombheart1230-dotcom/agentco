@@ -1,17 +1,21 @@
-# Agentco Current Task — released Pi interactive routing baseline
+# Agentco Current Task — P5.3 Native Codex + Hermes Workers
 
-**P5 / P5.1 FINAL PASS; P5.2 Claude-only interactive routing FINAL PASS (2026-10-13).** Source implementation `e863179f0171bb04eafa38190cb75ea7633d7d4e`, accepted after Claude independent evidence-only review. Normal Pi 1.0.4 RPC session auto tool routing and direct slash command both executed actual installed Claude CLI and returned the fixed synthetic `ADD42=42`. **Three-harness coverage PARTIAL**, since Codex and Hermes remain **NOT_READY**, correctly refusing named execution without fallback.
+**ACTIVE / APPROVED (2026-10-13).** `C:\Agentco`, feature branch `feature/p5-3-codex-hermes-workers`, based on released main `2f8efe60a5aa8a97109dc3aff97237f40bdc0a8a`.
 
-## Current usage
+Follow `AGENTS.md`. Read **ONLY** `docs/work-orders/P5_3_CODEX_HERMES_WORKERS.md`, current implementation `pi-dev/extensions/harness-delegation.ts`, `scripts/commander.mjs` and focused `scripts/harness-delegation.test.mjs` as actually needed. Prefer installed CLI `--help`/version and minimal direct file checks. **Do not reload P3 experimental history, completed P5.x records or rerun earlier 22-case regression and model comparisons.**
 
-From `C:\Agentco`, run `node scripts/pi.mjs`. Intended Pi tool: `agentco_delegate` on explicitly synthetic `add42`. Pi command: `/harness status`, `/harness auto add42`, `/harness claude add42`, `/harness codex add42`, `/harness hermes add42`. Only Claude route is validated to perform the named fixed task, and an unknown job/real file/user private text MUST be rejected; Codex/Hermes return NOT_READY without new model calls. The actual RPC session flow is verified, **TUI keyboard/rendering E2E is NOT RUN**.
+## Accepted state — DO NOT repeat
 
-Standalone accepted P5 and P5.1 entrypoints remain `node scripts/commander.mjs --check`, text-only synthetic request, and `node scripts/commander.mjs --toy-edit`. The main Pi default Ultra `:free` and the Claude worker Super `:free` are not the same model. No general project code edits/Skill execution, arbitrary text forwarding or combined three-harness READY claim. Physical HTTP counts and billing unknown.
+- P5/P5.1 verified synthetic text/file-tool delegation is final PASS.
+- P5.2 Pi interactive **auto and named Claude synthetic add42** has independent final PASS and main merge: native `agentco_delegate`, `/harness`, Claude exact Super `:free`; default Pi Ultra `:free`. Codex/Hermes name slots still `NOT_READY`. No general/private-project Worker READY.
+- Installed official Codex 0.162.1 under `results/p3/tools/codex/0.162.1/`, Hermes v0.21.7 under existing vendor user-scope installation; **installation not runtime proof**. No new installation/reinstalls or account/profile/login reads/writes.
 
-## Verification and source of truth
+## Execute NOW — one combined batch
 
-Claude reran 4/4 new P5.2 offline tests PASS, 0 fresh API/model calls. Real same-session RPC evidence and two Claude Worker result artifacts are retained under machine-local ignored `results/p5-2/`. Refer ONLY to the final closure in `docs/work-orders/P5_2_INTERACTIVE_HARNESS_ROUTING.md` and current tracked implementation; skip completed P3/P5/P5.1 history. The exact reviewed implementation files are unchanged.
+Goal: use native official CLI to **verify and connect each independently** as a safe exact-free synthetic `add42` Worker within the real Pi Extension, while retaining named command, tool-call path, clean failure and no fallback. Public docs show Codex supports custom Responses provider and OpenRouter has Responses endpoint, but version-specific compatibility needs real validation. Hermes one-shot `-z` and `hermes-agent` native toolsets, auxiliary/fallback config must be examined on the installed version. Focused offline preflight, at most 6 new Codex+Hermes model CLI prompts COMBINED, no paid/other-provider, no personal/project data/read exposure. If unsupported, keep `NOT_READY` with one exact missing gate; don't repeatedly redesign tools or force model calls.
 
-## NEXT — not approved yet
+Existing Claude auto/manual and original text/toy edit must continue unchanged; preserve `pi-dev/settings.json`, `shared/skills`, all vendor/global/user configs, runtime, secrets, sessions, PATH, main, archived branches and both stashes. No generic Skill compatibility adapter, new framework, daemon, server, dependencies, WSL/Docker or arbitrary private work.
 
-One separately scoped real-product advancement: resolve native Codex and Hermes **safe, free-only, tool-free synthetic invocation** and enable named routes after verified smoke; or expand the Claude-only toy job set while retaining owned data and isolation. No generic four-harness Skill adapter, new agent framework, benchmark, user/private source code handling, or host-global changes. Default roles: user priority/direction, GPT architecture/final technical decision, Codex implementation, Claude independent verification. Any new implementation requires a new approved work order on a new feature branch. Keep upstream Pi unchanged and preserve user sessions/runtime/auth/PATH/ignored results and all stashes.
+Do scoped native CLI wiring, focused mock tests, actual named Pi route for ready lanes, sanitized ignored `results/p5-3/` evidence, **one feature-branch commit/push** and concise **한국어** matrix PASS/NOT_READY with exact reasons. Do not merge main.
+
+After implementation: freeze branch for ONE independent Claude code+evidence review with zero additional model/API calls; GPT/user acceptance/merge decision.
