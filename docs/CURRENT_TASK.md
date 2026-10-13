@@ -1,15 +1,19 @@
 # Agentco Current Task
 
-Canonical workspace C:\Agentco / feature/p3-worker-harness-design. Follow AGENTS.md; read only Final PID safety execution result in docs/work-orders/P5_PIPELINE_MVP.md and changed helper/test. No P3 history or prior model/quality/install reruns.
+Canonical workspace `C:\Agentco`; branch `feature/p3-worker-harness-design`. Follow `AGENTS.md`. Read ONLY **"Final direct-child cleanup fix — close P5"** at the end of `docs/work-orders/P5_PIPELINE_MVP.md` and inspect `scripts/commander.mjs` plus its test directly. Completed P0-P3 work orders, installations, previous model benchmarks and historical review discussions are out of scope.
 
-## Current state
+## Accepted results from independent Claude review of `ed9e280`
 
-Focused PID correction PASS; final independent review PENDING. Base ec57a50. Completed Worker records retire immediately to closed/null and parent finally does no lookup/kill. Active/orphan cleanup verifies native PID plus creation time; stale/mismatched/unverifiable identity skips termination and fails with cleanup uncertainty. Active identity check/taskkill has a residual race; no universal PID safety or termination guarantee claimed.
+P5 Pi -> Claude CLI -> Pi routing and exact Worker/toolResult/final correspondence previously PASS; same exact NVIDIA Super OpenRouter free-only route. Retiring completed Worker PID and skipping stale/mismatched/unverifiable **file-record orphan PID** have independently passed. No model calls during review.
 
-5 focused offline PID scenarios passed, zero model/API calls. Evidence: ignored results/p5/pid-safe-ec57a50/offline-evidence.json. Healthy pipeline evidence reused. Existing result correspondence, executable override, pinned free model, key handling and production settings preserved. Override now warns that the selected trusted executable receives API auth.
+**Required one regression fix:** if native PowerShell process-identity lookup fails, `runBounded` can detach a still-live **directly spawned child** and leave it running (potentially holding provider auth). This is a direct-child lifecycle bug, distinct from untrusted orphan PID cleanup. Overall P5 hardening still PARTIAL until corrected. WORKER READY for native Skill/file tools remains NO.
 
-Changes only scripts/commander.mjs, scripts/commander.test.mjs, CURRENT_TASK and active P5 work order. Existing runtime/sessions/auth/PATH/Skills/main/two stashes untouched. WORKER READY remains NO; file edits/Skill E2E NOT RUN.
+## ACTIVE — final focused P5 code/test correction (APPROVED)
 
-## Next handoff
+Execute one Codex batch without intermediate approval:
 
-Claude independently verifies this single new delta and offline evidence, no models/APIs, Korean report. GPT/user decide final P5 hardening PASS/main merge afterward. Further synthetic file-edit Worker implementation needs separate approval; do not resume harness comparisons.
+- For a still-live directly spawned child with an owned Node ChildProcess handle, clean up the child/process tree on timeout/abort/identity failure/output overflow; use official Windows native taskkill for its owned tree when possible, `child.kill()` for direct-child fallback; never treat `unref` alone as cleanup. Ensure bounded failure, nonzero status, and no untracked live process silently abandoned.
+- For separate **orphan file records**, retain strict PID plus `StartTime` identity checking and fail closed if stale or uncertain. Never blindly kill a PID from a file; don't revive retired Worker records.
+- Focused offline mock-child/grandchild tests specifically exercise unknown/failed identity and orphan-finally code path; preserve unrelated process, do not repeat model or provider calls. Keep existing native tool/Skill tests deferred.
+- Code changes only `scripts/commander.mjs`, `scripts/commander.test.mjs`; update this pointer and P5 work order with accurate short delta. One feature-branch commit/push, `git diff --check`; preserve Pi source, settings, sessions, auth, PATH, shared Skill, main, 2 stashes. No new packages/framework.
+- Report **in Korean**. After result, one final Claude independent focused review, zero inference; GPT/user close P5 and then move straight to **real synthetic file-edit via the existing Pi -> Claude pipeline**, not further four-harness/model comparisons.
