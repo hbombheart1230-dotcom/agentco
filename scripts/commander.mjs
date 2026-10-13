@@ -35,47 +35,64 @@ export async function killTree(owner, { readIdentity = getProcessIdentity, termi
   if (current.status !== 'found' || current.pid !== owner.pid || current.started !== owner.identity.started) throw Error('Cleanup skipped: process identity stale or unverifiable.');
   await terminate(owner.pid); return 'terminated';
 }
-export function runBounded(file, args, { timeout = 60000, maxBuffer = 1048576, signal, onSpawn, onIdentity, onRetire, ...options } = {}) {
+export async function cleanupOrphan(path, options) {
+  if (!existsSync(path)) return 'absent';
+  return killTree(JSON.parse(readFileSync(path,'utf8')), options);
+}
+export function runBounded(file, args, { timeout = 60000, maxBuffer = 1048576, signal, onSpawn, onIdentity, onRetire, readIdentity = getProcessIdentity, terminate = terminateTree, closeTimeout = 1000, ...options } = {}) {
   if (signal?.aborted) return Promise.reject(Error('Process aborted before launch.'));
   return new Promise((resolveRun, reject) => {
-    const child = spawn(file, args, { ...options, windowsHide: true, stdio: ['ignore', 'pipe', 'pipe'] });
-    const owner = { state:'spawned', pid:child.pid, identity:null };
-    let stdout = '', bytes = 0, failure, cleanup, identityReady;
-    const detach = () => { child.stdout.destroy(); child.stderr.destroy(); child.unref(); };
+    const child = spawn(file, args, { ...options, windowsHide:true, stdio:['ignore','pipe','pipe'] });
+    const owner = {state:'spawned',pid:child.pid,identity:null};
+    let stdout='', bytes=0, failure, cleanup, cleanupMode='none', closeTimer, settled=false;
+    const live = () => owner.state !== 'closed' && Number.isInteger(child.pid) && child.exitCode === null && child.signalCode === null;
+    const finish = (code, uncertainty=false) => {
+      if (settled) return; settled=true; clearTimeout(timer); clearTimeout(closeTimer); signal?.removeEventListener('abort',abort);
+      if (uncertainty) { failure=(failure?failure+' ':'')+'Exited child has open descendant streams; subtree cleanup unverified.'; child.stdout.destroy(); child.stderr.destroy(); }
+      if (failure) { const error=Error(failure+(cleanupMode==='direct-only'?' Direct child stopped; subtree cleanup unverified.':'')); error.cleanup=cleanupMode; reject(error); }
+      else resolveRun({status:code,stdout});
+    };
     const stop = reason => {
       failure ||= reason;
-      if (identityReady && owner.state !== 'closed') cleanup ||= identityReady.then(() => killTree(owner)).catch(() => {
-        failure = 'Cleanup skipped: process ownership uncertain.'; clearTimeout(timer); signal?.removeEventListener('abort', abort); detach(); reject(Error(failure));
-      });
+      if (!live() || cleanup) return;
+      // This is our still-live ChildProcess handle, never a PID adopted from a file.
+      cleanup = (async () => {
+        try { if (live()) { await terminate(child.pid); cleanupMode='tree'; } }
+        catch {
+          if (live()) {
+            cleanupMode='direct-only';
+            try { if (!child.kill('SIGKILL')) { cleanupMode='failed'; failure='Owned direct-child termination failed.'; } }
+            catch { cleanupMode='failed'; failure='Owned direct-child termination failed.'; }
+          }
+        }
+        if (cleanupMode==='failed') finish(null);
+      })();
     };
     const retire = () => {
-      if (owner.state === 'closed') return;
-      owner.state = 'closed'; owner.pid = null; owner.identity = null;
-      try { onRetire?.(owner); } catch { failure = 'Lifecycle retirement failed.'; }
+      if (owner.state==='closed') return;
+      owner.state='closed';owner.pid=null;owner.identity=null;
+      try { onRetire?.(owner); } catch { failure='Lifecycle retirement failed.'; }
     };
     const abort = () => stop('Process aborted.');
-    const timer = setTimeout(() => stop('Process timed out.'), timeout);
-    signal?.addEventListener('abort', abort, { once: true });
-    child.once('spawn', () => {
-      owner.pid = child.pid;
-      try { onSpawn?.(child.pid, owner); } catch { failure = 'Spawn tracking failed.'; }
-      identityReady = getProcessIdentity(child.pid).then(identity => {
-        if (owner.state !== 'closed') { owner.identity = identity; owner.state = 'active'; onIdentity?.(owner); }
-      }).catch(() => { failure = 'Identity tracking failed.'; });
+    const timer=setTimeout(()=>stop('Process timed out.'),timeout);
+    signal?.addEventListener('abort',abort,{once:true});
+    child.once('spawn',()=>{
+      owner.pid=child.pid;
+      try { onSpawn?.(child.pid,owner); } catch { failure='Spawn tracking failed.'; }
+      Promise.resolve().then(()=>readIdentity(child.pid)).then(identity=>{
+        if (owner.state==='closed') return;
+        owner.identity=identity;owner.state='active';onIdentity?.(owner);
+        if (identity?.status!=='found') stop('Process identity inspection failed.');
+      }).catch(()=>{if (owner.state!=='closed') stop('Process identity inspection failed.');});
       if (failure || signal?.aborted) stop(failure || 'Process aborted.');
     });
     if (signal?.aborted) abort();
-    for (const [stream, capture] of [[child.stdout, true], [child.stderr, false]]) stream.setEncoding('utf8').on('data', data => {
-      bytes += Buffer.byteLength(data); if (bytes > maxBuffer) { stop('Process output limit exceeded.'); return; }
-      if (capture) stdout += data;
+    for (const [stream,capture] of [[child.stdout,true],[child.stderr,false]]) stream.setEncoding('utf8').on('data',data=>{
+      bytes+=Buffer.byteLength(data);if(bytes>maxBuffer){stop('Process output limit exceeded.');return;}if(capture)stdout+=data;
     });
-    child.once('error', () => stop('Process launch failed.'));
-    child.once('exit', retire);
-    child.once('close', async code => {
-      retire(); clearTimeout(timer); signal?.removeEventListener('abort', abort);
-      try { if (cleanup) await cleanup; if (failure) reject(Error(failure)); else resolveRun({ status:code, stdout }); }
-      catch { reject(Error('Cleanup skipped: process ownership uncertain.')); }
-    });
+    child.once('error',()=>stop('Process launch failed.'));
+    child.once('exit',code=>{retire();closeTimer=setTimeout(async()=>{if(cleanup)await cleanup;finish(code,true);},closeTimeout);});
+    child.once('close',async code=>{retire();if(cleanup)await cleanup;finish(code);});
   });
 }
 export function validatePipeline(e) {
@@ -160,7 +177,7 @@ try { run = await runBounded(process.execPath, [cli,'--provider','openrouter','-
 catch (error) { failure = error.message; run = {status:null,stdout:''}; }
 finally {
   const ownerFile = join(toy,'worker-process.json');
-  if (existsSync(ownerFile)) { try { await killTree(JSON.parse(readFileSync(ownerFile,'utf8'))); } catch { failure = 'Worker cleanup skipped: ownership uncertain.'; } }
+  try { await cleanupOrphan(ownerFile); } catch { failure = 'Worker cleanup skipped: ownership uncertain.'; }
   process.removeListener('SIGINT', interrupt); process.removeListener('SIGTERM', interrupt);
 }
 const events = (run.stdout || '').split('\n').flatMap(line => { try { return [JSON.parse(line)]; } catch { return []; } });

@@ -4,7 +4,7 @@ import { mkdtempSync, readFileSync, writeFileSync, existsSync, mkdirSync } from 
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { spawn } from 'node:child_process';
-import { model, validatePipeline, resolveClaudePath, runBounded, killTree, getProcessIdentity, writeOwner } from './commander.mjs';
+import { model, validatePipeline, resolveClaudePath, runBounded, killTree, getProcessIdentity, writeOwner, cleanupOrphan } from './commander.mjs';
 
 function evidence(output = 'SECOND_PAYLOAD=137') {
   const worker = { output, model, observedModels: [model], exitCode: 0 };
@@ -93,4 +93,55 @@ test('already aborted launch starts no process and failed executable errors are 
 test('stream decoding preserves a Unicode character split across chunks', async () => {
   const r = await runBounded(process.execPath, ['-e', "const b=Buffer.from('\\uD55C');process.stdout.write(b.subarray(0,1));setTimeout(()=>process.stdout.write(b.subarray(1)),30)"], { timeout: 2000 });
   assert.equal(r.stdout, '\uD55C');
+});
+
+for (const mode of ['unknown','rejected','timeout','abort']) test(`Direct cleanup: ${mode} identity with tree and unrelated control`,async()=>{
+  const area=mkdtempSync(join(tmpdir(),'agentco-direct-'));const control=await ownedControl();let pid;
+  const controller=new AbortController();
+  const lookup=async()=>{if(mode==='timeout'||mode==='abort')return new Promise(()=>{});await sleep(800);if(mode==='rejected')throw Error('mock');return {status:'unknown'};};
+  const outcome=runBounded(process.execPath,['-e',treeCode(area)],{readIdentity:lookup,timeout:1500,signal:controller.signal,onSpawn:p=>pid=p}).then(value=>({value}),error=>({error}));
+  let descendants=[];
+  try{
+    for(let i=0;i<100&&!existsSync(join(area,'grand.pid'));i++)await sleep(10);
+    descendants=['child.pid','grand.pid'].map(n=>Number(readFileSync(join(area,n),'utf8')));
+    if(mode==='abort')controller.abort();
+    const {error}=await outcome;assert.ok(error);assert.equal(error.cleanup,'tree');
+    for(let i=0;i<30&&[pid,...descendants].some(alive);i++)await sleep(30);
+    assert.ok([pid,...descendants].every(p=>!alive(p)));assert.ok(alive(control.child.pid));
+  }finally{await killTree(control.owner);}
+});
+test('Direct cleanup: tree failure falls back to owned child handle',async()=>{
+  const control=await ownedControl();let pid;
+  try{
+    const error=await runBounded(process.execPath,['-e','setInterval(()=>{},1000)'],{timeout:150,readIdentity:()=>new Promise(()=>{}),terminate:async()=>{throw Error('mock taskkill failure');},onSpawn:p=>pid=p}).then(()=>null,e=>e);
+    assert.equal(error.cleanup,'direct-only');assert.match(error.message,/subtree cleanup unverified/);assert.ok(!alive(pid));assert.ok(alive(control.child.pid));
+  }finally{await killTree(control.owner);}
+});
+test('Direct cleanup: orphan file helper preserves reused unknown and retired PID',async()=>{
+  const control=await ownedControl();const marker=join(mkdtempSync(join(tmpdir(),'agentco-orphan-')),'worker-process.json');let kills=0,queries=0;
+  const options={terminate:async()=>{kills++;}};
+  try{
+    writeOwner(marker,{...control.owner,identity:{...control.owner.identity,started:'stale'}});await assert.rejects(cleanupOrphan(marker,options),/stale/);
+    writeOwner(marker,{...control.owner,identity:null});await assert.rejects(cleanupOrphan(marker,options),/unverifiable/);
+    writeOwner(marker,control.owner);await assert.rejects(cleanupOrphan(marker,{...options,readIdentity:async()=>({status:'unknown'})}),/unverifiable/);
+    writeOwner(marker,{...control.owner,state:'closed'});assert.equal(await cleanupOrphan(marker,{...options,readIdentity:async()=>{queries++;}}),'retired');
+    assert.equal(kills,0);assert.equal(queries,0);assert.ok(alive(control.child.pid));
+  }finally{await killTree(control.owner);}
+});
+test('Direct cleanup: normal exit retires before late identity callback',async()=>{
+  let release,owner,kills=0,updates=0;
+  const r=await runBounded(process.execPath,['-e','process.stdout.write("ok")'],{readIdentity:()=>new Promise(r=>release=r),onSpawn:(p,o)=>owner=o,onIdentity:()=>updates++,terminate:async()=>kills++});
+  release({status:'unknown'});await sleep(30);assert.equal(r.status,0);assert.equal(owner.state,'closed');assert.equal(owner.pid,null);assert.equal(updates,0);assert.equal(kills,0);
+});
+test('Direct cleanup: exit before pipe close is bounded without killing retired parent',async()=>{
+  const area=mkdtempSync(join(tmpdir(),'agentco-pipe-'));let kills=0;
+  const code=`const {spawn}=require('node:child_process');const fs=require('node:fs');const c=spawn(process.execPath,['-e','setInterval(()=>{},1000)'],{stdio:['ignore',1,2],windowsHide:true,detached:true});fs.writeFileSync(${JSON.stringify(join(area,'pid'))},String(c.pid));setTimeout(()=>process.exit(0),100);`;
+  const started=Date.now();
+  try{
+    await assert.rejects(runBounded(process.execPath,['-e',code],{readIdentity:()=>new Promise(()=>{}),closeTimeout:200,terminate:async()=>kills++}),/open descendant streams/);
+    assert.ok(Date.now()-started<3000);assert.equal(kills,0);
+  }finally{
+    const pid=Number(readFileSync(join(area,'pid'),'utf8'));const identity=await getProcessIdentity(pid);
+    if(identity.status==='found')await killTree({state:'active',pid,identity});else assert.ok(!alive(pid));
+  }
 });
