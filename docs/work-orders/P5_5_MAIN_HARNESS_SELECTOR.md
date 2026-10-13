@@ -1,13 +1,13 @@
 # P5.5 - Select Main Harness + explicit named delegation
 
-**Status:** selector implemented / readiness and delegation PARTIAL / review pending (2026-10-13)
+**Status:** user-directed TUI activation correction pending; prior scoped Claude review PASS at c167989 (2026-10-13)
 **Base main:** `cc6078fed3e1d9b4c0103a8de8d9c0a18ac1f37e`
 **Assigned feature:** `feature/p5-5-main-harness-selector`
 
 ## User intent (authoritative)
 
 The user wants **minimal additive work** and strongly prefers keeping existing implementation untouched:
-- `agentco` opens a lightweight menu: `1 Pi [default] / 2 Claude Code / 3 Codex CLI / 4 Hermes`. Enter chooses Pi. That selection becomes Main; the existing official native CLI is used for the conversation.
+- `agentco` opens a lightweight menu: `1 Pi [default] / 2 Claude Code / 3 Codex CLI / 4 Hermes`. Enter chooses Pi. **The selection MUST immediately open that existing official CLI's native interactive TUI**, not just `--version`/`--help`.
 - Explicitly saying "ask Pi to do X", "have Codex verify X", "use Claude", "delegate to Hermes" should be supportable from the selected Main using the **smallest official-native means** to reach the named other CLI. No silent substitution to another CLI.
 - **If no target harness is named, do NOT invent routing or modify the old AUTO policy.** The selected Main behaves as before; any already-supported AUTO mechanism is used unchanged. Do not turn AUTO into round-robin or reimplement the P5.4 dispatcher.
 - Keep the installed native CLI appearance/features; do not create a common chat UI or orchestrator.
@@ -23,7 +23,7 @@ Read only relevant live files: `bin/agentco.cmd`, `pi.cmd`, `scripts/pi.mjs`, `s
 - Implement a minimal Windows `agentco` entry/menu (PowerShell/Node/Batch, choose the smallest reliable option). It must launch Pi/Claude/Codex/Hermes as **native** process, with actual inherited interactive stdin/stdout/stderr; propagate exit codes and Ctrl+C, restore original working directory and terminal behavior. No nested Pi around non-Pi CLI.
 - `agentco` (interactive, no args) shows menu and Enter selects Pi; 1/2/3/4 select corresponding Main. Invalid selection repeats or safely errors. If no TTY, do not block in a menu; preserve legacy Pi behavior or fail with explicit usage when ambiguous.
 - `agentco --main pi|claude|codex|hermes` offers deterministic/scriptable choice without menu. Keep existing `agentco --version`, `agentco [Pi args]`, `pi.cmd`, `node scripts/pi.mjs` functional and backwards-compatible. Use argument forwarding without broken quoting/paths with spaces.
-- Locate native executables from trusted paths/installed local config. Do not use P5.4 synthetic child-only TEMP HOME/config as Main; those are for fixed isolated `add42`, not general interactive sessions. Avoid modifying/exposing existing native profiles, local auth, secrets, stashes or installed files. Never change or silently select a paid model. If selected Main's free-only model/profile isn't verified/usable, show a concise `NOT_READY` or `CONFIG_REQUIRED` with no fallback instead of launching unknown paid model. Distinguish executable present from general Main-ready.
+- Locate native executables from trusted paths/installed local config. Do not use P5.4 synthetic child-only TEMP HOME/config as Main; those are for fixed isolated `add42`, not general interactive sessions. Avoid modifying/exposing existing native profiles, local auth, secrets, stashes or installed files. **Do not block launching the installed native interactive TUI merely because the Main's model/provider cost profile has not been verified; the previous metadata-only `CONFIG_REQUIRED` gate was an incorrect interpretation of the user requirement.** TUI process start is not proof of free-model chat readiness. Never automatically submit a model prompt, reconfigure provider, or silently select a paid model/fallback; if free-only routing is unverified, surface this honestly as a warning/known gap without blocking an otherwise safe native TUI launch. If an actual startup action would itself incur an unverified paid call, fail closed for that specific documented case.
 - Pi default must preserve current exact-pinned v1.0.4 and model/settings/extension load. Other Mains use native supported configuration and existing install; no automatic installs/upgrades.
 
 ## Scope B — minimal explicit named delegation (must investigate and implement what is safely supported, not a rewrite)
@@ -50,7 +50,7 @@ Read only relevant live files: `bin/agentco.cmd`, `pi.cmd`, `scripts/pi.mjs`, `s
 ## Acceptance — focused, honest evidence
 
 1. **Launcher unit/offline:** menu default/1..4/invalid input, no-TTY path; previous `agentco --version` and Pi args still work. Mock process-launch arguments and env, Windows quoting, path-with-spaces, exit-code propagation, Ctrl+C/TTY handoff. No dependency installs or paid model calls in tests.
-2. **Native CLI smoke:** user-local explicit checks launch the correctly named **real** Pi/Claude/Codex/Hermes or report accurate NOT_READY; verify Main model route is free before any live prompt. Label each `LIVE / MOCK / NOT RUN / BLOCKED`. Do not claim general worker readiness from executable presence.
+2. **Native CLI smoke:** user-local no-prompt interactive startup, then clean exit, for all **four real native TUIs** (or report a truthful per-CLI environment failure). Native startup must not be gated on a new profile. Verify model route is free **before any live inference prompt**, not as a prerequisite to opening a TUI. Label `LIVE / MOCK / NOT RUN / BLOCKED`, and distinguish TUI-open success from free-provider chat success.
 3. **Explicit named delegation:** offline test proves requested identity is invoked, task is scoped/sanitized, failure has no fallback, no-target leaves same Main/default-AUTO, and P5.4 `add42` implementation was unchanged. For each Main, report **NATIVE-CHAT VERIFIED / EXPLICIT-COMMAND ONLY / NOT_READY**. Never claim natural language recognition works without a live authorized test.
 4. **Regression boundary:** narrow tests only; old P5.4 suites do not need rerun if files unchanged. Verify P5.4 core files unchanged with Git diff. No browser/finance code diff.
 5. **Handoff**: show `BRANCH`, `BASE_SHA`, `IMPLEMENTATION_SHA`, `MAIN_LAUNCH_MATRIX`, `EXPLICIT_DELEGATION_MATRIX`, `AUTO_UNCHANGED`, `MODEL_COST_GATE`, `TESTS_LIVE_VS_MOCK`, `CHANGED_FILES`, `KNOWN_GAPS`, `PUSH`. NEVER mark a capability PASS merely because the command exists.
@@ -107,3 +107,19 @@ CHANGED_FILES: bin/agentco.cmd; scripts/agentco.mjs; scripts/agentco.test.mjs; d
 KNOWN_GAPS: three non-Pi general Main profiles need separately verified free provider/auxiliary/context boundaries and launcher activation; broad natural-language/scoped real tasks need official native integrations and a safe task contract. Current connector is only add42, external Pi/self-target is not implemented as a worker. Review these exact limitations, not the completed P5.4 tests.
 
 Next: one Claude independent exact-SHA code/evidence review, no fresh model/API calls; GPT/user acceptance/release decision. Freeze feature until review; parked browser branch untouched.
+
+
+## User correction after scoped review — applies over earlier implementation assumptions (2026-10-13)
+
+**The user explicitly clarified: “4개다 CLI/TUI에서 동작하면 된다.”** They intended a selector that chooses an already-installed native interactive TUI, preserving all existing CLI features and P5.4 behavior. The previous implementation `c167989e727e633e2ca8f0810636ceb48ccccfe9` passes its narrow Claude review, **but fails the intended 4-TUI experience** because `mainPlan()` gates every non-Pi no-argument start as `CONFIG_REQUIRED`.
+
+**New scope is deliberately tiny and takes precedence over any older statement suggesting CONFIG_REQUIRED for non-Pi TUI launch:**
+
+1. Remove metadata-only `CONFIG_REQUIRED` blocking for existing trusted Claude Code, Codex CLI and Hermes executables. `agentco` → 2/3/4 must actually start the corresponding installed native interactive TUI, just like 1 launches Pi. Support `agentco --main claude|codex|hermes`. Preserve native stdio/TTY, working directory, ordinary native arguments and process exits. Do not emulate UI or create proxy chats.
+2. Use each native CLI's existing installed user configuration/identity, with no new temporary Worker HOME, no forced synthetic P5.4 settings, no auto-install/login/reconfiguration, and no automatic startup prompts. **Do not confuse TUI startup (which should work) with validated free-model messaging (which may require later configuration).** If a specific CLI opens but its provider is not usable, report that separately.
+3. Cost handling: never auto-send an inference prompt or silently switch to a paid/default model. If safe local **non-sensitive model metadata** can be determined without reading credentials, report effective model/provider and whether known free; otherwise report **UNVERIFIED**, without treating lack of evidence as TUI startup failure. Do not run paid or unverified model prompts for testing. Respect the user's existing free-only preference; do not edit their CLI profile or secret files.
+4. Pass `AGENTCO_MAIN` for whichever Main is selected (only harmless process metadata); maintain the existing fixed `--delegate add42` self-target guard. Do **not** touch `pi-dev/extensions/harness-delegation.ts`, `scripts/commander.mjs`, P5.4 AUTO choice, or existing Worker runtime. General chat natural-language delegation remains a separate unmet feature, not a new requirement of this correction.
+5. Focus tests on 4× no-argument `mainPlan`, all 4 TUI launches with inherited stdio and accurate exit/cancel, and regression of `--version`, legacy Pi args, `--delegate add42`, AUTO immutability. User-local live tests must not send prompts, access secrets, or incur inference. No historical P5.4 reruns.
+6. Commit/push a minimal implementation correction on **the same feature branch**, then have Claude independently verify only the new SHA/delta. **Do not merge main until this correction is reviewed**; earlier PASS was accurate for the wrong narrower UX boundary.
+
+Existing documented Execution result is historical evidence for SHA `c167989`, not the final user-facing TUI acceptance.
