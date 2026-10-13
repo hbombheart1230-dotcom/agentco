@@ -109,6 +109,27 @@ export function validatePipeline(e) {
     return result.exitCode === 0 && result.model === model && clean(result.output) === clean(e.worker.output) && clean(e.final) === clean(e.worker.output);
   } catch { return false; }
 }
+// Shared native text invocation; never starts another Pi Commander.
+export function claudeTextArgs(task) {
+  return ['--bare','--restricted','-p',task,'--model',model,'--tools','','--disallowedTools','*','--strict-mcp-config','--setting-sources','','--no-session-persistence','--no-chrome','--max-turns','1','--output-format','json','--system-prompt','Answer only the synthetic task briefly.','--settings','{}'];
+}
+export async function runSyntheticClaude(job, {signal} = {}) {
+  if (job !== 'add42') throw Error('Only fixed synthetic add42 is supported.');
+  const key=process.env.OPENROUTER_API_KEY;
+  if(!key) throw Error('Worker key unavailable.');
+  const pricing=(await (await fetch('https://openrouter.ai/api/v1/models',{signal:signal?AbortSignal.any([signal,AbortSignal.timeout(10000)]):AbortSignal.timeout(10000)})).json()).data?.find(m=>m.id===model)?.pricing;
+  if(pricing?.prompt!=='0'||pricing?.completion!=='0') throw Error('Exact-free Worker pricing gate failed.');
+  const toy=mkdtempSync(join(tmpdir(),'agentco-p5-2-worker-')), home=join(toy,'home');mkdirSync(home);
+  const env=Object.fromEntries(Object.entries(process.env).filter(([k])=>['SYSTEMROOT','WINDIR','COMSPEC','PATH','PATHEXT','TEMP','TMP','LOCALAPPDATA','APPDATA','PROGRAMDATA','PROGRAMFILES','PROGRAMFILES(X86)'].includes(k.toUpperCase())));
+  Object.assign(env,{HOME:home,USERPROFILE:home,CLAUDE_CONFIG_DIR:home,ANTHROPIC_BASE_URL:'https://openrouter.ai/api',ANTHROPIC_AUTH_TOKEN:key,ANTHROPIC_API_KEY:'',CLAUDE_CODE_SIMPLE:'1',CLAUDE_CODE_DISABLE_NONESSENTIAL_TRAFFIC:'1',CLAUDE_CODE_MAX_RETRIES:'0',API_TIMEOUT_MS:'20000',CLAUDE_CODE_MAX_OUTPUT_TOKENS:'256',DISABLE_AUTOUPDATER:'1',DISABLE_TELEMETRY:'1',DISABLE_ERROR_REPORTING:'1',DISABLE_AUTO_COMPACT:'1'});
+  for(const name of ['ANTHROPIC_MODEL','ANTHROPIC_DEFAULT_FABLE_MODEL','ANTHROPIC_DEFAULT_OPUS_MODEL','ANTHROPIC_DEFAULT_SONNET_MODEL','ANTHROPIC_DEFAULT_HAIKU_MODEL','CLAUDE_CODE_SUBAGENT_MODEL'])env[name]=model;
+  const run=await runBounded(resolveClaudePath(),claudeTextArgs('Calculate 7+11+24. Respond exactly ADD42=42.'),{cwd:toy,env,signal,timeout:30000,maxBuffer:262144});
+  const data=JSON.parse(run.stdout.trim()), observedModels=Object.keys(data.modelUsage||{});
+  if(run.status!==0||data.is_error||String(data.result).trim()!=='ADD42=42'||observedModels.length!==1||observedModels[0]!==model)throw Error('Synthetic Worker result/route failed.');
+  const result={harness:'claude',job,status:'PASS',output:'ADD42=42',model,observedModels,exitCode:run.status,toolMode:'none',turns:data.num_turns};
+  const area=join(root,'results/p5-2');mkdirSync(area,{recursive:true});writeFileSync(join(area,`worker-${Date.now()}.json`),JSON.stringify(result,null,2));
+  return result;
+}
 // Fixed synthetic fixture; validate bytes before executing any model-edited code.
 export const toyBefore = 'module.exports = (a, b, c) => a - b - c;\n';
 export const toyAfter = 'module.exports = (a, b, c) => a + b + c;\n';
@@ -161,7 +182,7 @@ writeFileSync(join(agent, 'settings.json'), JSON.stringify({ retry: { enabled: f
 writeFileSync(join(agent, 'models.json'), JSON.stringify({ providers: { openrouter: { modelOverrides: { [model]: { maxTokens: 512 } } } } }));
 const extension = join(toy, 'claude-worker.mjs');
 writeFileSync(extension, `
-import { runBounded, writeOwner, verifyToyEdit } from ${JSON.stringify(import.meta.url)};
+import { runBounded, writeOwner, verifyToyEdit, claudeTextArgs } from ${JSON.stringify(import.meta.url)};
 import { writeFileSync } from 'node:fs';
 import { resolve } from 'node:path';
 const saveOwner = owner => writeOwner(${JSON.stringify(join(toy,'worker-process.json'))},owner);
@@ -181,7 +202,7 @@ export default function(pi) {
       let result;
       if (${toyEdit}) { delete env.CLAUDE_CODE_SIMPLE; env.CLAUDE_CODE_SAFE_MODE='1'; }
       try {
-        const args=${toyEdit} ? ['--safe-mode','--restricted','-p',${JSON.stringify(toyTask)},'--model',${JSON.stringify(model)},'--tools','Read,Edit,Write','--allowedTools','Read(./sum.js),Edit(./sum.js)','--permission-mode','dontAsk','--strict-mcp-config','--setting-sources','','--disable-slash-commands','--no-session-persistence','--no-chrome','--max-turns','4','--output-format','stream-json','--verbose','--system-prompt','Edit only the synthetic sum.js as instructed. No other tasks.','--settings',${JSON.stringify(JSON.stringify({permissions:{deny:['Edit(./sum.test.mjs)']}}))}] : ['--bare','--restricted','-p',task,'--model',${JSON.stringify(model)},'--tools','','--disallowedTools','*','--strict-mcp-config','--setting-sources','','--no-session-persistence','--no-chrome','--max-turns','1','--output-format','json','--system-prompt','Answer only the synthetic task briefly.','--settings','{}'];
+        const args=${toyEdit} ? ['--safe-mode','--restricted','-p',${JSON.stringify(toyTask)},'--model',${JSON.stringify(model)},'--tools','Read,Edit,Write','--allowedTools','Read(./sum.js),Edit(./sum.js)','--permission-mode','dontAsk','--strict-mcp-config','--setting-sources','','--disable-slash-commands','--no-session-persistence','--no-chrome','--max-turns','4','--output-format','stream-json','--verbose','--system-prompt','Edit only the synthetic sum.js as instructed. No other tasks.','--settings',${JSON.stringify(JSON.stringify({permissions:{deny:['Edit(./sum.test.mjs)']}}))}] : claudeTextArgs(task);
         const run = await runBounded(${JSON.stringify(claude)}, args, {cwd:${JSON.stringify(project)},env,signal,timeout:${toyEdit?90000:30000},maxBuffer:${toyEdit?524288:262144},onSpawn:(pid,owner)=>saveOwner(owner),onIdentity:saveOwner,onRetire:saveOwner});
         if(run.status!==0) throw Error('Worker exit failed.');
         const events=${toyEdit}?run.stdout.split('\\n').flatMap(line=>{try{return [JSON.parse(line)];}catch{return [];}}):[];

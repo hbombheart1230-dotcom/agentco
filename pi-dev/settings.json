@@ -16,7 +16,8 @@
     "../node_modules/@earendil-works/pi-coding-agent/examples/extensions/plan-mode",
     "extensions/permission-gate.ts",
     "extensions/protected-paths.ts",
-    "extensions/git-checkpoint.ts"
+    "extensions/git-checkpoint.ts",
+    "extensions/harness-delegation.ts"
   ],
   "packages": [
     "npm:@ian-pascoe/pi-lsp@0.8.0",

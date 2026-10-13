@@ -1,6 +1,6 @@
-# P5.2 — Pi interactive Commander: automatic and explicit harness dispatch
+# P5.2 - Pi interactive Commander: automatic and explicit harness dispatch
 
-**APPROVED / ACTIVE (2026-10-13).** The user explicitly requests BOTH (a) automatic Worker selection and execution in a normal Pi session, and (b) naming a specific harness to execute. This is a real runtime integration task, not a design-only phase. Execute one substantial Codex batch, then one Claude independent review; avoid repeated micromanaged approval gates.
+**IMPLEMENTATION PASS (Claude minimum) / THREE-HARNESS PARTIAL / REVIEW PENDING (2026-10-13).** The user explicitly requests BOTH (a) automatic Worker selection and execution in a normal Pi session, and (b) naming a specific harness to execute. This is a real runtime integration task, not a design-only phase. Execute one substantial Codex batch, then one Claude independent review; avoid repeated micromanaged approval gates.
 
 ## Grounded baseline (do not repeat)
 
@@ -15,7 +15,7 @@
 
 From `C:\Agentco`, start **ordinary Pi session** via `node scripts/pi.mjs`. New Pi-native registration should offer TWO equivalent entrypoints:
 
-**Natural auto delegation** (model chooses the tool): e.g. user says `이 가상의 덧셈 문제를 적절한 Worker에게 맡겨서 답을 알려줘`; Pi invokes `agentco_delegate` with `harness=auto` and a strictly synthetic job token. Real model-driven tool call and subsequent result visible in the SAME Pi session must be evidenced.
+**Natural auto delegation**: ask Pi to delegate the fixed fabricated add42 job automatically and return the result. Pi invokes agentco_delegate with harness=auto and job=add42 in the same session.
 
 **Explicit harness selection** (not ignored): `/harness auto add42`, `/harness claude add42`, `/harness codex add42`, `/harness hermes add42`. Optionally `/harness claude edit42` to connect existing fixed toy edit if no recursive Commander launch is needed. User-provided direct command must execute the named installed CLI when eligible, not merely tell the Commander to try that route. No silent choice override, alias confusion or automatic switch to Claude if the user explicitly picked Codex/Hermes.
 
@@ -52,3 +52,47 @@ The job interface in THIS milestone must be restricted to **owned fabricated job
 - **P5.2 interactive routing PASS (minimum)**: in an ordinary existing Pi session, real Pi natural auto delegation invokes real external Claude Worker and incorporates the result; explicit `/harness claude add42` actually executes that CLI; explicit Codex/Hermes never misroute or silently use paid models; `/harness status` honestly distinguishes unavailable vs verified.
 - **P5.2 full three-worker routing PASS**: above PLUS real, observed, safe same-free-model text-only `add42` smoke for both Codex and Hermes and explicit `/harness codex`/`hermes` execution; otherwise label three-worker coverage PARTIAL, regardless of overall interactive-Claude PASS.
 - Never claim arbitrary private repo edit, true general Worker READY, native Skill execution, Linux portability, model benchmark or UI implementation. Existing P5 and P5.1 stay FINAL PASS and unchanged.
+
+## Execution result (2026-10-13)
+
+Minimum interactive-Claude routing PASS; full three-worker coverage PARTIAL; independent review PENDING. Clean safe fetch/new tracking branch at 970d87f60364ebafe86e0e6757b497bc6e50857e. No reset, stash mutation, main merge, worktree or installation.
+
+### Native implementation
+
+Installed Pi 1.0.4 loader/API and [official extension contracts](https://pi.dev/docs/latest/extensions) inspected. Installed upstream subagent launches Pi agents, not named external CLIs; installed LSP/Skill authoring packages do not supply this route. One thin harness-delegation.ts extension and ONE additive settings entry are necessary. Existing packages/security/subagent/Skill settings, default Ultra free model and hideThinkingBlock unchanged.
+
+agentco_delegate and /harness share deterministic routing. Only auto|claude|codex|hermes plus literal add42 accepted; no private text/path/session/source forwarded. Auto chooses verified Claude only. Unsupported named Workers preserve identity and return NOT_READY, fallback=false, no provider call. Slash command invokes Claude directly, then appends a visible same-session custom result with triggerTurn=false; no nested Pi or router model. Schema rejects extra properties.
+
+commander.mjs exports the accepted native text argument list and a narrowly fixed synthetic invocation. P5 text reuses the same flags; toy-edit and all accepted lifecycle/correspondence implementations unchanged. Worker has off-repo cwd/child home, narrow inherited env plus opaque auth, bare/restricted/no tools/settings/MCP/session. Exact Super free model and auxiliary aliases pinned; no retries/fallback. Bounded public zero-price gate, exact ADD42=42 and observed model required before PASS. Tool cancellation and shutdown abort/await owned invocations. No framework/packages/common Skill adapter.
+
+### Harness results
+
+| Harness | Result | Evidence / missing gate |
+| --- | --- | --- |
+| Claude | PASS | Actual model-selected auto and explicit direct native text execution; same-session return; exact Super free |
+| Codex | NOT_READY | Installed 0.162.1 exec help once: isolated-home/ephemeral/config/read-only controls exist, no explicit no-tools allowlist. Shell disabling alone cannot prove all file-reading tools removed; exact free Responses route unverified. No model call |
+| Hermes | NOT_READY | Native hermes.exe chat --help once, isolated home/no auth: exit 1. Installed oneshot mirrors normal rules/memory/skills, config toolsets, provider fallback and auxiliary title accounting; isolated no-tools/auxiliary-free route not established. No model call or repair/install |
+
+Sources: [Codex configuration](https://developers.openai.com/codex/config-reference/) documents Responses-only protocol and shell-tool feature control, but does not prove the required complete Windows no-tools boundary or this Nemotron route. [Hermes toolsets](https://hermes-agent.nousresearch.com/docs/reference/toolsets-reference) and [configuration](https://hermes-agent.nousresearch.com/docs/user-guide/configuration) describe tool bundles/profiles/auxiliary models. Installed source: hermes_cli/oneshot.py explicit-toolset validation, runtime fallback and auxiliary title accounting; cli.py toolset defaults. Hermes version baseline reused, not reconfirmed by failed isolated help. No real credentials/config/session contents inspected. Next missing gate: supported isolated native no-tools/auxiliary-free execution; installation PASS is insufficient.
+
+### Focused checks and real session
+
+Four new offline tests PASS: installed Pi loader registers one native subagent/agentco_delegate/harness without errors/collision; auto/manual share path and Codex/Hermes never fallback; private/unsupported args reject and exact-free/no-tool flags; shutdown cancellation waits for owned cleanup. Initial loading failed on obsolete TypeBox import; changed to installed official example's typebox, then four passed. Original commander --check PASS. Old 22-case process/P5.1 suite NOT RUN.
+
+One actual node scripts/pi.mjs RPC session, ordinary pi-dev settings, fresh off-repo cwd, --no-session, no context files/skills/templates/MCP, synthetic system prompt and only agentco_delegate exposed to model. Normal extensions still loaded; default/settings not rewritten. Official RPC automates the actual session and slash dispatcher. TUI drawing/keyboard interaction NOT RUN.
+
+1. /harness status, codex add42 and hermes add42 append truthful status/NOT_READY with no model calls.
+2. Natural synthetic request produces one real agentco_delegate call, harness=auto/job=add42. Installed Claude returns ADD42=42; successful toolResult reaches SAME session and Pi final includes ADD42=42.
+3. /harness claude add42 executes actual Claude directly via SAME route; PASS custom message appended, no extra Pi model turn.
+
+Observed Commander only NVIDIA Ultra free; Worker only NVIDIA Super free; public prompt/completion prices zero for both before smoke. New top-level CLI prompts: 3 total (Pi 1, Claude 2, Codex/Hermes 0), within 8. Each Claude one turn. HTTP/model request count may exceed prompt count; physical requests/provider invoice unobserved/unverified. No paid fallback/account lookup/real project data sent.
+
+Ignored evidence: results/p5-2/session-evidence.json, worker-1791858140984.json, worker-1791858145889.json, implementation-summary.json. Only fixed job/tool IDs/status/model/output, no raw session log/env/key/private path. Local session-smoke.mjs is an ignored acceptance fixture, not product code.
+
+Checks: syntax/extension loading, UTF-8/line endings, additive-only settings equality, unchanged accepted lifecycle/validation, diff-check, scope/secret review, unchanged main/history/two stashes. Six intended files only; runtime/auth/session/PATH/Skills preserved. One feature commit/push; no main merge.
+
+### Use / handoff
+
+From C:\Agentco: node scripts/pi.mjs. Ask to delegate fixed fabricated add42 automatically. Commands: /harness status; /harness auto add42; /harness claude add42; /harness codex add42; /harness hermes add42. Last two explicitly NOT_READY. Only add42 supported; arbitrary text/private paths and optional edit42 rejected. Existing standalone text/--toy-edit preserved.
+
+Freeze feature for one independent Claude diff/evidence review, zero new provider calls; GPT/user gates acceptance/release. General private-project Worker, native Skills, optional edit42, TUI rendering and other-PC/Linux portability NOT RUN. Three-harness coverage PARTIAL.
