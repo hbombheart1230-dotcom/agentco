@@ -1,6 +1,6 @@
-# P5.1 — Real Claude file editing through the existing Pi Commander
+# P5.1 - Real Claude file editing through the existing Pi Commander
 
-**Status: APPROVED / ACTIVE (2026-10-13).** One sizable Codex implementation batch; one final independent Claude review. New branch `feature/p5-1-file-edit` starts from released `main` `03245540e7ae2e30bb232430f1e00a03b1e97280`. **Do not revive the old 88-commit P3 experimental branch.** The user wants functional delivery before benchmark/model/harness comparison and insists on vendor-native code and reusable official features FIRST, no new custom framework.
+**Status: IMPLEMENTATION PASS / INDEPENDENT REVIEW PENDING (2026-10-13).** One sizable Codex implementation batch; one final independent Claude review. New branch `feature/p5-1-file-edit` starts from released `main` `03245540e7ae2e30bb232430f1e00a03b1e97280`. **Do not revive the old 88-commit P3 experimental branch.** The user wants functional delivery before benchmark/model/harness comparison and insists on vendor-native code and reusable official features FIRST, no new custom framework.
 
 ## Accepted base (DO NOT repeat)
 
@@ -45,6 +45,52 @@ The test fixture should be tiny, deterministic and **synthetic**: e.g. `sum.js` 
 - Modify only `scripts/commander.mjs`, `scripts/commander.test.mjs` as needed, `docs/CURRENT_TASK.md` and this P5.1 work order, plus optional tiny harmless toy fixture in ignored `results/p5-1/` rather than permanent product folders. Keep root setup, `pi-dev/`, `shared/skills/`, user auth/PATH/settings/runtime/session/stashes and past P3 branch untouched.
 - Run `node --check`, focused offline acceptance, one bounded live toy edit if safe, `git diff --check`, and verify before/after source bytes, tests, Pi toolResult/final correlation, exact-free model route and no secret-bearing evidence. Evidence in ignored `results/p5-1/`, with only sanitized summaries.
 - Stage explicit files, one commit/push **to this feature branch only**. No main merge by Codex now. Short Korean results: `tool invocation observed? | fixture edit? | node --test? | Pi result? | model route | code delta | evidence | next`. Honest `NOT RUN` status where applicable. If P5.1 works, one Claude independent evidence-only review, then GPT/user may selectively promote verified P5.1 to main.
-- All user-visible reports **한국어로 작성**, no intermediate user approvals for pre-authorized synthetic-only changes; if unsafe/paid/global installation or user data would be required, BLOCK that operation and report rather than changing constraints.
+- All user-visible reports must be written in Korean. No intermediate approval for authorized synthetic-only changes; unsafe/paid/global installation or user-data requirements must be BLOCKED.
 
 **Acceptance:** actual owned fabricated code file modified via installed Claude Code native file tool, trusted local test passes, Pi receives structured successful Worker result, final matches, no real user repo data transmitted, exact free model confirmed. This is **P5.1 toy edit PASS**, NOT permission to modify private projects/claim general Worker READY or perform model/harness benchmarks.
+
+## Execution result (2026-10-13)
+
+Clean worktree/stashes checked, safe fetch, new local tracking branch from `origin/feature/p5-1-file-edit` at `f7ff776cdc4d9fc182424d15b8d41301e564b552`. Existing archived feature SHA `dc56eb573f1b1f0935208d9a8435fe2b363673b3` untouched; local main untouched. No reset/force/stash mutation, new worktree, install or main merge.
+
+### Official capability and narrow implementation
+
+Installed Claude **2.1.292**, Node **24.19.0**. Official [CLI reference](https://code.claude.com/docs/en/cli-reference) documents restricted native file-tool working-directory bounds (>=2.1.248), safe-mode preserving built-in tools, explicit tool inventory, settings and permission flags. Installed --help agrees. [Permission rules](https://code.claude.com/docs/en/permissions) document Edit(path) covering both Edit and Write and deny rules taking priority. Prior same-version synthetic boundary evidence `results/p3/worker-e2e-r2-33c6ec3/claude-r2.json` was narrowly reused: external Read/Write denied, external canary unchanged and outside write absent. No new boundary model prompt.
+
+- Existing single helper and temporary official Pi registerTool extension reused. `--toy-edit` creates only sum.js and sum.test.mjs under a fresh off-repo project. Temporary Commander/Claude homes and runtime artifacts are sibling directories outside the Worker working directory, not model-readable fixture files.
+- Toy Worker uses `--safe-mode --restricted --tools Read,Edit,Write`, no bare/simple filter, no settings sources, strict MCP, slash commands disabled, no persistent session/browser. `dontAsk` plus `Read(./sum.js),Edit(./sum.js)` allows the source file; explicit Edit deny protects the test. No shell/network/Agent/Skill tools or extra directories. Runtime stream-json evidence is parsed in memory; only fabricated filenames and success flags are saved.
+- Host requires different before/after bytes, the fixed tiny known source, unchanged trusted test, exactly two regular nonsymlink fixture files, successful native Read plus Edit/Write, and host node --test exit 0 before emitting FILE_EDIT_RESULT=PASS. Model-edited code is byte-gated before execution; host Node test has an allowlisted environment without API auth. No-op/wrong/unexpected writes fail closed. This intentionally fixed demonstration is not a general workspace runner.
+- Commander user request is separate from Worker editing instructions; it returns the structured result's output field exactly. Existing validatePipeline correlation and all direct-child/orphan lifecycle implementations unchanged. Original bare/text flags, text output bound and default usage retained. Additional feature code uses only Node built-ins and official Claude/Pi options.
+- Price gate confirms exact NVIDIA Super prompt/completion zero before every live roundtrip. Both observed model sets are only `nvidia/nemotron-3-super-120b-a12b:free`; model aliases/auxiliary slots remain pinned, no fallback flag, retries and nonessential traffic disabled. Key remains opaque in child env, never tool context/Git/raw log. Actual HTTP request count and provider billing remain unobserved/unverified, not inferred from prompt counts.
+
+### Results and evidence
+
+| Check | Result | Evidence |
+| --- | --- | --- |
+| Native Read/Edit invocation | PASS | Successful matching native tool_use/tool_result events for sum.js |
+| Genuine fixture modification | PASS | Different SHA-256 before/after, expected fixed bytes |
+| Trusted host Node test | PASS | sum(7,11,24)=42; exit 0; one test |
+| Pi receives Worker result / final equality | PASS | One successful claude_worker toolResult; final exactly FILE_EDIT_RESULT=PASS; sum(7,11,24)=42; NODE_TEST=PASS |
+| Exact free-model routing | PASS | Public zero pricing and Commander/Worker observed model sets |
+| Focused offline negatives / host verification | PASS | Four new Toy edit tests; prior 18-case lifecycle suite NOT RUN |
+| Existing text mode | Syntax / startup PASS | --check passed; previous live text PASS reused, NOT RUN |
+| Native Write / Skill invocation | NOT RUN | Actual edit used Edit; Skill deliberately excluded |
+| General private-project readiness / other PC live run | NOT RUN | Only fixed isolated synthetic fixture tested |
+
+New CLI prompt attempts: **4 total = two Pi + two Claude**, within approved budget. Each Claude reported 4 turns; many HTTP/model requests may occur per CLI prompt, so 4 does not mean four model requests. No account lookup, paid fallback, repeated P3 comparison or installation test.
+
+1. First roundtrip `results/p5-1/pipeline-1791854561914/evidence.json`: native edit and host test succeeded, but Pi returned explanatory EDIT_DONE instead of validated Worker output. Overall pipelineSuccess=false and nonzero exit correctly rejected false PASS. Commander and Worker had shared conflicting final-response instructions.
+2. Corrected roundtrip `results/p5-1/pipeline-1791854616940/evidence.json`: **pipelineSuccess=true**, 18.008s, one dispatch, received structured result and exact final. Worker native Read/Edit succeeded; before hash `0d97619b626dedbb9a174115b8b2fdcead7798fc59610d7e8591cbcc396d4ac9`, after hash `88c8194757eacba1bc429a44dc97b3e9012693c6d0ca3dddc0f29cfdba35eca8`. worker.json plus fixture-before.js, fixture-after.js and sum.test.mjs archived locally with hash verification. Future toy runs also save those synthetic artifacts after validation. No third roundtrip.
+
+Sanitized batch summary: `results/p5-1/implementation-f7ff776/summary.json`. Evidence stays ignored/machine-local. Four-file implementation scope only; UTF-8 docs repaired in the active title/reporting instruction. Syntax, focused acceptance, startup, diff-check, intended scope, main/archive/stash preservation checked. Shared Skills/Pi source/settings, auth/session/runtime, user PATH/environment and CLI versions untouched.
+
+### Run / handoff
+
+```powershell
+cd C:\Agentco
+node scripts/commander.mjs --toy-edit
+```
+
+Uses the existing trusted Claude executable discovery/AGENTCO_CLAUDE_CLI override and approved opaque local OpenRouter key. Each execution creates a new fixture; do not rerun models merely for review. Restricted native file-tool boundary is not an OS sandbox for arbitrary programs, which are never exposed here. This mode deliberately accepts only the exact small fixture repair and does not accept arbitrary project paths or code execution.
+
+Next: one Claude independent diff/evidence review with zero provider calls; GPT/user final acceptance and optional selective main promotion. General Worker READY remains NO; Skill execution and private-project edits deferred, not blockers for the demonstrated P5.1 toy slice.

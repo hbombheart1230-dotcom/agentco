@@ -4,7 +4,7 @@ import { mkdtempSync, readFileSync, writeFileSync, existsSync, mkdirSync } from 
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { spawn } from 'node:child_process';
-import { model, validatePipeline, resolveClaudePath, runBounded, killTree, getProcessIdentity, writeOwner, cleanupOrphan } from './commander.mjs';
+import { model, validatePipeline, resolveClaudePath, runBounded, killTree, getProcessIdentity, writeOwner, cleanupOrphan, toyBefore, toyAfter, toyTest, checkToyEdit, verifyToyEdit } from './commander.mjs';
 
 function evidence(output = 'SECOND_PAYLOAD=137') {
   const worker = { output, model, observedModels: [model], exitCode: 0 };
@@ -144,4 +144,28 @@ test('Direct cleanup: exit before pipe close is bounded without killing retired 
     const pid=Number(readFileSync(join(area,'pid'),'utf8'));const identity=await getProcessIdentity(pid);
     if(identity.status==='found')await killTree({state:'active',pid,identity});else assert.ok(!alive(pid));
   }
+});
+
+const editTools=[{name:'Read',file:'sum.js',success:true},{name:'Edit',file:'sum.js',success:true}];
+test('Toy edit: no-op wrong source missing native edit and extra write fail closed',()=>{
+  const check=(after,tools=editTools,files=['sum.js','sum.test.mjs'],source=toyTest)=>checkToyEdit(toyBefore,after,source,files,tools,0);
+  assert.equal(check(toyAfter),true);assert.equal(check(toyBefore),false);assert.equal(check('module.exports=()=>42;'),false);
+  assert.equal(check(toyAfter,[]),false);assert.equal(check(toyAfter,[{name:'Write',file:'other',success:true}]),false);
+  assert.equal(check(toyAfter,[{name:'Edit',file:'sum.js',success:false}]),false);
+  assert.equal(check(toyAfter,editTools,['sum.js','sum.test.mjs','extra.js']),false);assert.equal(check(toyAfter,editTools,undefined,'tampered'),false);
+});
+test('Toy edit: failed host test cannot produce PASS',()=>{
+  assert.equal(checkToyEdit(toyBefore,toyAfter,toyTest,['sum.js','sum.test.mjs'],editTools,1),false);
+});
+test('Toy edit: missing mismatched returned Worker and fabricated final cannot PASS',()=>{
+  const e=evidence('FILE_EDIT_RESULT=PASS; sum(7,11,24)=42; NODE_TEST=PASS');assert.equal(validatePipeline(e),true);
+  e.worker=null;assert.equal(validatePipeline(e),false);
+  const wrong=evidence('FILE_EDIT_RESULT=PASS');wrong.returnedToolResults[0].content[0].text=JSON.stringify({...wrong.worker,output:'FAIL'});assert.equal(validatePipeline(wrong),false);
+  const missing=evidence('FILE_EDIT_RESULT=PASS');missing.returnedToolResults=[];assert.equal(validatePipeline(missing),false);
+});
+test('Toy edit: actual host Node test validates only fixed owned synthetic bytes',async()=>{
+  const project=mkdtempSync(join(tmpdir(),'agentco-toy-offline-'));
+  writeFileSync(join(project,'sum.js'),toyAfter);writeFileSync(join(project,'sum.test.mjs'),toyTest);
+  const proof=await verifyToyEdit(project,editTools);assert.equal(proof.testExitCode,0);assert.notEqual(proof.beforeHash,proof.afterHash);
+  writeFileSync(join(project,'sum.js'),toyBefore);await assert.rejects(verifyToyEdit(project,editTools),/integrity/);
 });

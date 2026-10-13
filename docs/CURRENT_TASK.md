@@ -1,19 +1,17 @@
-# Agentco Current Task — P5.1 native file-edit vertical slice
+# Agentco Current Task - P5.1 toy file edit implemented
 
-**Branch:** `feature/p5-1-file-edit` (from released main `03245540e7ae2e30bb232430f1e00a03b1e97280`). In `C:\Agentco`, safe-fetch and switch to this new remote tracking branch only if local worktree is clean; never reset, force-pull or touch pre-existing stashes. Preserve original `feature/p3-worker-harness-design` untouched.
+Branch: `feature/p5-1-file-edit`; implementation base `f7ff776cdc4d9fc182424d15b8d41301e564b552`, following released main `03245540e7ae2e30bb232430f1e00a03b1e97280`. Canonical workspace `C:\Agentco`. Follow `AGENTS.md`; read ONLY the Execution result in `docs/work-orders/P5_1_FILE_EDIT_VERTICAL.md` and this implementation's helper/test delta.
 
-Follow `AGENTS.md`. Read ONLY `docs/work-orders/P5_1_FILE_EDIT_VERTICAL.md` and the existing `scripts/commander.mjs` plus its test. No long P3 histories, model comparisons, repeated installers/doctor or P5 18-case regression.
+## Implementation PASS; independent review pending
 
-## Accepted baseline
+Actual Pi Commander -> Claude 2.1.292 native Read/Edit -> owned synthetic sum.js change -> host Node test -> Pi toolResult/final correspondence PASS. Explicit `--toy-edit` only; default text route preserved. Exact NVIDIA Super free model; 4 new CLI top-level prompt attempts total (2 Pi + 2 Claude), no further live calls. First roundtrip's mismatched Pi final correctly failed; second passed after separating Commander request from Worker instructions. Four new offline acceptance cases passed; previous process/text/model comparisons NOT RUN.
 
-- P5 final **PASS and selectively released on main**. Real Pi 1.0.4 -> Claude Code CLI -> Pi text/artifact workflow, exact NVIDIA Super `:free`, strict result match, lifecycle reviewed after 18/18 offline tests. Existing text-only invocation MUST still work.
-- P5 source and test Git blobs promoted without modifications. 88 unfinished P3 exploration commits deliberately NOT merged to main; they remain on the archived feature branch.
-- Native file-edit and actual Skill invocation NOT RUN. Overall Worker READY = NO.
+## NEXT: Claude independent evidence-only review
 
-## ACTIVE — P5.1 first actual toy file edit (APPROVED)
+Review this feature implementation commit and the current work order's Execution result. Check native restricted/safe-mode permission scope, child-only homes/settings, actual successful native tool events, before/after hashes, trusted host Node test, returned structured result and final equality, missing/wrong/no-op failure gates, free-only model/auth handling, and unchanged text/lifecycle paths.
 
-Build one **real synthetic code-file edit** through actual Commander -> official Claude CLI native `Read/Edit/Write` -> host `node --test` -> returned Pi result. Use a newly generated off-repo tiny JS fixture (e.g. broken sum function -> expected 42), no real source/privacy exposure.
+Evidence: ignored `results/p5-1/pipeline-1791854616940/` (successful roundtrip, worker and fixture artifacts), failed first roundtrip `results/p5-1/pipeline-1791854561914/`, and `results/p5-1/implementation-f7ff776/summary.json`.
 
-Official existing tool capability FIRST; enable file tools only for this explicit opt-in mode with native `--restricted` scope and isolated settings/home, no Bash/network/MCP/Shell or paid models. Do not write a new agent framework, custom Skill loader or duplicate Commander. Preserve the original text-only entrypoint and child safety safeguards. If the native file permissions cannot safely confine access to the fabricated workspace, STOP the live tool-capable run and report BLOCKED, not false PASS.
+No repeat model/API/account calls or file edits/commit/push during independent review. GPT/user gate final PASS and selective main promotion. General private-project Worker READY remains NO; native Skill invocation and arbitrary project edits NOT RUN. Preserve main, archived P3 branch, both stashes, runtime, settings, sessions, auth, PATH and shared Skills.
 
-Execute in **one Codex batch**: focused offline checks, <=4 total new CLI prompt attempts, successful toy edit & host test & real Pi received result when safe; sanitized evidence and one feature commit/push. No main merge or package installation. After Codex returns, one independent Claude review, zero repeat model/API tests. Report in Korean with actual results and explicit NOT RUN.
+Execution from `C:\Agentco`: `node scripts/commander.mjs --toy-edit`. It generates a fresh off-repo fixture and uses only the approved local opaque key. Do not rerun for this review.
