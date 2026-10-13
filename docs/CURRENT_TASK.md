@@ -1,22 +1,25 @@
-# Agentco Current Task — P5.5 released; no implementation in progress
+# Agentco Current Task — P5.6 native Main free-only routing / recurring login screens
 
-**P5.5 CLOSED / PARTIAL PRODUCT ACCEPTANCE (2026-10-13).**
+**ACTIVE / ASSIGNED (2026-10-13)**
 
-## Accepted release boundary
+## Minimum required context
 
-- Main selector launches installed Pi / Claude Code / Codex CLI / Hermes as native interactive TUI. Enter defaults to Pi; existing Pi CLI args and `--main` remain supported.
-- Independently reviewed implementation SHA: `d827df06ab7f7f0d1f0aa177864e4ed9ce41c175`, Claude verdict PASS; focused launcher tests 8/8 PASS without a model prompt. Codex menu 3 no-prompt interactive exit 0 is based on implementer's local manual evidence.
-- Codex Main alone receives native `--no-daemon` and child-only TERM fallback to handle that installed CLI. Other three native Main launch paths and P5.4 source are preserved.
-- The previous P5.4 AUTO policy is **unchanged**: fixed synthetic `add42` only, AUTO chooses Claude. Named `--delegate ... add42` is likewise fixed synthetic only.
-- **NOT VERIFIED/NOT DELIVERED**: general cross-harness natural-language task delegation; Claude/Hermes onboarding and general chat; free-model/non-paid chat routing for other native Mains; live financial data / browser integration.
-- Legacy local/auth/runtime/session/profile/stash artifacts remain machine-local and out of Git. Parked browser feature branch is independent and not merged.
+1. This file.
+2. `docs/work-orders/P5_6_NATIVE_FREE_MAIN_LOGIN.md`.
+3. Only the live launcher/environment and current focused test code pointed to by the work order, plus minimal installed CLI nonsecret help/config metadata.
 
-## Next action — user priority decision
+Do **not** reread P3–P5.5 completed history or rerun historical full suites.
 
-No new implementation is assigned yet. When a task is selected, create a separate feature work order; keep existing P5.4/P5.5 implementation frozen unless the next task specifically needs a bounded change.
+## Current scope and safety
 
-Potential next scope: verify existing native Main free-only model/provider setups **without inspecting credentials or sending unapproved paid inference**, then separately implement explicit real-task handoffs through official native mechanisms. Browser integration remains parked.
+- Workspace: `C:\Agentco` (personal only). Base remote `main` is `1ed95a3ff0432ca1b94e16d6d14506db0d710bac`.
+- Assigned remote branch: `feature/p5-6-native-free-main`. GPT has committed this spec and pointer there.
+- User symptom: selecting Claude/Codex/Hermes native TUI may route to sign-in/first-run provider screens. They want **existing OpenRouter free model** via each installed official native CLI, **without** unnecessary subscription OAuth. No novel frontend, global config reset, auth bypass or provider login automation.
+- First diagnose each native CLI locally using non-secret metadata only. Root `.env` may not reach non-Pi sessions today because launcher only uses `piEnv()` for Pi; confirm rather than assume.
+- Apply the smallest official-supported child-only provider/model setup if safely possible. Preserve Pi default Ultra free, existing P5.4 Worker/AUTO and P5.5 menu/Codex no-daemon/TERM.
+- Claude Code's official docs do not support non-Claude model use behind gateways, so an incompatible login/provider setup may remain **PARTIAL/BLOCKED**. Do not bypass required onboarding.
+- Fix exact model/provider, no paid fallbacks or auxiliary model drift; no live model calls without specific user approval. If no safe route can be proven, report BLOCKED rather than pretending the CLI is usable.
+- Preserve dirty files, creds, stash, runtime, native profiles, browser profile and independent Samsung POP branch; **never inspect or print secret values**.
+- Codex: implement/test/commit/push only feature. Claude: independent review of actual implementation SHA. GPT/user: final PASS and main decision.
 
-## Minimal context rule
-
-Start here and read only the new approved task order. P5.5 details and review are archival evidence at `docs/work-orders/P5_5_MAIN_HARNESS_SELECTOR.md`; do not reread historical P3–P5.4 work orders or rerun their tests.
+P5.6 is separate from cross-harness natural-language delegation, which remains deferred.
