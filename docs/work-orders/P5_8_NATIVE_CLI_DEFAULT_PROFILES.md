@@ -1,6 +1,6 @@
 # P5.8 — Configure actual native CLI defaults (not just Agentco launcher overrides)
 
-**Status:** ASSIGNED / Codex local configuration work pending (2026-10-13)
+**Status:** LOCAL DEFAULTS SAVED / PARTIAL - INDEPENDENT REVIEW PENDING (2026-10-13)
 **Base:** origin/main `4107000453feb4e5e9880cf2df27d5d288d02a23`
 **Remote feature:** `feature/p5-8-native-cli-default-profiles`
 **Canonical local workspace:** `C:\Agentco` (personal Agentco only; exclude Samsung internal CLI work)
@@ -39,3 +39,65 @@ This explicit task **authorizes carefully controlled edits of LOCAL user-level n
 `IMPLEMENTATION_SHA` (if repo commit), `LOCAL_NATIVE_FILES_CHANGED` (paths only), `LOCAL_BACKUPS_PRESENT_BOOL`, `NATIVE_DEFAULT_PROVIDER/MODEL` (3 CLIs), `ROOT_ENV_REFERENCE` (provider key *name* only), `HERMES_AUX_FALLBACK_SAFETY`, `CLAUDE_UNSUPPORTED` / compatible route, `NOUS_PORTAL_PROMPT` (observed/not run), `MODEL_PROMPTS=0`, `TEST_PASS`, `MAIN_UNCHANGED`, `FURTHER_STEPS`.
 
 **Acceptance:** Actual native defaults exist where the vendors read them; legitimate missing support must be reported, never emulated or hidden. Existing native TUI capabilities remain intact.
+
+
+## Execution delta (2026-10-13)
+
+BASE_SHA: 74f0db8631f96c914ce5007b504bef0082a4350b; baseline origin/main 4107000453feb4e5e9880cf2df27d5d288d02a23. Clean original tree fetched and switched safely to the prepared tracking feature. No stash/reset/worktree, installation or main merge.
+
+### Actual persistent files / before-after
+
+| CLI | Actual effective native config | Before provider / configured model | After provider / configured model | Local change |
+| --- | --- | --- | --- | --- |
+| Codex 0.162.1 | C:\Users\mush2\.codex\config.toml | openai (implicit) / unspecified | agentco_openrouter (OpenRouter) / nvidia/nemotron-3-super-120b-a12b:free | Saved and independently parsed |
+| Hermes 0.21.7 | C:\Users\mush2\AppData\Local\hermes\config.yaml | openrouter / anthropic/claude-opus-5.5 | openrouter / nvidia/nemotron-3-super-120b-a12b:free | Saved and native config check exit 0 |
+| Claude Code 2.1.292 | C:\Users\mush2\.claude\settings.json | model unspecified / no configured gateway base URL in this file | Unchanged | CLAUDE_UNSUPPORTED; no unnecessary backup/edit |
+
+Important actual-state correction: Hermes's installed Windows get_config_path() / native `hermes config path` resolves AppData\Local\hermes, NOT the illustrative %USERPROFILE%\.hermes path. Neither CODEX_HOME nor HERMES_HOME overrides were present in this execution. Claude before metadata does not imply absence of existing authentication; auth/session stores were not inspected.
+
+Only the two modified nonsecret configs were backed up in their respective native directories before edits:
+
+- C:\Users\mush2\.codex\config.toml.agentco-p5-8-20261013T132600005480Z.bak
+- C:\Users\mush2\AppData\Local\hermes\config.yaml.agentco-p5-8-20261013T132600005480Z.bak
+
+LOCAL_BACKUPS_PRESENT_BOOL: true. Exclusive-create backups were byte-verified locally and ACL inheritance removed, granting current user and SYSTEM only. Originals' ACLs were retained by in-place writes; no backup overwrite. No raw config/backups/auth/session files enter the repository or reviewer context. Preparatory local checks refused nonempty literal credential fields, duplicate YAML keys, unexpected schema and concurrent content changes. Existing comments/unrelated settings were preserved using installed tomlkit round-trip and YAML node-span edits; before/after semantic comparisons verified only intended settings changed. Existing host parsing libraries were reused; no package installation.
+
+### Persisted values and official basis
+
+Codex native provider table agentco_openrouter now contains the documented OpenRouter endpoint, Responses protocol, env_key="OPENROUTER_API_KEY", requires_openai_auth=false and supports_websockets=false. No token-returning command, literal token, or user auth replacement. Model/provider defaults are stored in USER config, not in new project overrides. [Official provider reference](https://developers.openai.com/codex/config-reference/) and installed CLI support the fields. Existing Agentco P5.6 price/key/config/daemon/TERM overrides are unchanged and agree with the persisted exact :free model. The installed standalone still needs --no-daemon for its packaging environment.
+
+Hermes actual native YAML now has model.provider=openrouter and model.default equal to the exact :free model. [Official configuration](https://hermes-agent.nousresearch.com/docs/user-guide/configuration) and installed schema were used:
+
+- compression.enabled=false; auxiliary.title_generation.enabled=false and model_upgrade_enabled=false.
+- auxiliary.free_only=true and auxiliary.openrouter_model pinned to the same :free slug (installed auxiliary_client supports these).
+- Thirteen named auxiliary tasks (approval, background_review, compression, curator, kanban_decomposer, mcp, profile_describer, skills_hub, title_generation, triage_specifier, tts_audio_tags, vision, voice_chat) pinned to OpenRouter/same exact model/endpoint, with api_key=${OPENROUTER_API_KEY} reference and empty fallback_chain. No literal credentials written. This is persisted configuration, not proof every runtime consumer honors all pins.
+- fallback_providers=[] AND legacy fallback_model=[]; delegation provider/model pinned to the same free route with fallback_providers=[]. [Official fallback documentation](https://hermes-agent.nousresearch.com/docs/user-guide/features/fallback-providers) explains legacy and current chains and per-task resolution. Memory/user-profile learning disabled to avoid unnecessary automatic calls.
+- Full auxiliary/tool/vendor behavior remains UNPROVEN without a separate scoped runtime audit. HERMES_FREE_CHAT_BLOCKED is retained: default guarded Agentco free route is unchanged; explicit acknowledged --native-default remains available. No claim of safe arbitrary free chat, voice/image support or paid fallback immunity after user changes settings.
+
+Claude: [official gateways](https://code.claude.com/docs/en/llm-gateway) do not support non-Claude models. Existing JSON was inspected locally for selected nonsecret model/base-URL presence only and left untouched. No fake NVIDIA mapping, Anthropic key injection, OAuth or paid Claude selection. Mandatory native theme/onboarding is distinct from API compatibility.
+
+### Canonical credential boundary / no-prompt startup results
+
+Canonical C:\Agentco\.env is unmoved/uncopied/unhashed and ignored; root key exists. No global env/profile/credential-file changes. Codex references OPENROUTER_API_KEY by NAME; Hermes builtin OpenRouter uses that variable and auxiliary YAML contains only ${OPENROUTER_API_KEY}. No real-key second store or env symlink created.
+
+For startup verification only, ignored results/p5-8/native-smoke.mjs called the existing opaque piEnv() loader and passed OPENROUTER_API_KEY into the selected native child's environment, preserving normal native HOME/profile. It added NO provider/model flags and no prompt. Codex received only the existing needed --no-daemon and child TERM fallback. Hermes received no CLI args. Thus the observed model comes from the persistent user config, not an Agentco provider override.
+
+| Native restart | First provider/model/login screen | Exit / observation |
+| --- | --- | --- |
+| Codex | No provider/model picker or subscription login shown | Correct exact :free footer; Ctrl+D exit 0, terminal restored |
+| Hermes | No first-run provider prompt or Nous portal login shown | NVIDIA model native input TUI opened immediately; Ctrl+D Goodbye, exit 0 |
+| Claude via existing explicit native-default | Theme/onboarding remains | No theme/login/consent accepted; Ctrl+C native cancellation then Windows batch termination, outer exit 1 |
+
+MODEL_PROMPTS=0. No inference or authenticated API/account query. [Public metadata](https://openrouter.ai/api/v1/models) showed exact :free prompt/completion both zero; native background networking is unmeasured. No existing session/runtime/browser cleanup; startup artifacts retained.
+
+Remaining credential-plumbing limitation is explicit: native settings do not make standalone CLIs auto-read C:\Agentco\.env. This shell had no OS OpenRouter key; normal native startup requires the key in its child environment. Installed Hermes env_loader.py loads its native-home .env with override=True, ahead of source-checkout .env fallback; existing native secret-store values were NOT inspected or changed, so root-only effective-key provenance inside Hermes is not certified. No secret-source precedence change was made. Existing Agentco Hermes native-default does not add a repo key; default Hermes free launch remains blocked. A later narrowly approved credential-plumbing decision may be needed; current task did not change the launcher.
+
+### Validation / Git boundary / next
+
+Four focused machine-local tests PASS before and again after TUI checks (repeat justified by possible native startup rewrites). They validate actual saved model/provider/env-key references; disabled title/compression/root fallback; auxiliary pins/reference-only credentials; verified backups and unrelated before/after semantics. Tests read nonsecret config snapshots locally and assert booleans rather than print values on failure; reviewer should use sanitized evidence, not execute raw-profile checks. Test requires existing Python + PyYAML and ignored execution evidence; missing machine evidence is SKIP/NOT CHECKED, not PASS. No old full suite rerun.
+
+Native Hermes config check exit 0 with no warning. Initial Codex --strict-config features list inspection returned exit 1 because that flag is unsupported for the features subcommand; it was NOT a TOML defect. Corrected supported --no-daemon features list exit 0 and actual native TUI loaded the persisted provider/model. This failed inspection attempt is retained honestly. TOML/YAML syntax and semantic preservation, Git diff/UTF-8/scope and syntax checks PASS.
+
+LOCAL_NATIVE_FILES_CHANGED: only the two paths above. Repo changed files: scripts/native-profile-check.test.py, docs/CURRENT_TASK.md, this work order. Sanitized machine evidence is results/p5-8/local-config-result.json / execution.json (ignored); raw profiles and backups never staged. Pi, menu, native-default, price gate, env loader, P5.4 Worker/AUTO and shared Skills all have zero source delta. Main/stashes preserved; feature-only commit/push.
+
+NEXT: Claude independent new-SHA safe-delta / sanitized evidence review only. GPT/user final decision. Persistent defaults are complete for Codex/Hermes; inference, fully free Hermes auxiliary operation and single-source standalone credential hydration remain PARTIAL, not silently solved. Restore only the corresponding local backup if the user requests rollback; preserve other state and never auto-reset auth.
