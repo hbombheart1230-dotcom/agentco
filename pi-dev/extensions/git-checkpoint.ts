@@ -6,7 +6,7 @@
  * (b) records nothing for the first turn of a run (leaf entry unknown at `turn_start`), and
  * (c) keeps checkpoints only in memory and as unreferenced `git stash create` objects.
  *
- * Here: one snapshot per user prompt (taken at `agent_start`, before the model touches anything), keyed by
+ * Opt-in development sessions only: one snapshot per user prompt (taken at `agent_start`), keyed by
  * the user-message entry id and stored as a custom session entry, so it survives /resume and /fork.
  * The snapshot is `git stash create` (tracked-file working-tree state) or HEAD on a clean tree, pinned under
  * refs/agentco-checkpoints/ so git gc cannot drop it. Untracked files are not captured.
@@ -20,6 +20,11 @@ type Checkpoint = { entryId: string; ref: string };
 
 export default function (pi: ExtensionAPI) {
 	let pending: string | undefined;
+	pi.registerFlag("agentco-checkpoints", {
+		description: "Enable automatic Git checkpoints for an explicitly requested development session",
+		type: "boolean",
+		default: false,
+	});
 
 	const git = async (...args: string[]) => {
 		try {
@@ -32,6 +37,7 @@ export default function (pi: ExtensionAPI) {
 
 	pi.on("agent_start", async () => {
 		pending = undefined;
+		if (pi.getFlag("agentco-checkpoints") !== true) return;
 		if (!(await git("rev-parse", "--is-inside-work-tree")).ok) return;
 		const stash = await git("stash", "create");
 		const snap = stash.ok && stash.out ? stash.out : (await git("rev-parse", "HEAD")).out;
