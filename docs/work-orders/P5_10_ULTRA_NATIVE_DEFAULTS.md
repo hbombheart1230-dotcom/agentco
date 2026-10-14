@@ -1,6 +1,6 @@
 # P5.10 — Set one OpenRouter Ultra :free model at native Main startup
 
-**Status:** ASSIGNED / local Codex implementation pending (2026-10-14)
+**Status:** LOCAL DEFAULTS COMPLETE / INDEPENDENT REVIEW PENDING (2026-10-14)
 **Feature:** `feature/p5-10-ultra-defaults`
 **Base:** `main` = `ba104a6b4661298b8cb17dd0f010b8309da76580`
 **Workspace:** `C:\Agentco` (PERSONAL Agentco only, not Samsung internal/OASIS)
@@ -37,3 +37,52 @@ OpenRouter's verified listing uses this exact ID; it is advertised as free, thou
 ## Required report (compact)
 
 `IMPLEMENTATION_SHA` / `PI` / `CODEX` / `HERMES_MAIN_AUX_DELEGATION` / `CLAUDE_MAIN_ROLE_ALIASES` / `NATIVE_STARTUP` / `NO_SECRETS_WRITTEN` / `LOCAL_BACKUPS` / `TESTS` / `CHAT_TEST_NOT_RUN` / `MAIN_UNCHANGED` / `LIMITATIONS`.
+
+
+## Execution delta (2026-10-14)
+
+BASE_SHA: ee12f739fdbd59bbcac2ad5f93df1bb9f048ea3b; origin/main ba104a6b4661298b8cb17dd0f010b8309da76580. Clean original workspace safely fetched/switched to tracking feature. No stash/reset/worktree, history reread or main merge.
+
+### Exact saved defaults
+
+All initial models now use nvidia/nemotron-3-ultra-550b-a55b:free. The exact :free suffix follows this approved work order; no unsuffixed/paid candidate substituted.
+
+| CLI / effective file | Delta | Provider / other state |
+| --- | --- | --- |
+| Pi / C:\Agentco\pi-dev\settings.json | Existing Ultra :free confirmed; no edit or backup needed | openrouter unchanged; TUI not repeated to preserve Pi startup state |
+| Codex / C:\Users\mush2\.codex\config.toml | model Super :free -> Ultra :free, one field | agentco_openrouter table, Responses endpoint, env_key and all unrelated values unchanged. No persisted review_model existed; none invented |
+| Hermes / C:\Users\mush2\AppData\Local\hermes\config.yaml | Main + 13 task model values + auxiliary.openrouter_model + delegation.model, 16 existing model fields -> Ultra :free | OpenRouter, endpoint, reference-only key, disabled title/compression/memory, all empty fallbacks and ALL nonmodel values unchanged |
+| Claude / C:\Users\mush2\.claude\settings.json | Initial model Super :free -> Ultra :free; six supported alias env settings -> same exact Ultra | Existing gateway URL/blank API_KEY and unrelated JSON fields unchanged; no token stored |
+
+Hermes task models: approval, background_review, compression, curator, kanban_decomposer, mcp, profile_describer, skills_hub, title_generation, triage_specifier, tts_audio_tags, vision, voice_chat. No newly invented auxiliary tasks or enable flags. Nonmodel AST/semantic comparison is exact, including previously disabled/fallback settings; comments/line endings preserved.
+
+Claude aliases applied: ANTHROPIC_DEFAULT_OPUS_MODEL, ANTHROPIC_DEFAULT_SONNET_MODEL, ANTHROPIC_DEFAULT_HAIKU_MODEL, CLAUDE_CODE_SUBAGENT_MODEL; additionally ANTHROPIC_DEFAULT_FABLE_MODEL and ANTHROPIC_SMALL_FAST_MODEL. [Official model configuration](https://code.claude.com/docs/en/model-config) documents the four roles and Fable, and documents small/fast as deprecated in favor of Haiku. All six exact symbols were verified in the installed trusted 2.1.292 binary before writing; no unconfirmed alias name, behavesAs/modelOverrides/provider spoof or vendor edit. The deprecated small/fast setting is aligned for installed-version compatibility, not claimed as a new capability. Per-agent explicit model choices can override the default subagent setting.
+
+Inherited role/main-model env override names: none. Repo .claude/settings.json and .claude/settings.local.json do not exist, so no project model/env override was found. No env dump or credential inspection. This config evidence is not a live Claude alias-resolution or NVIDIA protocol test.
+
+### Backups / local-only boundary
+
+All three changed native configs were backed up in their own native directories, exclusive-create, byte-verified and ACL-restricted to current user/SYSTEM:
+
+- config.toml.agentco-p5-10-20261014T011915372664Z.bak
+- config.yaml.agentco-p5-10-20261014T011915372664Z.bak
+- settings.json.agentco-p5-10-20261014T011915372664Z.bak
+
+LOCAL_BACKUPS=true; NO_SECRETS_WRITTEN=true. Local scripts rejected nonempty literal credential fields before copying config snapshots. Only nonsecret config files were backed up; root/Hermes .env, auth/cache and existing session files were neither edited nor printed. No credential values/lengths/hashes, raw native configs or backups in Git/evidence/context. Originals retained permissions; no old backup overwritten. Codex TOML round-trip and Hermes scalar-node edits preserve unrelated syntax/comments; Claude unrelated JSON semantics preserved. Existing parsing libraries reused; no package install.
+
+### Native startup / tests
+
+| CLI | Initial native model display | New smoke result |
+| --- | --- | --- |
+| Pi | Settings confirm existing exact Ultra :free | NOT RUN; no Pi changes/startup mutation |
+| Codex 0.162.1 | Actual original TUI footer: nvidia/nemotron-3-ultra-550b-a55b:free | PASS: agentco --main codex, no model/provider flags, Ctrl+D exit 0 |
+| Hermes 0.21.7 | Actual original native input/status: nemotron-3-ultra-550b-a... (native truncation); full saved ID verified | PASS: agentco --main hermes, no model/provider flags or picker, Ctrl+D Goodbye/exit 0 |
+| Claude 2.1.292 | Saved initial model and six roles confirm Ultra; actual new TUI display UNVERIFIED | NOT RUN: work order explicitly says avoid repeating known non-cancellable onboarding/process-killing. No new Claude process or consent attempt |
+
+No model prompt or inference API request initiated; no authenticated model/catalog probe, public price lookup, account query, login, consent acceptance or process termination. Native background networking is unmeasured; not represented as zero physical HTTP traffic. New empty native startup artifacts are retained; no prior session/runtime/browser/stash cleanup.
+
+Six focused local tests PASS before startup and again after startup (repeat justified by potential native config rewrites): persisted Codex provider/model/ref; Hermes main/disabled/fallback; all 13 auxiliary and delegation refs; exact backup-to-current nonmodel preservation for all three; Claude main/six aliases/gateway; Pi unchanged Ultra. No active pinned model fields retain Super. Syntax/diff/UTF-8/exact-scope checks PASS; no old broad suite. The existing local check script now targets only P5.10 evidence, reads local nonsecret files, and prints pass/fail only; missing evidence is SKIP/NOT CHECKED, not PASS. Reviewer should inspect sanitized evidence rather than raw user profiles.
+
+CHANGED_REPO_FILES: docs/CURRENT_TASK.md, this work order, scripts/native-profile-check.test.py. Sanitized evidence: results/p5-10/local-config-result.json and execution.json (ignored). No runtime source changes: Agentco menu/aliases/key hydration, Codex daemon/TERM, Pi settings, P5.4 AUTO/Worker, browser and native credentials all preserved. Feature-only commit/push; local main and two existing stashes unchanged.
+
+NEXT: Claude independent new-SHA/delta and sanitized evidence review; GPT/user release decision. Claude onboarding, unknown NVIDIA catalog/protocol support, actual subagent/auxiliary behavior and runtime chat cost remain UNVERIFIED. Saved aliases/TUI do not prove successful inference. No main merge or model call without separate approval.

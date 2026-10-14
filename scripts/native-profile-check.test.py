@@ -1,17 +1,18 @@
-"""P5.8 read-only machine-local checks; no raw configs, credentials or CLI calls."""
+"""P5.10 read-only machine-local checks; no raw configs, credentials or CLI calls."""
 import os,json,tomllib,unittest
 from pathlib import Path
 import yaml
-MODEL='nvidia/nemotron-3-super-120b-a12b:free'
+MODEL='nvidia/nemotron-3-ultra-550b-a55b:free'
 ROOT=Path(__file__).resolve().parent.parent
 class NativeProfiles(unittest.TestCase):
     @classmethod
     def setUpClass(cls):
-        evidence=ROOT/'results/p5-8/local-config-result.json'
-        if not evidence.exists():raise unittest.SkipTest('P5.8 local evidence absent; machine configuration NOT CHECKED')
+        evidence=ROOT/'results/p5-10/local-config-result.json'
+        if not evidence.exists():raise unittest.SkipTest('P5.10 local evidence absent; machine configuration NOT CHECKED')
         cls.evidence=json.loads(evidence.read_text(encoding='utf-8'))
         cls.codex=tomllib.loads(Path(cls.evidence['Codex']['path']).read_text(encoding='utf-8-sig'))
         cls.hermes=yaml.safe_load(Path(cls.evidence['Hermes']['path']).read_text(encoding='utf-8-sig'))
+        cls.claude=json.loads(Path(cls.evidence['Claude']['path']).read_text(encoding='utf-8-sig'))
     def test_codex_persistent_provider_model_and_named_env_key(self):
         c=self.codex
         self.assertTrue(c.get('model')==MODEL and c.get('model_provider')=='agentco_openrouter')
@@ -31,16 +32,27 @@ class NativeProfiles(unittest.TestCase):
             d=aux.get(task,{})
             self.assertTrue(d.get('provider')=='openrouter' and d.get('model')==MODEL and d.get('api_key')=='${OPENROUTER_API_KEY}' and d.get('fallback_chain')==[])
         self.assertTrue(self.hermes.get('delegation',{}).get('fallback_providers')==[])
-    def test_local_backups_and_unrelated_settings_preserved(self):
+    def test_local_backups_and_exact_nonmodel_preservation(self):
         c=tomllib.loads(Path(self.evidence['Codex']['backup_path']).read_text(encoding='utf-8-sig'))
         h=yaml.safe_load(Path(self.evidence['Hermes']['backup_path']).read_text(encoding='utf-8-sig'))
-        for k,v in c.items():
-            if k not in {'model','model_provider','model_providers'}:self.assertTrue(self.codex.get(k)==v)
-        for k,v in c.get('model_providers',{}).items():self.assertTrue(self.codex.get('model_providers',{}).get(k)==v)
-        for k,v in h.items():
-            if k not in {'model','compression','auxiliary','fallback_providers','fallback_model','memory','delegation'}:self.assertTrue(self.hermes.get(k)==v)
-        for section,allowed in [('model',{'provider','default'}),('compression',{'enabled'}),('memory',{'memory_enabled','user_profile_enabled'}),('delegation',{'provider','model','fallback_providers'})]:
-            for k,v in h.get(section,{}).items():
-                if k not in allowed:self.assertTrue(self.hermes.get(section,{}).get(k)==v)
+        a=json.loads(Path(self.evidence['Claude']['backup_path']).read_text(encoding='utf-8-sig'))
+        c['model']=MODEL
+        if 'review_model' in self.evidence['Codex']['changed_fields']:c['review_model']=MODEL
+        self.assertTrue(c==self.codex)
+        h['model']['default']=MODEL;h['auxiliary']['openrouter_model']=MODEL;h['delegation']['model']=MODEL
+        for task in self.evidence['Hermes']['auxiliary_tasks_pinned']:h['auxiliary'][task]['model']=MODEL
+        self.assertTrue(h==self.hermes)
+        a['model']=MODEL;a.setdefault('env',{}).update({name:MODEL for name in self.evidence['Claude']['aliases']})
+        self.assertTrue(a==self.claude)
         self.assertTrue(all(row['backup_verified'] and row['backup_acl_restricted'] for row in self.evidence.values()))
+    def test_claude_main_six_supported_aliases_and_gateway_preserved(self):
+        c=self.claude;env=c.get('env',{})
+        self.assertTrue(c.get('model')==MODEL)
+        self.assertTrue(len(self.evidence['Claude']['aliases'])==6)
+        for name in self.evidence['Claude']['aliases']:self.assertTrue(env.get(name)==MODEL)
+        self.assertTrue(env.get('ANTHROPIC_BASE_URL')=='https://openrouter.ai/api' and env.get('ANTHROPIC_API_KEY')=='')
+        self.assertTrue(not env.get('ANTHROPIC_AUTH_TOKEN'))
+    def test_pi_already_ultra_confirmed_without_changes(self):
+        p=json.loads((ROOT/'pi-dev/settings.json').read_text(encoding='utf-8-sig'))
+        self.assertTrue(p.get('defaultProvider')=='openrouter' and p.get('defaultModel')==MODEL)
 if __name__=='__main__':unittest.main(verbosity=2)
