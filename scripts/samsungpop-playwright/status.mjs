@@ -88,6 +88,25 @@ async function main() {
     const fs = await import('node:fs');
     const path = await import('node:path');
     const os = await import('node:os');
+    
+    // Check if profile directory exists and has content
+    const profileExists = fs.existsSync(PROFILE_DIR);
+    let hasContent = false;
+    if (profileExists) {
+      try {
+        const entries = fs.readdirSync(PROFILE_DIR);
+        hasContent = entries.length > 0;
+      } catch { hasContent = false; }
+    }
+    
+    if (!profileExists || !hasContent) {
+      // No profile data yet - browser may have been opened but no login info available
+      console.log(JSON.stringify(sanitize({
+        state: StateEnum.UNKNOWN, browser: BrowserEnum.NOT_RUNNING, site: SiteEnum.SAMSUNGPOP, auth: AuthEnum.UNKNOWN, error_code: ErrorCodeEnum.NONE
+      })));
+      return;
+    }
+
     const tmpDir = await fs.promises.mkdtemp(path.join(os.tmpdir(), 'samsungpop-status-'));
     await fs.promises.cp(PROFILE_DIR, tmpDir, { recursive: true });
 
@@ -130,8 +149,9 @@ async function main() {
   } catch (err) {
     const msg = err?.message || String(err);
     let error_code = ErrorCodeEnum.UNKNOWN;
-    if (msg.includes('lock') || msg.includes('profile') || msg.includes('in use')) error_code = ErrorCodeEnum.PROFILE_LOCKED;
-    else if (msg.includes('navigation') || msg.includes('timeout')) error_code = ErrorCodeEnum.NAVIGATION_FAILED;
+    const lowerMsg = msg.toLowerCase();
+    if (lowerMsg.includes('lock') || lowerMsg.includes('profile locked') || lowerMsg.includes('in use')) error_code = ErrorCodeEnum.PROFILE_LOCKED;
+    else if (lowerMsg.includes('navigation') || lowerMsg.includes('timeout') || lowerMsg.includes('target page, context or browser has been closed')) error_code = ErrorCodeEnum.NAVIGATION_FAILED;
     console.log(JSON.stringify(sanitize({ state: StateEnum.ERROR, browser: BrowserEnum.UNKNOWN, site: SiteEnum.UNKNOWN, auth: AuthEnum.UNKNOWN, error_code })));
     process.exitCode = 1;
   }

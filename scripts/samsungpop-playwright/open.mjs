@@ -49,7 +49,6 @@ async function main() {
         '--no-default-browser-check',
       ],
       ignoreDefaultArgs: ['--enable-automation'],
-      recordVideo: { dir: OUTPUT_DIR || undefined },
     });
 
     browser = context.browser();
@@ -116,8 +115,11 @@ async function main() {
   } catch (err) {
     const msg = err?.message || String(err);
     let error_code = ErrorCodeEnum.UNKNOWN;
-    if (msg.includes('lock') || msg.includes('profile') || msg.includes('in use')) error_code = ErrorCodeEnum.PROFILE_LOCKED;
-    else if (msg.includes('navigation') || msg.includes('timeout')) error_code = ErrorCodeEnum.NAVIGATION_FAILED;
+    const lowerMsg = msg.toLowerCase();
+    const isProfileLock = /\b(lock(ed|ing)?|in use)\b/.test(lowerMsg) || lowerMsg.includes('profile locked') || lowerMsg.includes('singletonlock');
+    const isNavigationFail = lowerMsg.includes('navigation') || lowerMsg.includes('timeout') || lowerMsg.includes('target page, context or browser has been closed');
+    if (isProfileLock) error_code = ErrorCodeEnum.PROFILE_LOCKED;
+    else if (isNavigationFail) error_code = ErrorCodeEnum.NAVIGATION_FAILED;
     console.log(JSON.stringify(sanitize({ state: StateEnum.ERROR, browser: BrowserEnum.UNKNOWN, site: SiteEnum.UNKNOWN, auth: AuthEnum.UNKNOWN, error_code })));
     process.exitCode = 1;
   }

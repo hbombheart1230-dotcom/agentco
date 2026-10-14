@@ -16,7 +16,7 @@ const __dirname = dirname(fileURLToPath(import.meta.url));
 const root = resolve(__dirname, '..');
 
 const SAMSUNGPOP_ORIGIN = 'https://www.samsungpop.com/';
-const BANKING_PROFILE_DIR = resolve(process.env.USERPROFILE || process.env.HOME || '', '.agentco', 'browser-profile-banking');
+const BANKING_PROFILE_DIR_BASE = resolve(process.env.USERPROFILE || process.env.HOME || '', '.agentco');
 const BANKING_OUTPUT_DIR = resolve(process.env.USERPROFILE || process.env.HOME || '', '.agentco', 'browser-output-banking');
 
 const StateEnum = { OPEN: 'OPEN', LOGGED_IN: 'LOGGED_IN', LOGGED_OUT: 'LOGGED_OUT', UNKNOWN: 'UNKNOWN', ERROR: 'ERROR' };
@@ -40,13 +40,57 @@ function sanitizeStatus(raw) {
   return { state, browser, site, auth, error_code };
 }
 
-async function runPlaywrightScript(scriptName, args = []) {
-  const controller = new AbortController();
-  const timeoutMs = 30000;
+function getFreshProfileDir() {
+  return resolve(BANKING_PROFILE_DIR_BASE, 'browser-profile-banking-' + Date.now() + '-' + Math.random().toString(36).slice(2, 8));
+}
+
+async function runPlaywrightScript(scriptName, args = [], options = {}) {
+  const { waitForExit = true, timeoutMs = 30000 } = options;
+  const profileDir = getFreshProfileDir();
 
   const scriptPath = resolve(__dirname, 'samsungpop-playwright', `${scriptName}.mjs`);
 
+  if (!waitForExit) {
+    // Fire-and-forget for open command - spawn detached
+    const fs = await import('node:fs');
+    const logDir = resolve(process.env.USERPROFILE || process.env.HOME || '', '.agentco', 'browser-logs');
+    if (!fs.existsSync(logDir)) fs.mkdirSync(logDir, { recursive: true });
+    const logFile = resolve(logDir, `samsungpop-open-${Date.now()}.log`);
+    const logFd = fs.openSync(logFile, 'w');
+
+    const child = spawn(process.execPath, [scriptPath, ...args], {
+      cwd: root,
+      env: {
+        ...process.env,
+        BANKING_PROFILE_DIR: profileDir,
+        BANKING_OUTPUT_DIR,
+        SAMSUNGPOP_ORIGIN,
+        SYSTEMROOT: process.env.SYSTEMROOT,
+        WINDIR: process.env.WINDIR,
+        COMSPEC: process.env.COMSPEC,
+        PATH: process.env.PATH,
+        PATHEXT: process.env.PATHEXT,
+        TEMP: process.env.TEMP,
+        TMP: process.env.TMP,
+        LOCALAPPDATA: process.env.LOCALAPPDATA,
+        APPDATA: process.env.APPDATA,
+        PROGRAMDATA: process.env.PROGRAMDATA,
+        'PROGRAMFILES': process.env['PROGRAMFILES'],
+        'PROGRAMFILES(X86)': process.env['PROGRAMFILES(X86)'],
+      },
+      stdio: ['ignore', logFd, logFd],
+      windowsHide: true,
+      detached: true,
+    });
+    child.unref();
+    fs.closeSync(logFd);
+    // Give it a moment to start and navigate
+    await new Promise(r => setTimeout(r, 3000));
+    return sanitizeStatus({ state: StateEnum.OPEN, browser: BrowserEnum.RUNNING, site: SiteEnum.SAMSUNGPOP, auth: AuthEnum.UNKNOWN, error_code: ErrorCodeEnum.NONE });
+  }
+
   return new Promise((resolvePromise) => {
+    const controller = new AbortController();
     const timer = setTimeout(() => {
       controller.abort();
       resolvePromise(sanitizeStatus({ error_code: ErrorCodeEnum.NAVIGATION_FAILED }));
@@ -56,7 +100,7 @@ async function runPlaywrightScript(scriptName, args = []) {
       cwd: root,
       env: {
         ...process.env,
-        BANKING_PROFILE_DIR,
+        BANKING_PROFILE_DIR: profileDir,
         BANKING_OUTPUT_DIR,
         SAMSUNGPOP_ORIGIN,
         SYSTEMROOT: process.env.SYSTEMROOT,
@@ -106,7 +150,7 @@ async function runPlaywrightScript(scriptName, args = []) {
 }
 
 async function cmdOpen() {
-  return runPlaywrightScript('open');
+  return runPlaywrightScript('open', [], { waitForExit: false });
 }
 
 async function cmdStatus() {
