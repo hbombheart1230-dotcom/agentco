@@ -1,21 +1,19 @@
-# Agentco Current Task — Assistant-first released; P5.10 remains separate
+# Agentco Current Task — Assistant-first + P5.10 Ultra released
 
-**ASSISTANT-FIRST CLOSED / CLAUDE REVIEW PASS (2026-10-14)**
+**CURRENT STATE: NO ACTIVE CODING TASK (2026-10-14)**
 
-## Runtime behavior
+## Personal assistant by default
 
-- **Default: personal assistant.** A greeting, everyday question, advice, explanation, travel/finance research or general planning does NOT authorize reading this file, inspecting Git or initiating development. Root `AGENTS.md` is the canonical rule for all four Mains, with Pi-specific `pi-dev/AGENTS.md` and native Claude `CLAUDE.md` import.
-- **Development is opt-in by user intent.** Only a specific Agentco change, debug, test, review or continued coding request opens `docs/CURRENT_TASK.md`. For a newly assigned task, follow its active work order and minimum referenced code; do not reread completed P3–P5.9 history. Codex implements, Claude independently verifies, GPT and user decide final acceptance.
-- **Pi Git checkpoints are OFF by default**, to avoid Git activity on greeting turns; `agentco --main pi --agentco-checkpoints` enables them only for that Pi session. Existing fork/restore works with retained entries and is not deleted.
+For greetings, everyday conversation, general advice, finance/travel planning, explanations or research, **do not automatically read this file**, inspect Git, execute tests or start a coding workflow. Follow root `AGENTS.md` (canonical shared policy) and native `pi-dev/AGENTS.md` / `CLAUDE.md` as applicable. Presence of this repository or a greeting does not authorize development operations.
 
-## Accepted implementation
+When the user **explicitly requests Agentco implementation, debugging, testing, review, or continuing a named development task**, use this file as the development entrypoint and only the minimum context linked to that new work order. Never preload old completed phase reports. Standard handoff remains user/GPT direction → Codex implementation/test/commit/push → Claude independent verification → GPT/user release. Follow Git-first and preserve dirty/untracked local work, stash, sessions and secrets. On Pi, automatic Git checkpoint is OFF by default and optional with `agentco --main pi --agentco-checkpoints`.
 
-- Claude independent review at `2879522c69a5ed8f8e03859519a0be911acaf9ce`: PASS, offline tests 4/4 PASS; installed Pi loader and CLI flag supported, Hermes candidate/Claude import checked. **Actual model responses NOT RUN**, so this is policy/config acceptance, not guarantee of conversational compliance.
-- Latest evidence and exact limitations: `docs/capabilities/INTERACTION.md` (Independent verification and release acceptance).
-- No native model/provider/secret/auth/TUI changes, no P5.4 Worker/AUTO modification. Two local stashes, browser profile and user settings remain protected.
+## Accepted baselines
 
-## Parallel P5.10 Ultra model-default branch
+- **Assistant-first behavior**: Claude reviewed `2879522c69a5ed8f8e03859519a0be911acaf9ce`, PASS (4/4 focused offline tests). Native instruction routing and opt-in checkpoint implementation merged. See `docs/capabilities/INTERACTION.md`. Actual greeting-model adherence NOT independently tested by that review.
+- **P5.10 — persistent native Ultra defaults**: Claude reviewed `cd803da21c52d1b49117eca0557bf286c2d3ccfc`, PASS (6/6 machine-local profile checks, SKIP 0). Requested **exact model** is `nvidia/nemotron-3-ultra-550b-a55b:free`, including `:free`; the user's original request explicitly included the suffix. Pi already uses it; Codex native model is Ultra; Hermes main + 13 auxiliary task pins + auxiliary reference + delegation are Ultra (16 fields); Claude initial model and 6 supported role aliases are Ultra (7 fields). Actual user-local settings/backups remain on the original Windows machine, not in Git. No live Claude NVIDIA protocol/alias-resolution confirmation by this review, and no guarantee of continued free pricing. See `docs/work-orders/P5_10_ULTRA_NATIVE_DEFAULTS.md` for scoped evidence and limitations.
+- **Previously accepted P5.9 native launcher**: one-choice 4-Main menu, no custom free-price/compatibility gate, no redundant `-c` model overrides. P5.4 synthetic AUTO/Worker and Pi/Agentra/browser remain unchanged.
 
-`feature/p5-10-ultra-defaults` remains a **separate unmerged, unreviewed-for-release branch** with task spec `docs/work-orders/P5_10_ULTRA_NATIVE_DEFAULTS.md` and non-overlapping native model test changes. Independent reviewer identified a single future merge conflict: **this file** (`docs/CURRENT_TASK.md`). Once P5.10 has its own PASS review, retain this assistant-first development-only preamble and record P5.10's true completion status. Never silently overwrite either branch, its work order or user-local models.
+## Next work
 
-**No new implementation is currently assigned on main.** GitHub origin/main authoritative. Do not disturb local checkout/dirty files, ignored results, stashes, native settings/auth or parked browser branch.
+No new implementation assigned. For future development, create or select a fresh active work order **only after user direction**, and update this pointer; do not launch tests or consume credits merely because the repository is the CWD. Do not read credentials or print native configuration values. GitHub origin/main authoritative; preserve two existing local stashes and avoid resetting the local checkout, whose current branch may still be P5.10.
