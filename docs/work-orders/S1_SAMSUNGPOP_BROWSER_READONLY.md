@@ -87,3 +87,20 @@ Reviewed implementation SHA: `ec339de7989859c39f287f9f3a8ce20b4723ca23` via GitH
 - Assert no `fs.cp`/storage cloning, that child exceptions and stdout/stderr do not persist raw strings, and that all model-facing events/returned objects contain only fixed enums/codes. Include failure and cleanup paths.
 - No real bank website, user login, account reads, or network/model calls until required isolation is demonstrated and an independent reviewer accepts the scoped changes. Tests not run must be labeled NOT_RUN.
 - Implementer commits/pushes the minimal fix on the existing feature branch. Return exact SHA, focused tests (MOCK versus LIVE), changed files, true isolation verdict, and remaining blockers. GPT/user gate merge; Claude independently reviews the implementation SHA when it was not the implementer.
+
+
+## GPT static review — blockers (2026-10-14)
+
+Static source review only; Windows runtime, local stashes and the live Samsung POP site were NOT tested by GPT. Last inspected implementation commit: `ec339de7989859c39f287f9f3a8ce20b4723ca23`. The prior 8/8 tests are shallow synthetic/source-pattern tests and do NOT prove hard isolation. **S1 ISOLATION_GATE=BLOCKED; LIVE=NOT_RUN until separately established.**
+
+Required delta work before live testing (keep design minimal; do not re-read past phase reports):
+
+1. `samsungpop-controller.mjs` creates a different random profile for each `open` and `status` call. Existing `~/.agentco/browser-profile` is not reused, and status cannot reliably observe the just-opened session. Inventory original M1/M2 local implementations and choose a consistent, explicitly owned profile/session without copying auth artifacts. Preserve existing profiles.
+2. Detached `open` unconditionally claims `OPEN/RUNNING/SAMSUNGPOP` after three seconds; implement a real bounded readiness handshake and return `UNKNOWN` or `ERROR` on failure. A confirmed browser process is not proof of navigation or authentication.
+3. `status.mjs` attaches indiscriminately to `localhost:9222` and may inspect unrelated Edge contexts. Prove owner identity or use a controller-owned local IPC channel; no attach to arbitrary debugging endpoints.
+4. `status.mjs` recursively copies the browser profile into a temporary directory and infers login from cookie/storage-name presence. Remove the profile cloning and cookie/storage heuristics entirely. Define deterministic, bank-specific positive UI evidence; ambiguous status => `UNKNOWN`. No authentication tokens may be read or exposed.
+5. Model-facing Pi shell/read/codemode and general Playwright MCP are still available. Current `protected-paths.ts`/`permission-gate.ts` regexes and a `triggerTurn:false` command are **not** an enforced bank boundary. Demonstrate a genuine process/tool/file-access boundary with synthetic adversarial tests for all available model-origin paths. If the current Windows security context cannot enforce the boundary, STOP as BLOCKED and propose the smallest safe separate-process/identity design; do not open the real bank page.
+6. Do not redirect arbitrary Playwright stdout/stderr to persistent banking logs. Prevent leaks from exceptions, child process diagnostics, uncaught rejects and test artifacts; outputs to Pi/model must contain only the fixed status schema. Ensure deterministic cleanup without touching historical profile/session data.
+7. Rewrite focused tests to exercise actual production code and runtime behavior, not copied sanitizer logic or static string searches alone. Cover startup failure, profile ownership, wrong target, ambiguous/positive auth, session restart, tool/IPC failures and fake banking sentinels. Report MOCK/PASS and LIVE/NOT_RUN separately.
+
+Acceptance order: safe local Git inventory -> local M1/M2 discovery -> enforceable isolation PASS -> actual session ownership/status tests -> only then user-initiated live browser login. Preserve two stashes, local dirty state and secrets. Pi is the default implementer; push feature branch only. Independent Claude review on exact implementation SHA before any main merge.
