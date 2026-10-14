@@ -60,3 +60,30 @@ Report: `BASE_SHA`, `IMPLEMENTATION_SHA`, `BRANCH`, `CHANGED_FILES`, `M1_PATH`, 
 ## Explicitly out of scope
 
 S2 research extraction, S3 authenticated balances/holdings/transactions, S4 natural language financial analysis; buying/selling/canceling, transfer/withdrawal, order status mutation; MFA bypass, tokens/cookie copy, profile cloning, stealth automation, external raw financial-data exfiltration. Defer those to separately authorized work orders after S1.
+
+
+## GPT static review — 2026-10-14 (REWORK REQUIRED)
+
+Reviewed implementation SHA: `ec339de7989859c39f287f9f3a8ce20b4723ca23` via GitHub source, not a local runtime execution. The reported `8/8 synthetic PASS` is **not accepted as an enforced isolation gate**, and live banking/manual login remains **NOT_RUN / DO NOT RUN** until the mandatory corrections and independent review.
+
+### Mandatory P0 fixes
+
+1. **Stable, single banking session:** `scripts/samsungpop-controller.mjs` calls `getFreshProfileDir()` independently for `open` and `status`, so status cannot access the browser opened by the preceding command. Replace with a stable, dedicated banking-profile location and explicit single-owner lifecycle/attach strategy. Do not reuse or alter the general model-visible Playwright MCP profile. Existing historic bank login is NOT migrated; new manual sign-in may be necessary. Avoid a second Edge process on a locked profile, distinguish stopped from detached startup, and prevent infinite accumulation of generated directories.
+2. **No profile copying:** `scripts/samsungpop-playwright/status.mjs` calls `fs.promises.cp(PROFILE_DIR,tmpDir,{recursive:true})` and launches Edge on the clone, contrary to the prohibition on copying credentials, cookies or session material. Remove the entire clone/headless cookie/storage inference branch. No temp auth copies, cookies, tokens, screenshots, traces, or banking dumps; no cleanup-only mitigation.
+3. **Enforced model/data isolation:** General MCP `browser_navigate/snapshot/click/type/evaluate` remain available in `pi-dev/mcp.json`; `protected-paths.ts` handles only certain `read/write/edit` paths and `permission-gate.ts` checks narrow dangerous shell command patterns. Neither blocks arbitrary profile access using shell, `node -e`, codemode, subagents or future generic tools. A standalone controller plus `triggerTurn:false` is insufficient proof. Define and demonstrate actual restrictions preventing all model-origin file/shell/browser access to active banking profile/page/output and error/log results, or mark `ISOLATION=BLOCKED` and STOP without any live banking navigation. Never weaken general browse functionality silently.
+
+### Mandatory P1 correctness fixes
+
+4. `status.mjs` attempts a global unauthenticated CDP attach at `localhost:9222` without verifying the browser owner, profile, or target identity. Never connect to an unrelated process/port. Prefer explicit ownership-scoped IPC or a verified fixed-endpoint/nonce with a confined local process; if none, report `UNKNOWN`, not fabricated status.
+5. Cookie/localStorage **key names** are not evidence of authentication. Remove positive `LOGGED_IN/OUT` inference from keys or URL. Generic speculative CSS selectors are not validated Samsung POP indicators. Require unambiguous, locally evaluated positive evidence for either state; otherwise `UNKNOWN`.
+6. `cmdOpen` returns `OPEN/RUNNING` after 3 seconds without verifying child readiness, navigation success or same-origin. Add a bounded readiness result containing fixed enums, and honest fail-closed errors. Avoid unbounded detached lifecycle (`await new Promise(() => {})`) without ownership/shutdown semantics.
+7. Detached `browser-logs` currently receive raw child stdout/stderr. Remove raw log capture for banking paths or allowlist strictly sanitized code-only events (including failures); keep no sensitive residual output.
+8. Do not add stealth/anti-bot flags or machine security-setting changes as a workaround. Avoid work outside S1.
+
+### Acceptance tests (behavior, not source-string checks)
+
+- Current `scripts/samsungpop-isolation.test.mjs` largely searches source text and duplicates sanitizer implementation; this is **not** proof of runtime enforcement. Exercise actual exported sanitizer/controller and representative mocked Pi tool dispatch (read, bash, codemode, MCP browser, subagent) against fake profile/page/credential sentinel fixtures; assert the operations are blocked rather than merely their results sanitized.
+- Test `open → status → status → close/reopen` using the **same** test-owned fake persistent profile/owner; assert a wrong CDP endpoint is rejected, lock or startup failure never returns `OPEN`, and auth remains `UNKNOWN` without positive evidence.
+- Assert no `fs.cp`/storage cloning, that child exceptions and stdout/stderr do not persist raw strings, and that all model-facing events/returned objects contain only fixed enums/codes. Include failure and cleanup paths.
+- No real bank website, user login, account reads, or network/model calls until required isolation is demonstrated and an independent reviewer accepts the scoped changes. Tests not run must be labeled NOT_RUN.
+- Implementer commits/pushes the minimal fix on the existing feature branch. Return exact SHA, focused tests (MOCK versus LIVE), changed files, true isolation verdict, and remaining blockers. GPT/user gate merge; Claude independently reviews the implementation SHA when it was not the implementer.
