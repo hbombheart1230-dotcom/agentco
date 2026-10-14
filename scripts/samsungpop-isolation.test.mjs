@@ -187,18 +187,28 @@ describe('S1 Samsung POP - Isolation Gate Synthetic Tests', () => {
     assert.ok(!mcpContent.mcpServers['samsung-pop'], 'No banking MCP server (alt name)');
   });
 
-  test('Controller script exists and exports expected functions', async () => {
+  test('Controller script uses single persistent profile, no fresh profile per run', async () => {
     const controllerPath = resolve(root, 'scripts', 'samsungpop-controller.mjs');
     const controllerContent = await fs.readFile(controllerPath, 'utf8');
 
+    // Must NOT create fresh profile per run
+    assert.ok(!controllerContent.includes('getFreshProfileDir'), 'Must not create fresh profile per run');
+    assert.ok(!controllerContent.includes('Date.now()'), 'Must not use timestamp in profile path');
+    assert.ok(!controllerContent.includes('Math.random'), 'Must not use random in profile path');
+
+    // Must use single persistent banking profile
+    assert.ok(controllerContent.includes('browser-profile-banking'), 'Must use persistent banking profile');
+    assert.ok(controllerContent.includes('BANKING_PROFILE_DIR'), 'Must have BANKING_PROFILE_DIR constant');
+
+    // Must export expected functions
     assert.ok(controllerContent.includes('sanitizeStatus'), 'Must export sanitizeStatus');
     assert.ok(controllerContent.includes('cmdOpen'), 'Must export cmdOpen');
     assert.ok(controllerContent.includes('cmdStatus'), 'Must export cmdStatus');
     assert.ok(controllerContent.includes('runPlaywrightScript'), 'Must have runPlaywrightScript');
-    assert.ok(controllerContent.includes('pi.exec'), 'Controller uses pi.exec pattern (via extension)');
+    assert.ok(controllerContent.includes('CDP_PORT'), 'Must export CDP_PORT');
   });
 
-  test('Playwright scripts exist and use sanitization', async () => {
+  test('Playwright scripts use persistent profile, CDP, and consistent auth detection', async () => {
     const openPath = resolve(root, 'scripts', 'samsungpop-playwright', 'open.mjs');
     const statusPath = resolve(root, 'scripts', 'samsungpop-playwright', 'status.mjs');
 
@@ -218,5 +228,27 @@ describe('S1 Samsung POP - Isolation Gate Synthetic Tests', () => {
     assert.ok(!openContent.includes('page.screenshot'), 'open.mjs must not return screenshots');
     assert.ok(!statusContent.includes('page.content()'), 'status.mjs must not return page content');
     assert.ok(!statusContent.includes('page.screenshot'), 'status.mjs must not return screenshots');
+
+    // open.mjs must start with CDP enabled
+    assert.ok(openContent.includes('remote-debugging-port'), 'open.mjs must start Edge with CDP port');
+    assert.ok(openContent.includes('CDP_PORT'), 'open.mjs must read CDP_PORT from env');
+
+    // open.mjs must wait for navigation to complete
+    assert.ok(openContent.includes('waitForLoadState'), 'open.mjs must wait for load state');
+    assert.ok(openContent.includes('networkidle'), 'open.mjs must wait for network idle');
+
+    // status.mjs must NOT clone profile
+    assert.ok(!statusContent.includes('mkdtemp'), 'status.mjs must not create temp dir');
+    assert.ok(!statusContent.includes('cp('), 'status.mjs must not copy profile');
+    assert.ok(!statusContent.includes('launchPersistentContext'), 'status.mjs must not launch new context');
+
+    // status.mjs must attach via CDP
+    assert.ok(statusContent.includes('connectOverCDP'), 'status.mjs must connect via CDP');
+    assert.ok(statusContent.includes('CDP_PORT'), 'status.mjs must read CDP_PORT from env');
+    assert.ok(statusContent.includes('CDP_URL'), 'status.mjs must construct CDP URL');
+
+    // Both must use shared determineAuthStatus logic
+    assert.ok(openContent.includes('determineAuthStatus'), 'open.mjs must have determineAuthStatus');
+    assert.ok(statusContent.includes('determineAuthStatus'), 'status.mjs must have determineAuthStatus');
   });
 });

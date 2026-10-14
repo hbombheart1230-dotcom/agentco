@@ -6,6 +6,9 @@
  * The model NEVER sees this script, its tools, or its output directly.
  *
  * Returns ONLY fixed enums - no raw page content, URLs, snapshots, or storage.
+ *
+ * Uses a SINGLE persistent banking profile at ~/.agentco/browser-profile-banking
+ * Edge is launched with CDP (--remote-debugging-port=9222) for status attachment.
  */
 
 import { spawn } from 'node:child_process';
@@ -16,8 +19,9 @@ const __dirname = dirname(fileURLToPath(import.meta.url));
 const root = resolve(__dirname, '..');
 
 const SAMSUNGPOP_ORIGIN = 'https://www.samsungpop.com/';
-const BANKING_PROFILE_DIR_BASE = resolve(process.env.USERPROFILE || process.env.HOME || '', '.agentco');
+const BANKING_PROFILE_DIR = resolve(process.env.USERPROFILE || process.env.HOME || '', '.agentco', 'browser-profile-banking');
 const BANKING_OUTPUT_DIR = resolve(process.env.USERPROFILE || process.env.HOME || '', '.agentco', 'browser-output-banking');
+const CDP_PORT = 9222;
 
 const StateEnum = { OPEN: 'OPEN', LOGGED_IN: 'LOGGED_IN', LOGGED_OUT: 'LOGGED_OUT', UNKNOWN: 'UNKNOWN', ERROR: 'ERROR' };
 const BrowserEnum = { RUNNING: 'RUNNING', NOT_RUNNING: 'NOT_RUNNING', UNKNOWN: 'UNKNOWN' };
@@ -40,54 +44,10 @@ function sanitizeStatus(raw) {
   return { state, browser, site, auth, error_code };
 }
 
-function getFreshProfileDir() {
-  return resolve(BANKING_PROFILE_DIR_BASE, 'browser-profile-banking-' + Date.now() + '-' + Math.random().toString(36).slice(2, 8));
-}
-
 async function runPlaywrightScript(scriptName, args = [], options = {}) {
-  const { waitForExit = true, timeoutMs = 30000 } = options;
-  const profileDir = getFreshProfileDir();
+  const { waitForExit = true, timeoutMs = 60000 } = options;
 
   const scriptPath = resolve(__dirname, 'samsungpop-playwright', `${scriptName}.mjs`);
-
-  if (!waitForExit) {
-    // Fire-and-forget for open command - spawn detached
-    const fs = await import('node:fs');
-    const logDir = resolve(process.env.USERPROFILE || process.env.HOME || '', '.agentco', 'browser-logs');
-    if (!fs.existsSync(logDir)) fs.mkdirSync(logDir, { recursive: true });
-    const logFile = resolve(logDir, `samsungpop-open-${Date.now()}.log`);
-    const logFd = fs.openSync(logFile, 'w');
-
-    const child = spawn(process.execPath, [scriptPath, ...args], {
-      cwd: root,
-      env: {
-        ...process.env,
-        BANKING_PROFILE_DIR: profileDir,
-        BANKING_OUTPUT_DIR,
-        SAMSUNGPOP_ORIGIN,
-        SYSTEMROOT: process.env.SYSTEMROOT,
-        WINDIR: process.env.WINDIR,
-        COMSPEC: process.env.COMSPEC,
-        PATH: process.env.PATH,
-        PATHEXT: process.env.PATHEXT,
-        TEMP: process.env.TEMP,
-        TMP: process.env.TMP,
-        LOCALAPPDATA: process.env.LOCALAPPDATA,
-        APPDATA: process.env.APPDATA,
-        PROGRAMDATA: process.env.PROGRAMDATA,
-        'PROGRAMFILES': process.env['PROGRAMFILES'],
-        'PROGRAMFILES(X86)': process.env['PROGRAMFILES(X86)'],
-      },
-      stdio: ['ignore', logFd, logFd],
-      windowsHide: true,
-      detached: true,
-    });
-    child.unref();
-    fs.closeSync(logFd);
-    // Give it a moment to start and navigate
-    await new Promise(r => setTimeout(r, 3000));
-    return sanitizeStatus({ state: StateEnum.OPEN, browser: BrowserEnum.RUNNING, site: SiteEnum.SAMSUNGPOP, auth: AuthEnum.UNKNOWN, error_code: ErrorCodeEnum.NONE });
-  }
 
   return new Promise((resolvePromise) => {
     const controller = new AbortController();
@@ -100,9 +60,10 @@ async function runPlaywrightScript(scriptName, args = [], options = {}) {
       cwd: root,
       env: {
         ...process.env,
-        BANKING_PROFILE_DIR: profileDir,
+        BANKING_PROFILE_DIR,
         BANKING_OUTPUT_DIR,
         SAMSUNGPOP_ORIGIN,
+        CDP_PORT: String(CDP_PORT),
         SYSTEMROOT: process.env.SYSTEMROOT,
         WINDIR: process.env.WINDIR,
         COMSPEC: process.env.COMSPEC,
@@ -123,22 +84,45 @@ async function runPlaywrightScript(scriptName, args = [], options = {}) {
 
     let stdout = '';
     let stderr = '';
-    child.stdout?.on('data', (d) => { stdout += d.toString(); });
+    let resolved = false;
+
+    child.stdout?.on('data', (d) => {
+      stdout += d.toString();
+      // For open command, try to parse JSON as soon as it's available
+      if (!waitForExit && !resolved) {
+        const lines = stdout.trim().split('\n');
+        for (const line of lines) {
+          if (line.startsWith('{')) {
+            try {
+              const parsed = JSON.parse(line);
+              if (parsed.state && parsed.browser && parsed.site && parsed.auth && parsed.error_code) {
+                resolved = true;
+                clearTimeout(timer);
+                // Don't kill the child - let browser keep running
+                resolvePromise(sanitizeStatus(parsed));
+                return;
+              }
+            } catch {}
+          }
+        }
+      }
+    });
     child.stderr?.on('data', (d) => { stderr += d.toString(); });
 
     child.on('error', (err) => {
-      clearTimeout(timer);
-      resolvePromise(sanitizeStatus({ error_code: ErrorCodeEnum.NAVIGATION_FAILED }));
+      if (!resolved) {
+        clearTimeout(timer);
+        resolvePromise(sanitizeStatus({ error_code: ErrorCodeEnum.NAVIGATION_FAILED }));
+      }
     });
 
     child.on('close', (code) => {
+      if (resolved) return;
       clearTimeout(timer);
-      // Child process always outputs JSON status, even on error
       try {
         const parsed = JSON.parse(stdout.trim());
         resolvePromise(sanitizeStatus(parsed));
       } catch {
-        // Fallback if child didn't output valid JSON
         if (code !== 0) {
           resolvePromise(sanitizeStatus({ error_code: ErrorCodeEnum.NAVIGATION_FAILED }));
         } else {
@@ -175,4 +159,4 @@ if (process.argv[1] && resolve(process.argv[1]) === fileURLToPath(import.meta.ur
   });
 }
 
-export { cmdOpen, cmdStatus, sanitizeStatus, StateEnum, BrowserEnum, SiteEnum, AuthEnum, ErrorCodeEnum };
+export { cmdOpen, cmdStatus, sanitizeStatus, StateEnum, BrowserEnum, SiteEnum, AuthEnum, ErrorCodeEnum, BANKING_PROFILE_DIR, CDP_PORT };

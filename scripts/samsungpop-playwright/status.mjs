@@ -1,15 +1,16 @@
 /**
  * Samsung POP Status - Playwright Implementation
  *
- * Runs in isolated child process. Checks browser/login status WITHOUT navigation.
- * Attaches to existing Edge instance via CDP if available, or launches headless check.
- * NEVER returns raw page content, URLs, or snapshots to parent.
+ * Checks browser/login status by attaching to existing Edge instance via CDP.
+ * NO profile cloning, NO navigation. NEVER returns raw page content, URLs, or snapshots.
  */
 
 import { chromium } from 'playwright';
 
 const ORIGIN = process.env.SAMSUNGPOP_ORIGIN || 'https://www.samsungpop.com/';
 const PROFILE_DIR = process.env.BANKING_PROFILE_DIR;
+const CDP_PORT = parseInt(process.env.CDP_PORT || '9222', 10);
+const CDP_URL = `http://localhost:${CDP_PORT}`;
 
 const StateEnum = { OPEN: 'OPEN', LOGGED_IN: 'LOGGED_IN', LOGGED_OUT: 'LOGGED_OUT', UNKNOWN: 'UNKNOWN', ERROR: 'ERROR' };
 const BrowserEnum = { RUNNING: 'RUNNING', NOT_RUNNING: 'NOT_RUNNING', UNKNOWN: 'UNKNOWN' };
@@ -34,126 +35,174 @@ function sanitize(raw) {
 
 async function main() {
   let browser;
-  let context;
   try {
     if (!PROFILE_DIR) throw new Error('BANKING_PROFILE_DIR not set');
 
+    // Try to attach to running browser via CDP
     try {
-      browser = await chromium.connectOverCDP('http://localhost:9222', { timeout: 5000 });
-      const contexts = browser.contexts();
-      if (contexts.length > 0) {
-        context = contexts[0];
-        const pages = context.pages();
-        const samsungPage = pages.find(p => p.url().startsWith(ORIGIN));
-
-        if (samsungPage) {
-          let authStatus = AuthEnum.UNKNOWN;
-          try {
-            const loggedInSelectors = [
-              '[data-testid="user-menu"]', '.user-profile', '#logout-button',
-              'button:has-text("로그아웃")', 'a:has-text("마이페이지")', '[class*="logged-in"]'
-            ];
-            for (const sel of loggedInSelectors) {
-              const el = await samsungPage.$(sel);
-              if (el) { authStatus = AuthEnum.LOGGED_IN; break; }
-            }
-            if (authStatus === AuthEnum.UNKNOWN) {
-              const loggedOutSelectors = [
-                'button:has-text("로그인")', 'a:has-text("로그인")', '#login-button', '[data-testid="login-button"]'
-              ];
-              for (const sel of loggedOutSelectors) {
-                const el = await samsungPage.$(sel);
-                if (el) { authStatus = AuthEnum.LOGGED_OUT; break; }
-              }
-            }
-          } catch { authStatus = AuthEnum.UNKNOWN; }
-
-          const state = authStatus === AuthEnum.LOGGED_IN ? StateEnum.LOGGED_IN :
-                        authStatus === AuthEnum.LOGGED_OUT ? StateEnum.LOGGED_OUT : StateEnum.OPEN;
-
-          console.log(JSON.stringify(sanitize({
-            state, browser: BrowserEnum.RUNNING, site: SiteEnum.SAMSUNGPOP, auth: authStatus, error_code: ErrorCodeEnum.NONE
-          })));
-          return;
-        }
-      }
-      console.log(JSON.stringify(sanitize({
-        state: StateEnum.UNKNOWN, browser: BrowserEnum.RUNNING, site: SiteEnum.OTHER, auth: AuthEnum.UNKNOWN, error_code: ErrorCodeEnum.NONE
-      })));
-      return;
-    } catch {
-      // No CDP connection
-    }
-
-    const fs = await import('node:fs');
-    const path = await import('node:path');
-    const os = await import('node:os');
-    
-    // Check if profile directory exists and has content
-    const profileExists = fs.existsSync(PROFILE_DIR);
-    let hasContent = false;
-    if (profileExists) {
+      browser = await chromium.connectOverCDP(CDP_URL, { timeout: 5000 });
+      
+      // Verify browser is actually alive by getting version
+      let browserAlive = false;
       try {
-        const entries = fs.readdirSync(PROFILE_DIR);
-        hasContent = entries.length > 0;
-      } catch { hasContent = false; }
-    }
-    
-    if (!profileExists || !hasContent) {
-      // No profile data yet - browser may have been opened but no login info available
+        const version = await browser.version();
+        browserAlive = !!version;
+      } catch {}
+      
+      if (!browserAlive) {
+        console.log(JSON.stringify(sanitize({
+          state: StateEnum.UNKNOWN, browser: BrowserEnum.NOT_RUNNING, site: SiteEnum.UNKNOWN, auth: AuthEnum.UNKNOWN, error_code: ErrorCodeEnum.NONE
+        })));
+        await browser.close().catch(() => {});
+        return;
+      }
+
+      const contexts = browser.contexts();
+
+      if (contexts.length === 0) {
+        console.log(JSON.stringify(sanitize({
+          state: StateEnum.UNKNOWN, browser: BrowserEnum.RUNNING, site: SiteEnum.UNKNOWN, auth: AuthEnum.UNKNOWN, error_code: ErrorCodeEnum.NONE
+        })));
+        await browser.close();
+        return;
+      }
+
+      const context = contexts[0];
+      const pages = context.pages();
+      
+      // Verify pages are actually responsive
+      let hasLivePage = false;
+      for (const page of pages) {
+        try {
+          await page.evaluate(() => 1);
+          hasLivePage = true;
+          break;
+        } catch {}
+      }
+      
+      if (!hasLivePage) {
+        console.log(JSON.stringify(sanitize({
+          state: StateEnum.UNKNOWN, browser: BrowserEnum.NOT_RUNNING, site: SiteEnum.UNKNOWN, auth: AuthEnum.UNKNOWN, error_code: ErrorCodeEnum.NONE
+        })));
+        await browser.close();
+        return;
+      }
+
+      const samsungPage = pages.find(p => p.url().startsWith(ORIGIN));
+
+      if (!samsungPage) {
+        // Browser running but not on Samsung POP
+        console.log(JSON.stringify(sanitize({
+          state: StateEnum.UNKNOWN, browser: BrowserEnum.RUNNING, site: SiteEnum.OTHER, auth: AuthEnum.UNKNOWN, error_code: ErrorCodeEnum.NONE
+        })));
+        await browser.close();
+        return;
+      }
+
+      // Determine auth status using same logic as open
+      const authStatus = await determineAuthStatus(samsungPage);
+
+      const state = authStatus === AuthEnum.LOGGED_IN ? StateEnum.LOGGED_IN :
+                    authStatus === AuthEnum.LOGGED_OUT ? StateEnum.LOGGED_OUT : StateEnum.OPEN;
+
+      console.log(JSON.stringify(sanitize({
+        state, browser: BrowserEnum.RUNNING, site: SiteEnum.SAMSUNGPOP, auth: authStatus, error_code: ErrorCodeEnum.NONE
+      })));
+      await browser.close();
+      return;
+
+    } catch (cdpErr) {
+      // CDP connection failed - browser not running or CDP not available
+      const fs = await import('node:fs');
+      const profileExists = fs.existsSync(PROFILE_DIR);
+      let hasContent = false;
+      if (profileExists) {
+        try {
+          const entries = fs.readdirSync(PROFILE_DIR);
+          hasContent = entries.length > 0;
+        } catch { hasContent = false; }
+      }
+
+      if (!profileExists || !hasContent) {
+        console.log(JSON.stringify(sanitize({
+          state: StateEnum.UNKNOWN, browser: BrowserEnum.NOT_RUNNING, site: SiteEnum.SAMSUNGPOP, auth: AuthEnum.UNKNOWN, error_code: ErrorCodeEnum.NONE
+        })));
+        return;
+      }
+
+      // Profile exists but browser not running - cannot determine auth without launching
       console.log(JSON.stringify(sanitize({
         state: StateEnum.UNKNOWN, browser: BrowserEnum.NOT_RUNNING, site: SiteEnum.SAMSUNGPOP, auth: AuthEnum.UNKNOWN, error_code: ErrorCodeEnum.NONE
       })));
       return;
     }
 
-    const tmpDir = await fs.promises.mkdtemp(path.join(os.tmpdir(), 'samsungpop-status-'));
-    await fs.promises.cp(PROFILE_DIR, tmpDir, { recursive: true });
+  } catch (err) {
+    const msg = err?.message || String(err);
+    let error_code = ErrorCodeEnum.UNKNOWN;
+    const lowerMsg = msg.toLowerCase();
+    if (/\b(lock(ed|ing)?|in use)\b/.test(lowerMsg) || lowerMsg.includes('profile locked') || lowerMsg.includes('singletonlock')) error_code = ErrorCodeEnum.PROFILE_LOCKED;
+    else if (lowerMsg.includes('navigation') || lowerMsg.includes('timeout') || lowerMsg.includes('target page, context or browser has been closed')) error_code = ErrorCodeEnum.NAVIGATION_FAILED;
+    console.log(JSON.stringify(sanitize({ state: StateEnum.ERROR, browser: BrowserEnum.UNKNOWN, site: SiteEnum.UNKNOWN, auth: AuthEnum.UNKNOWN, error_code })));
+    process.exitCode = 1;
+  }
+}
 
-    context = await chromium.launchPersistentContext(tmpDir, {
-      channel: 'msedge',
-      headless: true,
-      viewport: { width: 1280, height: 720 },
-    });
-    browser = context.browser();
-    const page = context.pages()[0] || await context.newPage();
+async function determineAuthStatus(page) {
+  try {
+    // Check for logged-in indicators
+    const loggedInSelectors = [
+      '[data-testid="user-menu"]',
+      '.user-profile',
+      '#logout-button',
+      'button:has-text("로그아웃")',
+      'a:has-text("마이페이지")',
+      '[class*="logged-in"]',
+      '.header-user',
+      '.user-name',
+      '[data-user-id]',
+    ];
+    for (const sel of loggedInSelectors) {
+      const el = await page.$(sel);
+      if (el) return AuthEnum.LOGGED_IN;
+    }
 
-    const hasAuthCookie = await page.evaluate(() => {
-      return document.cookie.includes('auth') || document.cookie.includes('session') || document.cookie.includes('token');
-    }).catch(() => false);
+    // Check for logged-out indicators
+    const loggedOutSelectors = [
+      'button:has-text("로그인")',
+      'a:has-text("로그인")',
+      '#login-button',
+      '[data-testid="login-button"]',
+      '.login-btn',
+      '.btn-login',
+      'input[id*="login"i]',
+      'form[action*="login"i]',
+    ];
+    for (const sel of loggedOutSelectors) {
+      const el = await page.$(sel);
+      if (el) return AuthEnum.LOGGED_OUT;
+    }
 
-    const hasAuthStorage = await page.evaluate(() => {
+    // Check cookies/storage as fallback
+    const hasAuthData = await page.evaluate(() => {
       try {
+        const cookies = document.cookie;
+        if (cookies.includes('auth') || cookies.includes('session') || cookies.includes('token') || cookies.includes('login')) return true;
         for (let i = 0; i < localStorage.length; i++) {
           const key = localStorage.key(i);
-          if (key && (key.includes('auth') || key.includes('token') || key.includes('user'))) return true;
+          if (key && (key.includes('auth') || key.includes('token') || key.includes('user') || key.includes('login'))) return true;
         }
         for (let i = 0; i < sessionStorage.length; i++) {
           const key = sessionStorage.key(i);
-          if (key && (key.includes('auth') || key.includes('token') || key.includes('user'))) return true;
+          if (key && (key.includes('auth') || key.includes('token') || key.includes('user') || key.includes('login'))) return true;
         }
         return false;
       } catch { return false; }
     }).catch(() => false);
 
-    let authStatus = hasAuthCookie || hasAuthStorage ? AuthEnum.LOGGED_IN : AuthEnum.LOGGED_OUT;
-    const state = authStatus === AuthEnum.LOGGED_IN ? StateEnum.LOGGED_IN : StateEnum.LOGGED_OUT;
-
-    console.log(JSON.stringify(sanitize({
-      state, browser: BrowserEnum.NOT_RUNNING, site: SiteEnum.SAMSUNGPOP, auth: authStatus, error_code: ErrorCodeEnum.NONE
-    })));
-
-    await context.close();
-    await fs.promises.rm(tmpDir, { recursive: true, force: true });
-
-  } catch (err) {
-    const msg = err?.message || String(err);
-    let error_code = ErrorCodeEnum.UNKNOWN;
-    const lowerMsg = msg.toLowerCase();
-    if (lowerMsg.includes('lock') || lowerMsg.includes('profile locked') || lowerMsg.includes('in use')) error_code = ErrorCodeEnum.PROFILE_LOCKED;
-    else if (lowerMsg.includes('navigation') || lowerMsg.includes('timeout') || lowerMsg.includes('target page, context or browser has been closed')) error_code = ErrorCodeEnum.NAVIGATION_FAILED;
-    console.log(JSON.stringify(sanitize({ state: StateEnum.ERROR, browser: BrowserEnum.UNKNOWN, site: SiteEnum.UNKNOWN, auth: AuthEnum.UNKNOWN, error_code })));
-    process.exitCode = 1;
+    return hasAuthData ? AuthEnum.LOGGED_IN : AuthEnum.LOGGED_OUT;
+  } catch {
+    return AuthEnum.UNKNOWN;
   }
 }
 
