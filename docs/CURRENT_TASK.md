@@ -22,3 +22,10 @@ When the user **explicitly requests Agentco implementation, debugging, testing, 
 4. Preserve the two local stashes, runtime, auth and ignored profile without inspecting contents. No main merge until independent verification and user approval. No old work-order reread or gratuitous model calls.
 5. Implementer is Pi or selected Main. Claude independent verification only when Claude did not implement; otherwise use another independent reviewer.
 
+
+
+## Latest S1 review — rework required, no live banking (2026-10-14)
+
+GPT reviewed `0656d1a9be26cb18ed630a8d0506de14cab625e1` directly against GitHub source: stable profile and profile-copy removal are improvements, but reported 8/8 source-pattern tests do NOT prove enforced isolation. Status: **ISOLATION_GATE=BLOCKED, LIVE=NOT_RUN, MAIN_MERGE=NO**. Still open: same-user model tool access to bank profile/CDP, global unverified CDP :9222 owner, cookie/storage heuristic false login statuses, browser owner lifecycle, and real production behavioral tests.
+
+For next narrowly scoped rework, read only **the final section** of `docs/work-orders/S1_SAMSUNGPOP_BROWSER_READONLY.md` ("GPT static review — latest 0656d1a9") and directly relevant current S1 code. No historical-phase reread. If no enforceable separate Windows process/account/profile access boundary is feasible, report BLOCKED rather than opening Samsung POP. Do not expose raw page/profile data to any OpenRouter-powered Main, Worker or generic tool. No live bank site/login/account data, package changes, model calls, profile copying, global taskkill or branch merge. Preserve main, the two stashes and all existing auth/browser state.
