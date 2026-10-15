@@ -74,7 +74,9 @@ function sanitize(raw) {
   const auth = AuthValues.includes(raw?.auth) ? raw.auth : AuthEnum.UNKNOWN;
   const collect_code = CollectCodeValues.includes(raw?.collect_code) ? raw.collect_code : CollectCodeEnum.ERROR;
   // Preserve bounded metadata only (no raw financial values)
-  const saved_path = typeof raw?.saved_path === 'string' && raw.saved_path.startsWith('results/samsungpop/snapshots/') ? raw.saved_path : undefined;
+  // Strict path validation: only allow relative paths under results/samsungpop/snapshots/
+  const saved_path = (typeof raw?.saved_path === 'string' &&
+    /^results\/samsungpop\/snapshots\/samsungpop-[\w\-]+\.json$/.test(raw.saved_path)) ? raw.saved_path : undefined;
   const totals_count = Number.isInteger(raw?.totals_count) && raw.totals_count >= 0 && raw.totals_count <= 10 ? raw.totals_count : undefined;
   const positions_count = Number.isInteger(raw?.positions_count) && raw.positions_count >= 0 && raw.positions_count <= 100 ? raw.positions_count : undefined;
   return { state, browser, site, auth, collect_code, saved_path, totals_count, positions_count };
@@ -169,16 +171,23 @@ async function determinePageType(page) {
     const url = new URL(page.url());
     const pathname = url.pathname.toLowerCase();
     // Korean/English balance page keywords - must be validated against live Samsung POP
-    if (pathname.includes('balance') || pathname.includes('holding') || pathname.includes('account') || pathname.includes('asset') ||
-        pathname.includes('잔고') || pathname.includes('보유') || pathname.includes('계좌') || pathname.includes('자산')) {
-      return 'BALANCE_PAGE';
-    }
-    // Also allow if page has financial table markers
-    const hasFinancialMarkers = await page.evaluate(() => {
-      const text = document.body.innerText || '';
-      return /총\s*평가|총\s*손익|총\s*수익률|예수금|보유종목|종목명|수량|평가금액|손익|수익률/.test(text);
+    const urlMatch = pathname.includes('balance') || pathname.includes('holding') || pathname.includes('account') || pathname.includes('asset') ||
+        pathname.includes('잔고') || pathname.includes('보유') || pathname.includes('계좌') || pathname.includes('자산');
+    
+    // Also require financial table structure markers
+    const hasFinancialTable = await page.evaluate(() => {
+      const tables = document.querySelectorAll('table');
+      for (const table of tables) {
+        const text = table.innerText || '';
+        if (/종목명|수량|평가금액|손익|수익률|종목|수량|평가|손익|수익률|total|valuation|pl|return|quantity|name/i.test(text)) {
+          return true;
+        }
+      }
+      return false;
     });
-    if (hasFinancialMarkers) return 'BALANCE_PAGE';
+    
+    if (urlMatch && hasFinancialTable) return 'BALANCE_PAGE';
+    if (urlMatch && !hasFinancialTable) return 'NOT_ON_BALANCE_PAGE';
   } catch {}
   return 'OTHER';
 }
@@ -194,10 +203,16 @@ async function writeSnapshot(data) {
     // Atomic write: write to temp, then rename
     writeFileSync(tempPath, JSON.stringify(data, null, 2), { mode: 0o600 });
     const { renameSync } = await import('node:fs');
-    renameSync(tempPath, filepath);
+    try {
+      renameSync(tempPath, filepath);
+    } catch (renameErr) {
+      // Windows rename may fail if dest exists, try unlink then rename
+      try { unlinkSync(filepath); } catch {}
+      renameSync(tempPath, filepath);
+    }
     return { path: `results/samsungpop/snapshots/${filename}`, absolute: filepath };
   } catch (err) {
-    console.error('Snapshot write failed:', err.message);
+    // No raw error message in output
     return null;
   }
 }

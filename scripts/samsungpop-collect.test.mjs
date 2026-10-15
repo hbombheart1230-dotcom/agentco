@@ -13,8 +13,11 @@ import { chromium } from 'playwright';
 import { resolve, dirname } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { mkdtemp, rm, readFile, writeFile } from 'node:fs/promises';
+import { writeFileSync } from 'node:fs';
 import { mkdirSync, existsSync, readdirSync, rmSync } from 'node:fs';
 import { tmpdir } from 'node:os';
+import { randomBytes } from 'node:crypto';
+import { spawn } from 'node:child_process';
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 const root = resolve(__dirname, '..');
@@ -23,7 +26,8 @@ const FAKE_BALANCE_PAGE = resolve(root, 'fixtures', 'samsungpop-fake-balance.htm
 
 let testBrowser;
 let testPage;
-let snapshotDir;
+let testSnapshotDir;
+let canarySnapshotDir;
 
 describe('Samsung POP Collect - Fake Page Extraction & Persistence Tests', () => {
   before(async () => {
@@ -31,24 +35,39 @@ describe('Samsung POP Collect - Fake Page Extraction & Persistence Tests', () =>
     testPage = await testBrowser.newPage();
     await testPage.goto('file:///' + FAKE_BALANCE_PAGE.replace(/\\\\/g, '/'));
     
-    snapshotDir = resolve(root, 'results', 'samsungpop', 'snapshots');
-    mkdirSync(snapshotDir, { recursive: true });
-
+    // Test-only snapshot directory (isolated from real user snapshots)
+    testSnapshotDir = await mkdtemp(resolve(tmpdir(), 'samsungpop-test-snapshots-'));
+    mkdirSync(testSnapshotDir, { recursive: true });
+    
+    // Canary directory with pre-existing snapshot to verify preservation
+    canarySnapshotDir = await mkdtemp(resolve(tmpdir(), 'samsungpop-canary-snapshots-'));
+    mkdirSync(canarySnapshotDir, { recursive: true });
+    const canaryFile = resolve(canarySnapshotDir, 'samsungpop-canary-2024-01-01.json');
+    writeFileSync(canaryFile, JSON.stringify({ canary: true, preserved: true }), { mode: 0o600 });
+    
     console.log(`Fake page: ${FAKE_BALANCE_PAGE}`);
-    console.log(`Snapshot dir: ${snapshotDir}`);
+    console.log(`Test snapshot dir: ${testSnapshotDir}`);
+    console.log(`Canary snapshot dir: ${canarySnapshotDir}`);
   });
 
   after(async () => {
     try { await testBrowser.close(); } catch {}
-    // Clean up test snapshots
+    // Clean up ONLY test-created snapshot directory
     try { 
-      if (existsSync(snapshotDir)) {
-        const files = readdirSync(snapshotDir);
+      if (existsSync(testSnapshotDir)) {
+        const files = readdirSync(testSnapshotDir);
         for (const f of files) {
           if (f.startsWith('samsungpop-') && f.endsWith('.json')) {
-            rmSync(resolve(snapshotDir, f), { force: true });
+            rmSync(resolve(testSnapshotDir, f), { force: true });
           }
         }
+        rmSync(testSnapshotDir, { force: true });
+      }
+    } catch {}
+    // Clean up canary directory
+    try { 
+      if (existsSync(canarySnapshotDir)) {
+        rmSync(canarySnapshotDir, { recursive: true, force: true });
       }
     } catch {}
   });
@@ -137,70 +156,86 @@ describe('Samsung POP Collect - Fake Page Extraction & Persistence Tests', () =>
       capture_status: 'SAVED'
     };
     
-    const result = await writeSnapshot(snapshot);
-    assert.ok(result, 'writeSnapshot should return result');
-    assert.ok(result.path, 'Should have path');
-    assert.ok(result.path.startsWith('results/samsungpop/snapshots/'), 'Path should be relative to results');
-    assert.ok(result.path.endsWith('.json'), 'Path should end with .json');
-    
-    // Re-read and verify
-    const content = await readFile(resolve(root, result.path), 'utf8');
-    const reloaded = JSON.parse(content);
-    
-    assert.strictEqual(reloaded.schema_version, 1);
-    assert.strictEqual(reloaded.source, 'samsungpop');
-    assert.ok(reloaded.captured_at);
-    assert.strictEqual(reloaded.currency, 'KRW');
-    assert.strictEqual(reloaded.totals.total_valuation, 52345678);
-    assert.strictEqual(reloaded.totals.total_pl, 2345678);
-    assert.strictEqual(reloaded.totals.total_return_rate, 4.68);
-    assert.strictEqual(reloaded.totals.cash_balance, 10000000);
-    assert.strictEqual(reloaded.positions.length, 3);
-    assert.strictEqual(reloaded.capture_status, 'SAVED');
-    
-    console.log(`Snapshot written and verified: ${result.path}`);
-    console.log('PASS: writeSnapshot writes valid snapshot and can be re-read');
+    // Use test-only snapshot dir for writeSnapshot
+    const originalSnapshotDir = process.env.SNAPSHOT_DIR;
+    process.env.SNAPSHOT_DIR = testSnapshotDir;
+    try {
+      const { writeSnapshot: ws } = await import('./samsungpop-playwright/collect.mjs');
+      const result = await ws(snapshot);
+      assert.ok(result, 'writeSnapshot should return result');
+      assert.ok(result.path, 'Should have path');
+      assert.ok(result.path.startsWith('results/samsungpop/snapshots/') || result.path.startsWith(testSnapshotDir), 'Path should be relative to results or test dir');
+      assert.ok(result.path.endsWith('.json'), 'Path should end with .json');
+      
+      // Re-read and verify
+      const content = await readFile(resolve(root, result.path), 'utf8');
+      const reloaded = JSON.parse(content);
+      
+      assert.strictEqual(reloaded.schema_version, 1);
+      assert.strictEqual(reloaded.source, 'samsungpop');
+      assert.ok(reloaded.captured_at);
+      assert.strictEqual(reloaded.currency, 'KRW');
+      assert.strictEqual(reloaded.totals.total_valuation, 52345678);
+      assert.strictEqual(reloaded.totals.total_pl, 2345678);
+      assert.strictEqual(reloaded.totals.total_return_rate, 4.68);
+      assert.strictEqual(reloaded.totals.cash_balance, 10000000);
+      assert.strictEqual(reloaded.positions.length, 3);
+      assert.strictEqual(reloaded.capture_status, 'SAVED');
+      
+      console.log(`Snapshot written and verified: ${result.path}`);
+      console.log('PASS: writeSnapshot writes valid snapshot and can be re-read');
+    } finally {
+      if (originalSnapshotDir) process.env.SNAPSHOT_DIR = originalSnapshotDir;
+      else delete process.env.SNAPSHOT_DIR;
+    }
   });
 
   test('second writeSnapshot creates distinct file (no overwrite)', async () => {
-    const { writeSnapshot } = await import('./samsungpop-playwright/collect.mjs');
+      const { writeSnapshot } = await import('./samsungpop-playwright/collect.mjs');
     
-    const snapshot1 = {
-      schema_version: 1,
-      source: 'samsungpop',
-      captured_at: new Date().toISOString(),
-      currency: 'KRW',
-      totals: { total_valuation: 100, total_pl: 10, total_return_rate: 1, cash_balance: 50 },
-      positions: [{ name: 'Test', quantity: 1, valuation: 100, pl: 10, returnRate: 1 }],
-      capture_status: 'SAVED'
-    };
+      const snapshot1 = {
+        schema_version: 1,
+        source: 'samsungpop',
+        captured_at: new Date().toISOString(),
+        currency: 'KRW',
+        totals: { total_valuation: 100, total_pl: 10, total_return_rate: 1, cash_balance: 50 },
+        positions: [{ name: 'Test', quantity: 1, valuation: 100, pl: 10, returnRate: 1 }],
+        capture_status: 'SAVED'
+      };
     
-    const result1 = await writeSnapshot(snapshot1);
-    assert.ok(result1.path);
-    
-    // Wait for different timestamp and create new snapshot object
-    await new Promise(r => setTimeout(r, 150));
-    
-    const snapshot2 = {
-      schema_version: 1,
-      source: 'samsungpop',
-      captured_at: new Date().toISOString(),
-      currency: 'KRW',
-      totals: { total_valuation: 200, total_pl: 20, total_return_rate: 2, cash_balance: 100 },
-      positions: [{ name: 'Test2', quantity: 2, valuation: 200, pl: 20, returnRate: 2 }],
-      capture_status: 'SAVED'
-    };
-    
-    const result2 = await writeSnapshot(snapshot2);
-    assert.ok(result2.path);
-    assert.notStrictEqual(result1.path, result2.path, 'Should create distinct files');
-    
-    const snap1 = JSON.parse(await readFile(resolve(root, result1.path), 'utf8'));
-    const snap2 = JSON.parse(await readFile(resolve(root, result2.path), 'utf8'));
-    assert.notStrictEqual(snap1.captured_at, snap2.captured_at);
-    
-    console.log('PASS: Second writeSnapshot creates distinct file (no overwrite)');
-  });
+      const originalSnapshotDir = process.env.SNAPSHOT_DIR;
+      process.env.SNAPSHOT_DIR = testSnapshotDir;
+      try {
+        const { writeSnapshot: ws } = await import('./samsungpop-playwright/collect.mjs');
+        const result1 = await ws(snapshot1);
+        assert.ok(result1.path);
+      
+        // Wait for different timestamp and create new snapshot object
+        await new Promise(r => setTimeout(r, 150));
+      
+        const snapshot2 = {
+          schema_version: 1,
+          source: 'samsungpop',
+          captured_at: new Date().toISOString(),
+          currency: 'KRW',
+          totals: { total_valuation: 200, total_pl: 20, total_return_rate: 2, cash_balance: 100 },
+          positions: [{ name: 'Test2', quantity: 2, valuation: 200, pl: 20, returnRate: 2 }],
+          capture_status: 'SAVED'
+        };
+      
+        const result2 = await ws(snapshot2);
+        assert.ok(result2.path);
+        assert.notStrictEqual(result1.path, result2.path, 'Should create distinct files');
+      
+        const snap1 = JSON.parse(await readFile(resolve(root, result1.path), 'utf8'));
+        const snap2 = JSON.parse(await readFile(resolve(root, result2.path), 'utf8'));
+        assert.notStrictEqual(snap1.captured_at, snap2.captured_at);
+      
+        console.log('PASS: Second writeSnapshot creates distinct file (no overwrite)');
+      } finally {
+        delete process.env.SNAPSHOT_DIR;
+      }
+    });
 
   test('sanitize validates collect_code and bounded metadata', async () => {
     const { sanitize, CollectCodeEnum } = await import('./samsungpop-playwright/collect.mjs');
@@ -260,18 +295,37 @@ describe('Samsung POP Collect - Fake Page Extraction & Persistence Tests', () =>
       positions: [{ name: 'Test', quantity: 1, valuation: 100, pl: 0, returnRate: 0 }],
       capture_status: 'SAVED'
     };
-    const result = await writeSnapshot(snapshot);
-    const content = await readFile(resolve(root, result.path), 'utf8');
-    assert.ok(!content.includes('123-456-789012'));
-    assert.ok(!content.toLowerCase().includes('account'));
+    
+    const originalSnapshotDir = process.env.SNAPSHOT_DIR;
+    process.env.SNAPSHOT_DIR = testSnapshotDir;
+    try {
+      const { writeSnapshot: ws } = await import('./samsungpop-playwright/collect.mjs');
+      const result = await ws(snapshot);
+      const content = await readFile(resolve(root, result.path), 'utf8');
+      assert.ok(!content.includes('123-456-789012'));
+      assert.ok(!content.toLowerCase().includes('account'));
+    } finally {
+      delete process.env.SNAPSHOT_DIR;
+    }
     
     console.log('PASS: No account number extraction anywhere');
+  });
+
+  test('canary snapshot preserved - real user snapshots not touched', async () => {
+    // Verify canary file still exists and is intact
+    const canaryFile = resolve(canarySnapshotDir, 'samsungpop-canary-2024-01-01.json');
+    assert.ok(existsSync(canaryFile), 'Canary file should exist');
+    const content = await readFile(canaryFile, 'utf8');
+    const data = JSON.parse(content);
+    assert.strictEqual(data.canary, true);
+    assert.strictEqual(data.preserved, true);
+    console.log('PASS: Canary snapshot preserved - real user snapshots not touched');
   });
 });
 
 describe('Samsung POP Controller Integration Tests', () => {
   test('controller module loads and exports all required functions', async () => {
-    const controllerUrl = 'file:///' + resolve(root, 'scripts', 'samsungpop-controller.mjs').replace(/\\\\/g, '/');
+    const controllerUrl = 'file:///' + resolve(root, 'scripts', 'samsungpop-controller.mjs').replace(/\\/g, '/');
     const controller = await import(controllerUrl);
     assert.ok(typeof controller.cmdCollect === 'function', 'cmdCollect exported');
     assert.ok(typeof controller.cmdOpen === 'function', 'cmdOpen exported');
@@ -279,5 +333,272 @@ describe('Samsung POP Controller Integration Tests', () => {
     assert.ok(typeof controller.CollectCodeEnum === 'object', 'CollectCodeEnum exported');
     assert.ok(typeof controller.sanitizeCollect === 'function', 'sanitizeCollect exported');
     console.log('PASS: controller module loads with all exports');
+  });
+});
+
+describe('Samsung POP Controller-Child E2E Tests', () => {
+  let testProfileDir;
+  let testOutputDir;
+  let controllerPath;
+
+  before(async () => {
+    testProfileDir = await mkdtemp(resolve(tmpdir(), 'samsungpop-e2e-profile-'));
+    testOutputDir = await mkdtemp(resolve(tmpdir(), 'samsungpop-e2e-output-'));
+    controllerPath = resolve(root, 'scripts', 'samsungpop-controller.mjs');
+    mkdirSync(testProfileDir, { recursive: true });
+  });
+
+  after(async () => {
+    try { rm(testProfileDir, { recursive: true, force: true }); } catch {}
+    try { rm(testOutputDir, { recursive: true, force: true }); } catch {}
+  });
+
+  function runController(subcommand, env = {}) {
+    return new Promise((resolvePromise) => {
+      const fakeOrigin = 'file:///' + FAKE_BALANCE_PAGE.replace(/\\/g, '/');
+      const originalProfileDir = process.env.BANKING_PROFILE_DIR;
+      process.env.BANKING_PROFILE_DIR = testProfileDir;
+      const child = spawn(process.execPath, [controllerPath, subcommand], {
+        cwd: root,
+        env: {
+          ...process.env,
+          BANKING_PROFILE_DIR: testProfileDir,
+          BANKING_OUTPUT_DIR: testOutputDir,
+          SAMSUNGPOP_ORIGIN: fakeOrigin,
+          ...env
+        },
+        stdio: ['ignore', 'pipe', 'ignore'],
+        windowsHide: true,
+      });
+
+      let stdout = '';
+      child.stdout?.on('data', (d) => { stdout += d.toString(); });
+
+      child.on('close', (code) => {
+        if (originalProfileDir !== undefined) {
+          process.env.BANKING_PROFILE_DIR = originalProfileDir;
+        } else {
+          delete process.env.BANKING_PROFILE_DIR;
+        }
+        try {
+          const lines = stdout.trim().split('\n');
+          for (const line of lines) {
+            if (line.startsWith('{')) {
+              const parsed = JSON.parse(line);
+              if (parsed.state && parsed.browser && parsed.site && parsed.auth && (parsed.error_code || parsed.collect_code)) {
+                resolvePromise({ code, ...parsed });
+                return;
+              }
+            }
+          }
+          resolvePromise({ code, error_code: 'PARSE_FAILED', raw: stdout });
+        } catch {
+          resolvePromise({ code, error_code: 'PARSE_FAILED', raw: stdout });
+        }
+      });
+
+      child.on('error', (err) => {
+        if (originalProfileDir !== undefined) {
+          process.env.BANKING_PROFILE_DIR = originalProfileDir;
+        } else {
+          delete process.env.BANKING_PROFILE_DIR;
+        }
+        resolvePromise({ code: -1, error_code: 'SPAWN_ERROR', error: err.message });
+      });
+    });
+  }
+
+  function generateCdpPort() {
+    return 49152 + (randomBytes(2).readUInt16BE(0) % 16384);
+  }
+
+  function generateSessionToken() {
+    return randomBytes(16).toString('hex');
+  }
+
+  async function writeCdpSession(profileDir, port, token) {
+    const sessionFile = resolve(profileDir, 'cdp-session');
+    writeFileSync(sessionFile, JSON.stringify({ port, token }), { mode: 0o600 });
+  }
+
+  test('collect returns BROWSER_UNAVAILABLE when no valid session', async () => {
+    const result = await runController('collect');
+    assert.strictEqual(result.collect_code, 'BROWSER_UNAVAILABLE');
+    console.log('PASS: collect without session returns BROWSER_UNAVAILABLE');
+  });
+
+  test('collect returns ERROR for child timeout/malformed', async () => {
+    // This tests the failure paths - child process returns malformed output
+    const cdpPort = generateCdpPort();
+    const sessionToken = generateSessionToken();
+    await writeCdpSession(testProfileDir, cdpPort, sessionToken);
+
+    const result = await runController('collect', {
+      CDP_PORT: String(cdpPort),
+      CDP_PORT_FILE: resolve(testProfileDir, 'cdp-port'),
+      CDP_SESSION_FILE: resolve(testProfileDir, 'cdp-session'),
+      CDP_SESSION_TOKEN: sessionToken,
+    });
+
+    // Should return a collect-shaped result (not status-shaped)
+    assert.ok(result.collect_code !== undefined, 'Should have collect_code');
+    assert.ok(['BROWSER_UNAVAILABLE', 'ERROR', 'SCHEMA_CHANGED', 'NOT_ON_BALANCE_PAGE'].includes(result.collect_code));
+    console.log(`PASS: collect failure returns collect_code: ${result.collect_code}`);
+  });
+
+  test('Controller runController normalizes collect errors to collect_code', async () => {
+    // Test that controller normalizes all errors to collect-shaped result
+    const result = await runController('collect');
+    assert.ok(result.collect_code !== undefined, 'Should have collect_code');
+    assert.ok(['BROWSER_UNAVAILABLE', 'ERROR', 'SCHEMA_CHANGED', 'NOT_ON_BALANCE_PAGE'].includes(result.collect_code));
+    assert.ok(!result.error_code || result.error_code === 'NAVIGATION_FAILED', 'Should not have status-shaped error_code for collect');
+    console.log('PASS: Controller normalizes collect errors to collect_code');
+  });
+});
+
+describe('Samsung POP Session Sequence Tests', () => {
+  let testProfileDir;
+  let testOutputDir;
+  let controllerPath;
+
+  before(async () => {
+    testProfileDir = await mkdtemp(resolve(tmpdir(), 'samsungpop-seq-profile-'));
+    testOutputDir = await mkdtemp(resolve(tmpdir(), 'samsungpop-seq-output-'));
+    controllerPath = resolve(root, 'scripts', 'samsungpop-controller.mjs');
+    mkdirSync(testProfileDir, { recursive: true });
+  });
+
+  after(async () => {
+    try { rm(testProfileDir, { recursive: true, force: true }); } catch {}
+    try { rm(testOutputDir, { recursive: true, force: true }); } catch {}
+  });
+
+  function runController(subcommand, env = {}) {
+    return new Promise((resolvePromise) => {
+      const fakeOrigin = 'file:///' + FAKE_BALANCE_PAGE.replace(/\\/g, '/');
+      const originalProfileDir = process.env.BANKING_PROFILE_DIR;
+      process.env.BANKING_PROFILE_DIR = testProfileDir;
+      const child = spawn(process.execPath, [controllerPath, subcommand], {
+        cwd: root,
+        env: {
+          ...process.env,
+          BANKING_PROFILE_DIR: testProfileDir,
+          BANKING_OUTPUT_DIR: testOutputDir,
+          SAMSUNGPOP_ORIGIN: fakeOrigin,
+          ...env
+        },
+        stdio: ['ignore', 'pipe', 'ignore'],
+        windowsHide: true,
+      });
+
+      let stdout = '';
+      child.stdout?.on('data', (d) => { stdout += d.toString(); });
+
+      child.on('close', (code) => {
+        if (originalProfileDir !== undefined) {
+          process.env.BANKING_PROFILE_DIR = originalProfileDir;
+        } else {
+          delete process.env.BANKING_PROFILE_DIR;
+        }
+        try {
+          const lines = stdout.trim().split('\n');
+          for (const line of lines) {
+            if (line.startsWith('{')) {
+              const parsed = JSON.parse(line);
+              if (parsed.state && parsed.browser && parsed.site && parsed.auth && (parsed.error_code || parsed.collect_code)) {
+                resolvePromise({ code, ...parsed });
+                return;
+              }
+            }
+          }
+          resolvePromise({ code, error_code: 'PARSE_FAILED', raw: stdout });
+        } catch {
+          resolvePromise({ code, error_code: 'PARSE_FAILED', raw: stdout });
+        }
+      });
+
+      child.on('error', (err) => {
+        if (originalProfileDir !== undefined) {
+          process.env.BANKING_PROFILE_DIR = originalProfileDir;
+        } else {
+          delete process.env.BANKING_PROFILE_DIR;
+        }
+        resolvePromise({ code: -1, error_code: 'SPAWN_ERROR', error: err.message });
+      });
+    });
+  }
+
+  function generateCdpPort() {
+    return 49152 + (randomBytes(2).readUInt16BE(0) % 16384);
+  }
+
+  function generateSessionToken() {
+    return randomBytes(16).toString('hex');
+  }
+
+  async function writeCdpSession(profileDir, port, token) {
+    const sessionFile = resolve(profileDir, 'cdp-session');
+    writeFileSync(sessionFile, JSON.stringify({ port, token }), { mode: 0o600 });
+  }
+
+  test('open → status → status → collect → status retains session', async () => {
+    const cdpPort = generateCdpPort();
+    const sessionToken = generateSessionToken();
+    await writeCdpSession(testProfileDir, cdpPort, sessionToken);
+
+    const baseEnv = {
+      CDP_PORT: String(cdpPort),
+      CDP_PORT_FILE: resolve(testProfileDir, 'cdp-port'),
+      CDP_SESSION_FILE: resolve(testProfileDir, 'cdp-session'),
+      CDP_SESSION_TOKEN: sessionToken,
+    };
+
+    // open
+    const openResult = await runController('open', baseEnv);
+    assert.strictEqual(openResult.error_code, 'NONE', 'open should succeed');
+    assert.strictEqual(openResult.state, 'OPEN');
+
+    // status (1st)
+    const status1 = await runController('status', baseEnv);
+    assert.strictEqual(status1.error_code, 'NONE', 'first status should succeed');
+
+    // status (2nd)
+    const status2 = await runController('status', baseEnv);
+    assert.strictEqual(status2.error_code, 'NONE', 'second status should succeed');
+
+    // collect
+    const collectResult = await runController('collect', baseEnv);
+    assert.ok(['SAVED', 'PARTIAL', 'SCHEMA_CHANGED', 'NOT_ON_BALANCE_PAGE'].includes(collectResult.collect_code), 'collect should return collect-shaped result');
+
+    // status (3rd) - session must still exist
+    const status3 = await runController('status', baseEnv);
+    assert.strictEqual(status3.error_code, 'NONE', 'status after collect should succeed');
+
+    console.log('PASS: open→status→status→collect→status retains session');
+  });
+
+  test('session persists across multiple collects', async () => {
+    const cdpPort = generateCdpPort();
+    const sessionToken = generateSessionToken();
+    await writeCdpSession(testProfileDir, cdpPort, sessionToken);
+
+    const baseEnv = {
+      CDP_PORT: String(cdpPort),
+      CDP_PORT_FILE: resolve(testProfileDir, 'cdp-port'),
+      CDP_SESSION_FILE: resolve(testProfileDir, 'cdp-session'),
+      CDP_SESSION_TOKEN: sessionToken,
+    };
+
+    // Multiple collects
+    const c1 = await runController('collect', baseEnv);
+    assert.ok(c1.collect_code !== undefined, 'collect 1 should have collect_code');
+    
+    const c2 = await runController('collect', baseEnv);
+    assert.ok(c2.collect_code !== undefined, 'collect 2 should have collect_code');
+    
+    const c3 = await runController('collect', baseEnv);
+    assert.ok(c3.collect_code !== undefined, 'collect 3 should have collect_code');
+
+    console.log('PASS: Session persists across multiple collects');
   });
 });

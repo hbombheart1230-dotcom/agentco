@@ -118,7 +118,9 @@ function sanitizeCollect(raw) {
   const auth = AuthValues.includes(raw?.auth) ? raw.auth : AuthEnum.UNKNOWN;
   const collect_code = CollectCodeValues.includes(raw?.collect_code) ? raw.collect_code : CollectCodeEnum.ERROR;
   // Preserve bounded metadata only (no raw financial values)
-  const saved_path = typeof raw?.saved_path === 'string' && raw.saved_path.startsWith('results/samsungpop/snapshots/') ? raw.saved_path : undefined;
+  // Strict path validation: only allow relative paths under results/samsungpop/snapshots/
+  const saved_path = (typeof raw?.saved_path === 'string' &&
+    /^results\/samsungpop\/snapshots\/samsungpop-[\w\-]+\.json$/.test(raw.saved_path)) ? raw.saved_path : undefined;
   const totals_count = Number.isInteger(raw?.totals_count) && raw.totals_count >= 0 && raw.totals_count <= 10 ? raw.totals_count : undefined;
   const positions_count = Number.isInteger(raw?.positions_count) && raw.positions_count >= 0 && raw.positions_count <= 100 ? raw.positions_count : undefined;
   return { state, browser, site, auth, collect_code, saved_path, totals_count, positions_count };
@@ -185,6 +187,9 @@ async function runPlaywrightScript(scriptName, args = [], options = {}) {
   } else if (scriptName === 'status' || scriptName === 'collect') {
     const session = readCdpSession();
     if (!session) {
+      if (scriptName === 'collect') {
+        return sanitizeCollect({ collect_code: CollectCodeEnum.BROWSER_UNAVAILABLE });
+      }
       return sanitizeStatus({ error_code: ErrorCodeEnum.NAVIGATION_FAILED });
     }
     cdpPort = session.port;
@@ -271,7 +276,6 @@ async function runPlaywrightScript(scriptName, args = [], options = {}) {
 
     child.stderr?.on('data', (d) => {
       stderr += d.toString();
-      console.error('DEBUG: Child stderr:', d.toString().trim());
     });
 
     child.on('error', (err) => {
@@ -281,7 +285,11 @@ async function runPlaywrightScript(scriptName, args = [], options = {}) {
           clearCdpPort();
           clearCdpSession();
         }
-        resolvePromise(sanitizeStatus({ error_code: ErrorCodeEnum.NAVIGATION_FAILED }));
+        if (scriptName === 'collect') {
+          resolvePromise(sanitizeCollect({ collect_code: CollectCodeEnum.ERROR }));
+        } else {
+          resolvePromise(sanitizeStatus({ error_code: ErrorCodeEnum.NAVIGATION_FAILED }));
+        }
       }
     });
 
@@ -304,7 +312,9 @@ async function runPlaywrightScript(scriptName, args = [], options = {}) {
           clearCdpPort();
           clearCdpSession();
         }
-        if (code !== 0) {
+        if (scriptName === 'collect') {
+          resolvePromise(sanitizeCollect({ collect_code: CollectCodeEnum.ERROR }));
+        } else if (code !== 0) {
           resolvePromise(sanitizeStatus({ error_code: ErrorCodeEnum.NAVIGATION_FAILED }));
         } else {
           resolvePromise(sanitizeStatus({ error_code: ErrorCodeEnum.UNKNOWN }));
