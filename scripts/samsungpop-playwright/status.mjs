@@ -160,7 +160,14 @@ async function main() {
         return;
       }
 
-      const samsungPage = pages.find(p => p.url().startsWith(ORIGIN));
+      const samsungPage = pages.find(p => {
+        try {
+          const url = new URL(p.url());
+          return url.origin === new URL(ORIGIN).origin;
+        } catch {
+          return false;
+        }
+      });
 
       if (!samsungPage) {
         // Browser running but not on Samsung POP

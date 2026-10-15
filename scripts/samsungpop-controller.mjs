@@ -99,10 +99,36 @@ async function runPlaywrightScript(scriptName, args = [], options = {}) {
   let cdpPort;
   let sessionToken;
   if (scriptName === 'open') {
-    cdpPort = generateCdpPort();
-    sessionToken = generateSessionToken();
-    writeCdpPort(cdpPort);
-    writeCdpSession(cdpPort, sessionToken);
+    // Ensure profile directory exists before writing session files
+    try {
+      const { mkdirSync } = await import('node:fs');
+      mkdirSync(BANKING_PROFILE_DIR, { recursive: true });
+    } catch {}
+    
+    // Check for existing valid session (duplicate open handling)
+    const existingSession = readCdpSession();
+    if (existingSession) {
+      // Verify the existing session is still alive
+      try {
+        const { chromium } = await import('playwright');
+        const browser = await chromium.connectOverCDP(`http://localhost:${existingSession.port}`, { timeout: 2000 });
+        await browser.close();
+        // Session is valid - reuse it
+        cdpPort = existingSession.port;
+        sessionToken = existingSession.token;
+      } catch {
+        // Stale session - generate new one
+        cdpPort = generateCdpPort();
+        sessionToken = generateSessionToken();
+        writeCdpPort(cdpPort);
+        writeCdpSession(cdpPort, sessionToken);
+      }
+    } else {
+      cdpPort = generateCdpPort();
+      sessionToken = generateSessionToken();
+      writeCdpPort(cdpPort);
+      writeCdpSession(cdpPort, sessionToken);
+    }
   } else if (scriptName === 'status') {
     const session = readCdpSession();
     if (!session) {
@@ -172,9 +198,9 @@ async function runPlaywrightScript(scriptName, args = [], options = {}) {
               if (parsed.state && parsed.browser && parsed.site && parsed.auth && parsed.error_code) {
                 resolved = true;
                 clearTimeout(timer);
-                // For open: don't clear CDP port - status needs it
-                // For status: clear CDP port after use
-                if (waitForExit) clearCdpPort();
+                // For open: don't clear CDP port/session - status needs it
+                // For status: do NOT clear on success - preserve for open→status→status
+                // Only clear on error/stale session (handled in child.on close/error)
                 resolvePromise(sanitizeStatus(parsed));
                 return;
               }

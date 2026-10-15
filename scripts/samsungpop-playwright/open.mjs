@@ -136,7 +136,12 @@ async function main() {
     }
 
     const currentUrl = page.url();
-    if (!currentUrl.startsWith(ORIGIN)) {
+    let isSameOrigin = false;
+    try {
+      const url = new URL(currentUrl);
+      isSameOrigin = url.origin === new URL(ORIGIN).origin;
+    } catch {}
+    if (!isSameOrigin) {
       console.log(JSON.stringify(sanitize({ state: StateEnum.ERROR, browser: BrowserEnum.RUNNING, site: SiteEnum.OTHER, auth: AuthEnum.UNKNOWN, error_code: ErrorCodeEnum.NAVIGATION_FAILED })));
       await browser.close();
       return;
