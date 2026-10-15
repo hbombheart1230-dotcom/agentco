@@ -1,6 +1,6 @@
 # Agentco — CURRENT_TASK (2026-10-15)
 
-**State: S2 REWORK REQUIRED (reviewed 6f9b0f9, 2026-10-15).** Start with the **Execution contract — exact S2 final-fix implementation instructions (2026-10-15)** at the bottom of `docs/work-orders/S2_SAMSUNGPOP_READ_SAVE.md`. Detailed acceptance criteria supersede earlier informal prompts. Collector now has JSON snapshot and holdings source code; remote push confirmed, but controller loses saved-path/count metadata, 6/6 tests are the unchanged obsolete dispatch/no-session tests, and live DOM matching is unverified. Read the latest **GPT review — 2026-10-15, rework commit 6f9b0f9** at the bottom of `docs/work-orders/S2_SAMSUNGPOP_READ_SAVE.md`. No live finance account access yet.
+**State: S2 MOCK READ/SAVE PARTIALLY VERIFIED; QA HOLD (2026-10-15).** Remote implementation `4e65ec51afb4250a5a070038a85c8c1c2a19712d` has fixture parser and JSON readback tests, but current test teardown can DELETE EVERY `results/samsungpop/snapshots/samsungpop-*.json` in the workspace; do not rerun these tests in a workspace with user snapshots. Controller→Pi end-to-end, collect error shapes and raw stderr handling also need targeted repair. Start at the **GPT independent static review — implementation 4e65ec5 (2026-10-15)** at the bottom of `docs/work-orders/S2_SAMSUNGPOP_READ_SAVE.md`. `LIVE=NOT_RUN`. No separate Windows accounts or MCP architecture authorized.
 
 ## Assistant-first default
 A greeting, general conversation or personal-assistant query is NOT permission to inspect Git, start workers or access financial data. Enter development mode only for an explicitly requested task. Follow root `AGENTS.md`. Personal repo: `hbombheart1230-dotcom/agentco`; canonical Windows workspace: `C:\Agentco`. Personal Agentco is separate from Samsung Display and Agentra.
@@ -34,3 +34,7 @@ Read `CURRENT_TASK.md` + active S2 work order and only changed components it nam
 - Source-of-truth remote S2 feature branch; newly appended task review commit `504802b`. Preserve current local `settings.json`, all 3 stashes, banking profile, divergent local implementation commit, and inspect retained temporary worktree before removal.
 - One implementer fixes collect metadata loss, collect-shaped error, replaces obsolete tests with actual fixture parse→save→readback and two snapshots, page detection, small atomic file write. Then focused tests, commit/push this branch only; no main merge and no actual bank browsing.
 - On passing mocks, run independent reviewer once, then plan first user-supervised live validation separately. Do not claim Windows account/ACL or MCP isolation; those are not approved work in this lightweight scope.
+
+## S2 QA latest (2026-10-15)
+- Task review commit `2ca0d7f`: STOP unsafe snapshot-cleanup tests before any new test invocation. Preserve all existing snapshots. Fix only test isolation, bounded metadata/error paths and actual synthetic Controller→Pi delivery; no old S1 rereads.
+- User accepted read/save, NOT trading, no Windows separate-account/ACL or finance MCP. Do not require those for mock scope. Live remains user-supervised later, after QA and separate review.
