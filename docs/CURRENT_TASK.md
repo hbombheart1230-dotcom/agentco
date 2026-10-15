@@ -1,6 +1,6 @@
 # Agentco — CURRENT_TASK (2026-10-15)
 
-**State: S2 IMPLEMENTED PARTIALLY / REWORK REQUIRED.** Remote S2 SHA `16ae48930d9e4e46d480a3268040c24d95cb90d0` was statically reviewed by GPT on 2026-10-15. Existing `/samsungpop collect` is wired but does **not** write JSON snapshots or collect holdings; 6/6 mock tests do not prove extraction and persistence. Do not start live finance reads. Read the **GPT code review — 2026-10-15** section appended to the active S2 work order.
+**State: S2 REWORK REQUIRED (reviewed 6f9b0f9, 2026-10-15).** Collector now has JSON snapshot and holdings source code; remote push confirmed, but controller loses saved-path/count metadata, 6/6 tests are the unchanged obsolete dispatch/no-session tests, and live DOM matching is unverified. Read the latest **GPT review — 2026-10-15, rework commit 6f9b0f9** at the bottom of `docs/work-orders/S2_SAMSUNGPOP_READ_SAVE.md`. No live finance account access yet.
 
 ## Assistant-first default
 A greeting, general conversation or personal-assistant query is NOT permission to inspect Git, start workers or access financial data. Enter development mode only for an explicitly requested task. Follow root `AGENTS.md`. Personal repo: `hbombheart1230-dotcom/agentco`; canonical Windows workspace: `C:\Agentco`. Personal Agentco is separate from Samsung Display and Agentra.
@@ -29,3 +29,8 @@ Read `CURRENT_TASK.md` + active S2 work order and only changed components it nam
 - First read the appended GPT review in `docs/work-orders/S2_SAMSUNGPOP_READ_SAVE.md` (commit `ddd9831`); fix collector→JSON writer, lost result fields, unmasked account digits, and session close handling, with real fake-fixture extraction/persistence tests.
 - Use feature S2 branch current remote HEAD, never force push or reset the user's divergent dirty local branch. A temporary worktree is preferred. Preserve settings, all stashes, existing profile/auth and local `cd04aca` commit.
 - Implement/test/commit/push ONLY the S2 feature branch; no actual finance site, no auto login/trading. Then independently review new SHA.
+
+## Next exact action (no old history)
+- Source-of-truth remote S2 feature branch; newly appended task review commit `504802b`. Preserve current local `settings.json`, all 3 stashes, banking profile, divergent local implementation commit, and inspect retained temporary worktree before removal.
+- One implementer fixes collect metadata loss, collect-shaped error, replaces obsolete tests with actual fixture parse→save→readback and two snapshots, page detection, small atomic file write. Then focused tests, commit/push this branch only; no main merge and no actual bank browsing.
+- On passing mocks, run independent reviewer once, then plan first user-supervised live validation separately. Do not claim Windows account/ACL or MCP isolation; those are not approved work in this lightweight scope.
