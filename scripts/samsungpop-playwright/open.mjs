@@ -1,15 +1,18 @@
 /**
  * Samsung POP Open - Playwright Implementation
  *
- * Launches Edge with persistent banking profile, navigates to Samsung POP,
- * verifies navigation, and reports fixed status. Browser stays running.
+ * Launches Edge detached with persistent banking profile and random CDP port,
+ * connects via CDP to navigate to Samsung POP, reports fixed status, exits.
+ * Browser stays running (detached) for user manual login.
+ * NO profile cloning, NO cookie/storage inspection, NO raw page data exposed.
  */
 
+import { spawn } from 'node:child_process';
 import { chromium } from 'playwright';
 
 const ORIGIN = process.env.SAMSUNGPOP_ORIGIN || 'https://www.samsungpop.com/';
 const PROFILE_DIR = process.env.BANKING_PROFILE_DIR;
-const FIXED_CDP_PORT = 9222;
+const EDGE_PATH = process.env.EDGE_PATH || 'C:/Program Files (x86)/Microsoft/Edge/Application/msedge.exe';
 
 const StateEnum = { OPEN: 'OPEN', LOGGED_IN: 'LOGGED_IN', LOGGED_OUT: 'LOGGED_OUT', UNKNOWN: 'UNKNOWN', ERROR: 'ERROR' };
 const BrowserEnum = { RUNNING: 'RUNNING', NOT_RUNNING: 'NOT_RUNNING', UNKNOWN: 'UNKNOWN' };
@@ -65,8 +68,39 @@ async function determineAuthStatus(page) {
   }
 }
 
+function launchEdgeDetached(cdpPort) {
+  const edgeArgs = [
+    `--user-data-dir=${PROFILE_DIR}`,
+    `--remote-debugging-port=${cdpPort}`,
+    '--no-first-run',
+    '--no-default-browser-check',
+    ORIGIN,
+  ];
+  const edgeProcess = spawn(EDGE_PATH, edgeArgs, {
+    detached: true,
+    stdio: 'ignore',
+    windowsHide: false,
+  });
+  edgeProcess.unref();
+  return edgeProcess;
+}
+
+async function waitForCDP(port, timeoutMs = 15000) {
+  const start = Date.now();
+  while (Date.now() - start < timeoutMs) {
+    try {
+      const browser = await chromium.connectOverCDP(`http://localhost:${port}`, { timeout: 2000 });
+      await browser.close();
+      return true;
+    } catch {
+      await new Promise(r => setTimeout(r, 500));
+    }
+  }
+  return false;
+}
+
 async function main() {
-  let context;
+  let browser;
   try {
     if (!PROFILE_DIR) {
       console.log(JSON.stringify(sanitize({ state: StateEnum.ERROR, browser: BrowserEnum.UNKNOWN, site: StateEnum.UNKNOWN, auth: AuthEnum.UNKNOWN, error_code: ErrorCodeEnum.UNSUPPORTED })));
@@ -74,33 +108,44 @@ async function main() {
       return;
     }
 
-    // Launch with persistent profile; no stealth flags
-    const cdpPort = parseInt(process.env.CDP_PORT || String(FIXED_CDP_PORT), 10);
-    context = await chromium.launchPersistentContext(PROFILE_DIR, {
-      channel: 'msedge',
-      headless: false,
-      viewport: { width: 1280, height: 720 },
-      args: ['--no-first-run', '--no-default-browser-check', `--remote-debugging-port=${cdpPort}`],
-      ignoreDefaultArgs: ['--enable-automation'],
-    });
+    const cdpPort = parseInt(process.env.CDP_PORT || '9222', 10);
 
+    // Launch Edge detached with our profile and CDP port
+    launchEdgeDetached(cdpPort);
+
+    // Wait for CDP endpoint to be ready
+    const cdpReady = await waitForCDP(cdpPort);
+    if (!cdpReady) {
+      console.log(JSON.stringify(sanitize({ state: StateEnum.ERROR, browser: BrowserEnum.UNKNOWN, site: StateEnum.UNKNOWN, auth: AuthEnum.UNKNOWN, error_code: ErrorCodeEnum.NAVIGATION_FAILED })));
+      return;
+    }
+
+    // Connect via CDP to navigate and verify
+    browser = await chromium.connectOverCDP(`http://localhost:${cdpPort}`, { timeout: 10000 });
+
+    const contexts = browser.contexts();
+    const context = contexts[0] || await browser.newContext({ viewport: { width: 1280, height: 720 } });
     const page = context.pages()[0] || await context.newPage();
 
     const response = await page.goto(ORIGIN, { waitUntil: 'domcontentloaded', timeout: 30000 });
 
     if (!response || response.status() >= 400) {
       console.log(JSON.stringify(sanitize({ state: StateEnum.ERROR, browser: BrowserEnum.RUNNING, site: StateEnum.SAMSUNGPOP, auth: AuthEnum.UNKNOWN, error_code: ErrorCodeEnum.NAVIGATION_FAILED })));
+      await browser.close();
       return;
     }
 
     const currentUrl = page.url();
     if (!currentUrl.startsWith(ORIGIN)) {
       console.log(JSON.stringify(sanitize({ state: StateEnum.ERROR, browser: BrowserEnum.RUNNING, site: StateEnum.OTHER, auth: AuthEnum.UNKNOWN, error_code: ErrorCodeEnum.NAVIGATION_FAILED })));
+      await browser.close();
       return;
     }
 
-    await page.waitForLoadState('networkidle', { timeout: 20000 }).catch(() => {});
+    // Wait for page to be interactive
+    await page.waitForLoadState('networkidle', { timeout: 15000 }).catch(() => {});
 
+    // Determine login status using shared logic
     const authStatus = await determineAuthStatus(page);
 
     const state = authStatus === AuthEnum.LOGGED_IN ? StateEnum.LOGGED_IN :
@@ -111,12 +156,11 @@ async function main() {
       browser: BrowserEnum.RUNNING,
       site: SiteEnum.SAMSUNGPOP,
       auth: authStatus,
-      error_code: ErrorCodeEnum.NONE,
+      error_code: ErrorCodeEnum.NONE
     })));
 
-    // Browser stays running for user manual login
-    // Process remains alive; user closes Edge window when done
-    await new Promise(() => {});
+    // Disconnect Playwright but leave browser running (detached) for CDP attachment
+    await browser.close();
 
   } catch (err) {
     const msg = err?.message || String(err);

@@ -8,14 +8,15 @@
  * Returns ONLY fixed enums - no raw page content, URLs, snapshots, or storage.
  *
  * Uses a SINGLE persistent banking profile at ~/.agentco/browser-profile-banking
- * Edge is launched with fixed CDP port 9222 for ownership verification.
- * Status attaches ONLY to the controller-owned CDP endpoint.
+ * Each open generates a random CDP port for session ownership verification.
+ * Status attaches ONLY to the controller-owned CDP endpoint via port file.
  */
 
 import { spawn } from 'node:child_process';
 import { resolve, dirname } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { writeFileSync, unlinkSync, existsSync, readFileSync } from 'node:fs';
+import { randomBytes } from 'node:crypto';
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 const root = resolve(__dirname, '..');
@@ -24,7 +25,11 @@ const SAMSUNGPOP_ORIGIN = 'https://www.samsungpop.com/';
 const BANKING_PROFILE_DIR = resolve(process.env.USERPROFILE || process.env.HOME || '', '.agentco', 'browser-profile-banking');
 const BANKING_OUTPUT_DIR = resolve(process.env.USERPROFILE || process.env.HOME || '', '.agentco', 'browser-output-banking');
 const CDP_PORT_FILE = resolve(BANKING_PROFILE_DIR, 'cdp-port');
-const FIXED_CDP_PORT = 9222;
+
+function generateCdpPort() {
+  // Use a random port in the dynamic range (49152-65535)
+  return 49152 + (randomBytes(2).readUInt16BE(0) % 16384);
+}
 
 const StateEnum = { OPEN: 'OPEN', LOGGED_IN: 'LOGGED_IN', LOGGED_OUT: 'LOGGED_OUT', UNKNOWN: 'UNKNOWN', ERROR: 'ERROR' };
 const BrowserEnum = { RUNNING: 'RUNNING', NOT_RUNNING: 'NOT_RUNNING', UNKNOWN: 'UNKNOWN' };
@@ -66,8 +71,19 @@ async function runPlaywrightScript(scriptName, args = [], options = {}) {
   const { waitForExit = true, timeoutMs = 60000 } = options;
 
   const scriptPath = resolve(__dirname, 'samsungpop-playwright', `${scriptName}.mjs`);
-  const cdpPort = FIXED_CDP_PORT;
-  writeCdpPort(cdpPort);
+  let cdpPort;
+  if (scriptName === 'open') {
+    cdpPort = generateCdpPort();
+    writeCdpPort(cdpPort);
+  } else if (scriptName === 'status') {
+    cdpPort = readCdpPort();
+    if (!cdpPort) {
+      return sanitizeStatus({ error_code: ErrorCodeEnum.NAVIGATION_FAILED });
+    }
+  } else {
+    cdpPort = generateCdpPort();
+    writeCdpPort(cdpPort);
+  }
 
   return new Promise((resolvePromise) => {
     const controller = new AbortController();
@@ -85,6 +101,7 @@ async function runPlaywrightScript(scriptName, args = [], options = {}) {
         BANKING_OUTPUT_DIR,
         SAMSUNGPOP_ORIGIN,
         CDP_PORT: String(cdpPort),
+        CDP_PORT_FILE,
         SYSTEMROOT: process.env.SYSTEMROOT,
         WINDIR: process.env.WINDIR,
         COMSPEC: process.env.COMSPEC,
@@ -182,4 +199,4 @@ if (process.argv[1] && resolve(process.argv[1]) === fileURLToPath(import.meta.ur
   });
 }
 
-export { cmdOpen, cmdStatus, sanitizeStatus, StateEnum, BrowserEnum, SiteEnum, AuthEnum, ErrorCodeEnum, BANKING_PROFILE_DIR, FIXED_CDP_PORT, readCdpPort, writeCdpPort, clearCdpPort, CDP_PORT_FILE };
+export { cmdOpen, cmdStatus, sanitizeStatus, StateEnum, BrowserEnum, SiteEnum, AuthEnum, ErrorCodeEnum, BANKING_PROFILE_DIR, generateCdpPort, readCdpPort, writeCdpPort, clearCdpPort, CDP_PORT_FILE };
