@@ -253,3 +253,50 @@ Do not reset hard or force push. Work on latest remote S2 feature branch, commit
 `BLOCKERS`
 
 Stop if a test attempts to access/delete real snapshot files, or if the implementation cannot produce truthful integration evidence. Do not claim overall PASS on partial green unit tests.
+
+
+---
+
+## GPT HARD STOP review — `21c2152a90aded31d14239cc3f652c6768eed428` (2026-10-16)
+
+**Status: QA FAIL / DO NOT RUN THE CURRENT TESTS IN THE USER'S CANONICAL WORKSPACE / NO LIVE TEST.** GitHub remote branch SHA confirmed. This supersedes previous "final" PASS claims. The following issues were confirmed by direct inspection of that exact commit, not inferred from logs. A passing `node:test` count does not establish production readiness.
+
+### Concrete blockers, ordered by risk
+
+**BLOCKER 1 — mock snapshots still write into production output tree.**
+- In `scripts/samsungpop-playwright/collect.mjs`, top-level `const SNAPSHOT_DIR = resolve(root,'results','samsungpop','snapshots')` is constant and **does not consult** `process.env.SNAPSHOT_DIR` or a test argument.
+- In `scripts/samsungpop-collect.test.mjs`, tests set `process.env.SNAPSHOT_DIR = testSnapshotDir`, import `writeSnapshot` again, and assume it redirects the output. It does NOT. Even `writeSnapshot(snapshot)` used by direct tests writes to the real `results/.../snapshots` location of the checked-out worktree.
+- Its canary is stored in another independent temp directory and is never at risk, so canary PASS is meaningless evidence that real snapshot files were isolated. Old wildcard cleanup was removed, but synthetic JSON **pollution** and accidental modification risks remain.
+- **Do not rerun 14 current S2 tests before fixing writer injection.** Inspect existing `results/samsungpop/snapshots` metadata for synthetic contamination without reading/printing actual financial values or deleting anything automatically. If synthetic and real data cannot be distinguished, report and preserve all files.
+
+**Fix contract:** `writeSnapshot(data, options?)` takes an optional output directory *only when directly invoked by tests*. Production `main()` always calls its unoverridden default; no CLI, model/user-supplied path or exposed argument for the production command. Tests call `writeSnapshot(snapshot, { outputDir: testSnapshotDir })` (or equivalent tightly scoped injected dependency), and re-read the **actual absolute returned test file** under `testSnapshotDir`. At test end, delete only the uniquely created temporary test tree; do not touch `root/results`. Assert `relative(resolve(testSnapshotDir, filename), testSnapshotDir)`/realpath containment appropriately. Check that the production snapshot tree's filenames/count and an existing canary file in that tree remain unchanged across the mock test (metadata only; avoid real file contents).
+
+**BLOCKER 2 — `writeSnapshot` can unlink an existing destination.**
+- When `renameSync(tempPath, filepath)` fails, the fallback calls `unlinkSync(filepath)` before retrying rename. This can delete an unrelated preexisting snapshot on any rename failure. The random suffix is not a correctness proof.
+- Use collision-safe **no-clobber** finalization, ideally a unique temporary file and atomic same-volume `linkSync(tempPath, newFinalPath)` then unlink **only your own temporary file**, or a proven Windows-appropriate exclusive-create alternative. On `EEXIST`, choose a new filename; on unsupported finalization fail without touching preexisting files. Never unlink a final destination. Use `crypto.randomUUID()`/randomBytes rather than Math.random if convenient. A test must precreate a target collision and assert its exact original bytes preserved. No silent partial writes or falsely returning SAVED.
+
+**BLOCKER 3 — purported offline session E2E can open real Samsung POP.**
+- Controller sets `const SAMSUNGPOP_ORIGIN='https://www.samsungpop.com/'`, then child environment always overrides `SAMSUNGPOP_ORIGIN` with that constant (after `...process.env`).
+- Test helper supplies a fake `SAMSUNGPOP_ORIGIN` pointing to a `file://` fixture, but controller discards it. `cmdOpen()` launches Edge using `scripts/samsungpop-playwright/open.mjs`, which passes ORIGIN to Edge and calls `page.goto(ORIGIN)`. Therefore the test's `open→status→...` may contact the *real* Samsung POP home page, contrary to "no real bank website" report.
+- Disable old session/open E2E tests until a **test-only bank-like local fixture** is actually used end-to-end and assert no page/tab navigates to `samsungpop.com`. Never use the real bank profile. A test-only origin override must be narrowly gated to synthetic fixture with a disposable test profile, and must not weaken production origin checks. If true offline full sequence cannot be proven, report `SEQUENCE=NOT_RUN` and rely on the previously user-observed S1 functional open/status evidence instead of claiming a false PASS.
+
+### Additional bounded issues (only fix where needed by S2 acceptance)
+
+4. `pi-dev/extensions/samsungpop.ts:runController` still returns **status-shaped** `sanitizeStatus` for collect command when `pi.exec` exits nonzero or JSON parsing fails; `formatCollectResult` then receives undefined `collect_code`. Add branch-specific error normalization and tests for the Pi handler through a thin injected/host stub, or report `PI_UI_E2E=NOT_RUN`. Never leak raw values.
+5. `scripts/samsungpop-controller.mjs` stores child `stdout` and `stderr` in unbounded in-memory buffers (verbatim stderr no longer echoed); cap both, discard/abort excess, return fixed error enum. No logging of raw child exceptions. Do not change supported `/samsungpop open|status` UI beyond genuine necessary compatibility.
+6. Real Samsung POP selectors have never been validated and generic table marker detection is not a verified live account page. A mock passing does NOT mean live readiness. No live bank session access, screenshots, account data inspection or real click automation in this patch; do not add a financial broker/Windows account or bank MCP.
+
+### Concrete acceptance tests (run in disposable worktree only AFTER fixes)
+
+- `WRITER_ISOLATION`: before/after production results directory entries unchanged; all synthetic snapshots are written to the test-owned directory and validated there. It must be impossible for test `writeSnapshot` to silently fall back to production directory.
+- `NO_CLOBBER`: pre-existing final file byte-for-byte unchanged under forced filename collision and simulated rename/finalization failure. Failed write returns null/ERROR, no SAVE status.
+- `OFFLINE_NO_BANK_NETWORK`: fake origin stays local for entire test; even `open` never navigates to `https://www.samsungpop.com/`. If not reliably enforceable, omit open E2E, mark `SEQUENCE=NOT_RUN`.
+- `PARSER_FIXTURE`: exact 4 totals, signed amounts, 3 holdings and null-missing cases from real production extractor over fake page.
+- `METADATA`: controller child status/path/count survive sanitizers, and Pi collect command error path always has `collect_code`.
+- `NO_RAW`: no synthetic credential/account sentinel in stdout/stderr/Pi output or local snapshots.
+- `S1_REGRESSION`: only targeted basic open/status where safe, no full history marathon.
+- `LIVE=NOT_RUN`, `CDP_OWNERSHIP=NOT_VERIFIED` until separate user-attended live validation.
+
+**Git/roles:** `origin/feature/s2-samsungpop-read-save-20261015` at commit `21c2152...` was verified before this review was appended. The branch SHA after this addendum is different; fetch it first. Work in a fresh disposable Git worktree; preserve canonical dirty `pi-dev/settings.json`, 3 stashes, local `cd04aca`, profiles, any existing snapshots and previous worktrees. NEVER `reset --hard`, `clean`, `--force`, stash pop/drop, delete unknown snapshots, or merge main. Only one Pi/Codex implementer, with a separately assigned independent Claude review at resulting SHA. If any blocker isn't testable, STOP and report not verified rather than self-certify.
+
+**Report exactly:** `NEW_SHA`, `CHANGED_FILES`, `WRITER_ISOLATION`, `NO_CLOBBER`, `OFFLINE_NO_BANK_NETWORK`, `PARSER_FIXTURE`, `METADATA`, `PI_UI_E2E`, `NO_RAW`, `SEQUENCE`, `LIVE=NOT_RUN`, `CDP_OWNERSHIP=NOT_VERIFIED`, `PUSH`, `PRESERVED`, `BLOCKERS`. Report the actual test command and use PASS/FAIL/NOT_RUN, not narrative assertions.
