@@ -1,38 +1,21 @@
-# Agentco Current Task — Samsung POP S1 local read-only browser
+# Agentco — CURRENT_TASK (2026-10-15)
 
-**ACTIVE DEVELOPMENT TASK: S1 Samsung POP local browser status — inventory first (2026-10-14).**
+**State: NO ACTIVE IMPLEMENTATION TASK. S1 CLOSED / FUNCTIONAL PASS; next user-directed topic: S2 Samsung POP read-only information access design.**
 
-## Personal assistant by default
+## Assistant-first default
+A greeting, general conversation or personal-assistant query is NOT permission to read repository docs, run Git, use workers, or access finance. Enter development mode only when the user explicitly requests development, review or a named project task. Follow root `AGENTS.md`. Canonical personal repo: `hbombheart1230-dotcom/agentco`; Windows workspace: `C:\Agentco`; remote `origin/main` is authoritative, but respect existing local work.
 
-For greetings, everyday conversation, general advice, finance/travel planning, explanations or research, **do not automatically read this file**, inspect Git, execute tests or start a coding workflow. Follow root `AGENTS.md` (canonical shared policy) and native `pi-dev/AGENTS.md` / `CLAUDE.md` as applicable. Presence of this repository or a greeting does not authorize development operations.
+## Accepted milestones
+- Existing P0/P1, P2, P5.1–P5.10 improvements remain in main. Some worker flows had **synthetic** PASS only: broad autonomous Pi→3 Workers is NOT a verified production feature.
+- Pi CLI is default Main; **Codex CLI (local/native)** implements when delegated; **Claude Code CLI (local/native)** independently reviews changed SHA; **Hermes CLI (local/native)** is optional for targeted testing, not mandatory. CLI may use paid external-model API providers; local CLI does not mean zero credits. ChatGPT = architect/final technical judgment; user = product direction and approval.
+- **S1 Samsung POP browser:** local Pi `/samsungpop open` and `/samsungpop status`; user manually logs in; status is fixed enum only, `auth=UNKNOWN` by design. User-supervised Pi local smoke PASS (open, two status calls, repeat open without new Edge, user login, two final statuses). Reported 41/41 offline isolated tests PASS. Claude Code CLI earlier CONDITIONAL_PASS, subsequent narrow auth cleanup independently diff-reviewed by GPT. Source implementation `3395c3910b94b54d51bed6c3d818825b4f78859a`; merged via [PR #3](https://github.com/hbombheart1230-dotcom/agentco/pull/3) at `14aa506ebd5499367eab6ba5ed29e437bf549445`. Detailed historical evidence: `docs/work-orders/S1_SAMSUNGPOP_BROWSER_READONLY.md`. **Do not reopen S1 or repeatedly reread old reviews without a newly observed failure.**
+- Repo branch-history consolidation (legacy P3/P5.1/old POP design retained in ancestry without overwriting newer code): `docs/BRANCH_CONSOLIDATION_20261015.md`.
 
-When the user **explicitly requests Agentco implementation, debugging, testing, review, or continuing a named development task**, use this file as the development entrypoint and only the minimum context linked to that new work order. Never preload old completed phase reports. Standard handoff is user/GPT direction → Pi or user-selected Main implementation/test/commit/push (Codex available for coding) → independent verifier, preferably Claude when not implementer → GPT/user release. Follow Git-first and preserve dirty/untracked local work, stash, sessions and secrets. On Pi, automatic Git checkpoint is OFF by default and optional with `agentco --main pi --agentco-checkpoints`.
+## Next topic: Samsung POP S2 (DESIGN ONLY until explicitly assigned)
+Target: after user signs in manually in the dedicated Edge profile, user-approved **read-only** financial-information retrieval for the personal assistant. Begin with a thin scope: choose exact data fields (e.g. balances/positions), explicit user invocation, local-only extraction and a deliberately restricted JSON schema. Before accessing real account information, resolve CDP/browser-process ownership and secrets/PII handling, decide whether any data may reach external LLMs, and verify no orders/transfers/login automation. Make a new S2 work order only when user authorizes scope. Prefer native browser/extension/Skill/MCP, minimal custom code.
 
-## Accepted baselines
+## First task when moving the local machine to the merged main
+`C:\Agentco` was last reported checked out on `feature/s1-samsungpop-readonly-20261014`, with an existing user-modified `pi-dev/settings.json` and **three stashes**. GitHub consolidation only touched remote. The next local Pi/Codex action must inspect Git status, protect that change and the three stashes, then sync to `origin/main` safely. No blind `reset --hard`, `stash pop`, clean, force checkout, profile access, or overwrite. No automatic deletion of legacy remote branches.
 
-- **Assistant-first behavior**: Claude reviewed `2879522c69a5ed8f8e03859519a0be911acaf9ce`, PASS (4/4 focused offline tests). Native instruction routing and opt-in checkpoint implementation merged. See `docs/capabilities/INTERACTION.md`. Actual greeting-model adherence NOT independently tested by that review.
-- **P5.10 — persistent native Ultra defaults**: Claude reviewed `cd803da21c52d1b49117eca0557bf286c2d3ccfc`, PASS (6/6 machine-local profile checks, SKIP 0). Requested **exact model** is `nvidia/nemotron-3-ultra-550b-a55b:free`, including `:free`; the user's original request explicitly included the suffix. Pi already uses it; Codex native model is Ultra; Hermes main + 13 auxiliary task pins + auxiliary reference + delegation are Ultra (16 fields); Claude initial model and 6 supported role aliases are Ultra (7 fields). Actual user-local settings/backups remain on the original Windows machine, not in Git. No live Claude NVIDIA protocol/alias-resolution confirmation by this review, and no guarantee of continued free pricing. See `docs/work-orders/P5_10_ULTRA_NATIVE_DEFAULTS.md` for scoped evidence and limitations.
-- **Previously accepted P5.9 native launcher**: one-choice 4-Main menu, no custom free-price/compatibility gate, no redundant `-c` model overrides. P5.4 synthetic AUTO/Worker and Pi/Agentra/browser remain unchanged.
-
-## Active S1 work (explicit user assignment)
-
-1. Read only this pointer, [S1 Samsung POP work order](work-orders/S1_SAMSUNGPOP_BROWSER_READONLY.md), and current relevant source.
-2. Origin/main baseline: `c51b0a044ba8c6a303efc226ed44834d6a3b362e`; assigned branch `feature/s1-samsungpop-readonly-20261014`.
-3. Inventory local M1/M2/Edge/profile path metadata and Git safety first. Model-isolated banking boundary must PASS synthetic tests before any live bank-page test. Otherwise STOP as BLOCKED.
-4. Preserve the two local stashes, runtime, auth and ignored profile without inspecting contents. No main merge until independent verification and user approval. No old work-order reread or gratuitous model calls.
-5. Implementer is Pi or selected Main. Claude independent verification only when Claude did not implement; otherwise use another independent reviewer.
-
-
-
-## Latest S1 review — rework required, no live banking (2026-10-14)
-
-GPT reviewed `0656d1a9be26cb18ed630a8d0506de14cab625e1` directly against GitHub source: stable profile and profile-copy removal are improvements, but reported 8/8 source-pattern tests do NOT prove enforced isolation. Status: **ISOLATION_GATE=BLOCKED, LIVE=NOT_RUN, MAIN_MERGE=NO**. Still open: same-user model tool access to bank profile/CDP, global unverified CDP :9222 owner, cookie/storage heuristic false login statuses, browser owner lifecycle, and real production behavioral tests.
-
-For next narrowly scoped rework, read only **the final section** of `docs/work-orders/S1_SAMSUNGPOP_BROWSER_READONLY.md` ("GPT static review — latest 0656d1a9") and directly relevant current S1 code. No historical-phase reread. If no enforceable separate Windows process/account/profile access boundary is feasible, report BLOCKED rather than opening Samsung POP. Do not expose raw page/profile data to any OpenRouter-powered Main, Worker or generic tool. No live bank site/login/account data, package changes, model calls, profile copying, global taskkill or branch merge. Preserve main, the two stashes and all existing auth/browser state.
-
-
-## S1 product direction updated — user-operated login first (2026-10-14)
-
-The user reaffirmed the original approach: **open Samsung POP in Edge → user manually logs in → local non-sensitive status check**. Do not build an OS-level multi-user isolation platform as a prerequisite to this modest interactive workflow. The **latest** section of `docs/work-orders/S1_SAMSUNGPOP_BROWSER_READONLY.md` ("User product clarification — manual-login-first S1") is the governing scope, overriding earlier notes that blocked even local browser opening until hard sandbox proof. For implementation read only this latest scope plus relevant live S1 code; preserve two stashes, browser/credentials and all other native Main work.
-
-Keep login credentials, bank-page content and raw financial data OUT of normal model-visible tools, external LLM context and logs. The initial user-initiated local open/login is not equivalent to claiming enforced isolation or authenticating accounts programmatically. `auth=UNKNOWN` unless real bank-specific evidence can be verified; no cookie/storage heuristics or arbitrary CDP 9222 connections. Focused real-code behavior tests, then implementer feature-only push and independent review; **no main merge yet**.
+## Context-budget rule
+For a new S2 design request read **this file** and `docs/BRANCH_CONSOLIDATION_20261015.md` first, then only the S1 interfaces/extension directly relevant. Avoid completed history, repeated all-tests runs, model overdelegation and speculative architecture. Keep implementation and verification separately owned when code actually changes.
