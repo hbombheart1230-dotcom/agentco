@@ -1,6 +1,6 @@
 # Agentco — CURRENT_TASK (2026-10-15)
 
-**State: S2 READ & SAVE APPROVED FOR LOCAL IMPLEMENTATION; work order lives on feature branch.** S1 functional PASS; S2 actual finance read/save has NOT been implemented/tested by GPT.
+**State: S2 IMPLEMENTED PARTIALLY / REWORK REQUIRED.** Remote S2 SHA `16ae48930d9e4e46d480a3268040c24d95cb90d0` was statically reviewed by GPT on 2026-10-15. Existing `/samsungpop collect` is wired but does **not** write JSON snapshots or collect holdings; 6/6 mock tests do not prove extraction and persistence. Do not start live finance reads. Read the **GPT code review — 2026-10-15** section appended to the active S2 work order.
 
 ## Assistant-first default
 A greeting, general conversation or personal-assistant query is NOT permission to inspect Git, start workers or access financial data. Enter development mode only for an explicitly requested task. Follow root `AGENTS.md`. Personal repo: `hbombheart1230-dotcom/agentco`; canonical Windows workspace: `C:\Agentco`. Personal Agentco is separate from Samsung Display and Agentra.
@@ -8,7 +8,7 @@ A greeting, general conversation or personal-assistant query is NOT permission t
 ## Current development task (READ ONLY THESE FIRST)
 - Work order: `docs/work-orders/S2_SAMSUNGPOP_READ_SAVE.md`.
 - Assigned branch: `feature/s2-samsungpop-read-save-20261015`, based on authoritative `origin/main` at `0a6e8bdb956da188845aededbd6347abe1578751`.
-- Intent: user-supervised `/samsungpop collect` reads an already-visible Samsung POP balance/holdings screen, saves timestamped local JSON under ignored `results/samsungpop/snapshots/`, returns status/path only by default. Reuse S1 browser and Pi Extension. This is the first example of a future cross-site read/save assistant (hotel/air/shops later, **not now**).
+- Intent: fix `/samsungpop collect` to read visible balance/holdings data, save timestamped local JSON under ignored `results/samsungpop/snapshots/`, and return only status/path by default. Reuse S1 browser and Pi Extension. This is the first example of a future cross-site read/save assistant (hotel/air/shops later, **not now**).
 - Explicitly lightweight: no new Windows user, finance MCP, generalized broker platform, SQLite, 3-Worker orchestration, auto login or transactions. Current same-Windows-user approach is **not hard OS isolation**; do not claim otherwise. No credentials/cookies/identifiers collected or raw financial data sent to cloud LLM automatically.
 - Current authority: GPT writes design/work order; Pi local Main implements; optional local Codex implements if Pi delegates; Claude independently verifies exact pushed code SHA; GPT/user gate merge.
 
@@ -25,3 +25,7 @@ Last local inventory: `feature/s1-samsungpop-readonly-20261014` @ `3395c3910b94b
 
 ## Context budget
 Read `CURRENT_TASK.md` + active S2 work order and only changed components it names; skip old S1 review histories, repeated full tests, redundant worker calls. When implemented, update task state based on evidence; report mock vs live separately.
+## Immediate rework handoff
+- First read the appended GPT review in `docs/work-orders/S2_SAMSUNGPOP_READ_SAVE.md` (commit `ddd9831`); fix collector→JSON writer, lost result fields, unmasked account digits, and session close handling, with real fake-fixture extraction/persistence tests.
+- Use feature S2 branch current remote HEAD, never force push or reset the user's divergent dirty local branch. A temporary worktree is preferred. Preserve settings, all stashes, existing profile/auth and local `cd04aca` commit.
+- Implement/test/commit/push ONLY the S2 feature branch; no actual finance site, no auto login/trading. Then independently review new SHA.
