@@ -102,3 +102,23 @@ Stop on local Git conflict or any unforeseen sensitive-data exposure rather than
 - Small cost: one implementer (Pi or local Codex CLI) and one independent Claude review after implementation SHA. No extra workers/old test suites without relevant changed code.
 
 Do not state S2 is finished until a local JSON snapshot from actual fixture data is verified.
+
+---
+
+## GPT review — 2026-10-15, rework commit 6f9b0f9 (small final correction)
+
+**Static source verdict: REWORK REQUIRED, LIVE=NOT_RUN.** Remote fast-forward push verified. The new `collect.mjs` includes totals/holdings extraction and direct JSON file write, but source does not substantiate the claimed end-to-end data/persistence verification.
+
+### Must-fix, strictly minimal
+
+1. **Keep returned metadata across both adapters.** `collect.mjs` emits `saved_path`, `totals_count`, `positions_count`, but `scripts/samsungpop-controller.mjs:sanitizeCollect` returns only five enums and drops all three. Add bounded, validated optional metadata there (relative snapshots path only; integers with reasonable limits), and keep the Pi extension formatter metadata-only. Missing session/failed child in collect must return a **collect-shaped ERROR/BROWSER_UNAVAILABLE**, not a status object with undefined `collect_code`. No financial amounts in logs or command results.
+2. **Replace old collect tests with real assertions.** `scripts/samsungpop-collect.test.mjs` was not changed in 6f9b0f9 and still asserts obsolete `error_code` and old `ACCOUNT_NUMBER_MASKED`; tracked `scripts/samsungpop-collect.test.mjs.bak` merely duplicates the obsolete test. Remove the tracked `.bak` after ensuring the original test is preserved in Git history, replace original test with fixture-backed tests of the actual production parser and writer, not just command dispatch/no-session. Assert concrete four totals and three positions, positive/negative parsing, nulls, no account-number sentinel, two distinct saved JSON files read back, and metadata through controller→Pi. Do not claim fixture extraction/PERSISTENCE PASS without executing those tests.
+3. **Page detection must work with the real site.** `determinePageType()` currently depends solely on English words `balance|holding|account|asset` in URL pathname. This cannot be presumed true of Samsung POP; allow a deliberate user-visible current tab whose page structure has validated financial markers. Do not save on unrelated homepage or random banking page, or attach to another browser. If actual selectors are unknown, mark live `SCHEMA_CHANGED/NOT_ON_BALANCE_PAGE` and stop; first local live validation is user-supervised and no account details go to model.
+4. **Snapshot integrity.** `writeSnapshot()` currently writes directly (not atomically) to an ISO millisecond filename (collisions possible); update to unique no-overwrite, temporary-write + atomic rename/replace discipline appropriate for Windows. Log only fixed sanitized error codes. Maintain ignored `results/samsungpop/snapshots`, data schema, no account identifiers, no raw data in model/tool output.
+5. **Honest runtime behavior.** `waitForExit:false` avoids session-file deletion but does not by itself prove success/error/timeout semantics. Verify `open→status→status→collect→status` with synthetic session. Existing S1 behavioral source-pattern assertion can be updated *after* behavior is proven; do not mislabel 18/19 as a complete regression pass.
+
+### Scope and reporting
+
+No new architecture, OS accounts, separate MCP, SQL, cloud API, site-wide crawling, trading, login automation, or historical regression marathon. No real bank site access until mock tests prove saved JSON and user is present. Mark `CDP_OWNERSHIP=NOT_VERIFIED` until reliable process/session association is achieved, and do not claim a hard security boundary for same-user processes. Preserve canonical dirty `pi-dev/settings.json`, stash 3, profiles, local `cd04aca`, and the stuck temporary worktree; clean the temporary worktree only after proving no valuable changes and closing its processes.
+
+Do not reset hard or force push. Work on latest remote S2 feature branch, commit/push only this branch. Report `IMPLEMENTATION_SHA`, `RUN_TEST_COMMANDS`, `MOCK_EXTRACT`, `SNAPSHOT_REOPEN`, `CONTROLLER_METADATA`, `SESSION_SEQUENCE`, `LIVE=NOT_RUN`, `PUSH`. Independent Claude review after implementation, then GPT/user main gate.
