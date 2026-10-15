@@ -187,6 +187,38 @@ describe('S1 Samsung POP - Isolation Gate Synthetic Tests', () => {
     assert.ok(!mcpContent.mcpServers['samsung-pop'], 'No banking MCP server (alt name)');
   });
 
+  test('Actual behavioral isolation: controller exports sanitize with fixed enums only', async () => {
+    // Exercise the actual production controller module
+    const controllerPath = resolve(root, 'scripts', 'samsungpop-controller.mjs');
+    const controllerModule = await import('file://' + controllerPath);
+
+    assert.strictEqual(typeof controllerModule.sanitizeStatus, 'function', 'sanitizeStatus must be exported');
+    assert.strictEqual(typeof controllerModule.BANKING_PROFILE_DIR, 'string', 'BANKING_PROFILE_DIR must be defined');
+
+    // Fixed enums only - no leakage from extra fields
+    const result = controllerModule.sanitizeStatus({
+      state: 'LOGGED_IN', browser: 'RUNNING', site: 'SAMSUNGPOP', auth: 'LOGGED_IN', error_code: 'NONE',
+      extra_session: 'FAKE_SESSION_COOKIE=samsungpop-session-12345',
+      extra_account: '110-222-333333',
+      extra_balance: 50000000,
+    });
+
+    assert.strictEqual(result.state, 'LOGGED_IN');
+    assert.strictEqual(result.auth, 'LOGGED_IN');
+    assert.strictEqual(result.error_code, 'NONE');
+
+    const str = JSON.stringify(result);
+    assert.ok(!str.includes('FAKE_SESSION_COOKIE'), 'Sentinel must not leak');
+    assert.ok(!str.includes('110-222'), 'Account number must not leak');
+    assert.ok(!str.includes('50000000'), 'Balance must not leak');
+
+    // Unknown values default correctly
+    const bad = controllerModule.sanitizeStatus({ state: 'BAD', browser: 'BAD', site: 'BAD', auth: 'BAD', error_code: 'BAD' });
+    assert.strictEqual(bad.state, 'UNKNOWN');
+    assert.strictEqual(bad.auth, 'UNKNOWN');
+    assert.strictEqual(bad.error_code, 'UNKNOWN');
+  });
+
   test('Controller script uses single persistent profile, no fresh profile per run', async () => {
     const controllerPath = resolve(root, 'scripts', 'samsungpop-controller.mjs');
     const controllerContent = await fs.readFile(controllerPath, 'utf8');

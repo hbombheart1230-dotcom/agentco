@@ -183,24 +183,8 @@ async function determineAuthStatus(page) {
       if (el) return AuthEnum.LOGGED_OUT;
     }
 
-    // Check cookies/storage as fallback
-    const hasAuthData = await page.evaluate(() => {
-      try {
-        const cookies = document.cookie;
-        if (cookies.includes('auth') || cookies.includes('session') || cookies.includes('token') || cookies.includes('login')) return true;
-        for (let i = 0; i < localStorage.length; i++) {
-          const key = localStorage.key(i);
-          if (key && (key.includes('auth') || key.includes('token') || key.includes('user') || key.includes('login'))) return true;
-        }
-        for (let i = 0; i < sessionStorage.length; i++) {
-          const key = sessionStorage.key(i);
-          if (key && (key.includes('auth') || key.includes('token') || key.includes('user') || key.includes('login'))) return true;
-        }
-        return false;
-      } catch { return false; }
-    }).catch(() => false);
-
-    return hasAuthData ? AuthEnum.LOGGED_IN : AuthEnum.LOGGED_OUT;
+    // NO cookie/localStorage fallback - ambiguous = UNKNOWN
+    return AuthEnum.UNKNOWN;
   } catch {
     return AuthEnum.UNKNOWN;
   }
