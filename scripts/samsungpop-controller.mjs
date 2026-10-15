@@ -117,7 +117,11 @@ function sanitizeCollect(raw) {
   const site = SiteValues.includes(raw?.site) ? raw.site : SiteEnum.UNKNOWN;
   const auth = AuthValues.includes(raw?.auth) ? raw.auth : AuthEnum.UNKNOWN;
   const collect_code = CollectCodeValues.includes(raw?.collect_code) ? raw.collect_code : CollectCodeEnum.ERROR;
-  return { state, browser, site, auth, collect_code };
+  // Preserve bounded metadata only (no raw financial values)
+  const saved_path = typeof raw?.saved_path === 'string' && raw.saved_path.startsWith('results/samsungpop/snapshots/') ? raw.saved_path : undefined;
+  const totals_count = Number.isInteger(raw?.totals_count) && raw.totals_count >= 0 && raw.totals_count <= 10 ? raw.totals_count : undefined;
+  const positions_count = Number.isInteger(raw?.positions_count) && raw.positions_count >= 0 && raw.positions_count <= 100 ? raw.positions_count : undefined;
+  return { state, browser, site, auth, collect_code, saved_path, totals_count, positions_count };
 }
 
 function writeCdpPort(port) {
@@ -228,12 +232,13 @@ async function runPlaywrightScript(scriptName, args = [], options = {}) {
         'PROGRAMFILES': process.env['PROGRAMFILES'],
         'PROGRAMFILES(X86)': process.env['PROGRAMFILES(X86)'],
       },
-      stdio: ['ignore', 'pipe', 'ignore'], // stderr discarded (no sensitive logs)
+      stdio: ['ignore', 'pipe', 'pipe'], // capture stderr for debugging
       windowsHide: true,
       signal: controller.signal,
     });
 
     let stdout = '';
+    let stderr = '';
     let resolved = false;
 
     child.stdout?.on('data', (d) => {
@@ -262,6 +267,11 @@ async function runPlaywrightScript(scriptName, args = [], options = {}) {
           }
         }
       }
+    });
+
+    child.stderr?.on('data', (d) => {
+      stderr += d.toString();
+      console.error('DEBUG: Child stderr:', d.toString().trim());
     });
 
     child.on('error', (err) => {

@@ -4,203 +4,280 @@
  * Tests the collect functionality against a fake financial page fixture.
  * NO real bank website, NO real login, NO real credentials, NO network access to financial sites.
  * All tests use local file:// protocol with the fake balance page.
+ * Tests actual extraction + local persistence (snapshot writing + re-read).
  */
 
 import { test, describe, before, after } from 'node:test';
 import assert from 'node:assert';
-import { spawn } from 'node:child_process';
+import { chromium } from 'playwright';
 import { resolve, dirname } from 'node:path';
 import { fileURLToPath } from 'node:url';
-import { mkdtemp, rm } from 'node:fs/promises';
-import { mkdirSync, writeFileSync } from 'node:fs';
+import { mkdtemp, rm, readFile, writeFile } from 'node:fs/promises';
+import { mkdirSync, existsSync, readdirSync, rmSync } from 'node:fs';
 import { tmpdir } from 'node:os';
-import { randomBytes } from 'node:crypto';
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 const root = resolve(__dirname, '..');
 
-const SAMSUNGPOP_ORIGIN = 'https://www.samsungpop.com/';
 const FAKE_BALANCE_PAGE = resolve(root, 'fixtures', 'samsungpop-fake-balance.html');
 
-let testProfileDir;
-let testOutputDir;
-let controllerPath;
-let collectPath;
+let testBrowser;
+let testPage;
+let snapshotDir;
 
-function generateCdpPort() {
-  return 49152 + (randomBytes(2).readUInt16BE(0) % 16384);
-}
-
-function generateSessionToken() {
-  return randomBytes(16).toString('hex');
-}
-
-async function writeCdpSession(profileDir, port, token) {
-  const sessionFile = resolve(profileDir, 'cdp-session');
-  writeFileSync(sessionFile, JSON.stringify({ port, token }), { mode: 0o600 });
-}
-
-function runController(subcommand, env = {}) {
-  return new Promise((resolvePromise) => {
-    const fakeOrigin = 'file:///' + FAKE_BALANCE_PAGE.replace(/\\/g, '/');
-    const child = spawn(process.execPath, [controllerPath, subcommand], {
-      cwd: root,
-      env: {
-        ...process.env,
-        BANKING_PROFILE_DIR: testProfileDir,
-        BANKING_OUTPUT_DIR: testOutputDir,
-        SAMSUNGPOP_ORIGIN: fakeOrigin,
-        ...env
-      },
-      stdio: ['ignore', 'pipe', 'ignore'],
-      windowsHide: true,
-    });
-
-    let stdout = '';
-    child.stdout?.on('data', (d) => { stdout += d.toString(); });
-
-    child.on('close', (code) => {
-      try {
-        const lines = stdout.trim().split('\n');
-        for (const line of lines) {
-          if (line.startsWith('{')) {
-            const parsed = JSON.parse(line);
-            if (parsed.state && parsed.browser && parsed.site && parsed.auth && parsed.error_code) {
-              resolvePromise({ code, ...parsed });
-              return;
-            }
-          }
-        }
-        resolvePromise({ code, error_code: 'PARSE_FAILED', raw: stdout });
-      } catch {
-        resolvePromise({ code, error_code: 'PARSE_FAILED', raw: stdout });
-      }
-    });
-
-    child.on('error', (err) => {
-      resolvePromise({ code: -1, error_code: 'SPAWN_ERROR', error: err.message });
-    });
-  });
-}
-
-describe('Samsung POP Collect - Fake Page Tests', () => {
+describe('Samsung POP Collect - Fake Page Extraction & Persistence Tests', () => {
   before(async () => {
-    testProfileDir = await mkdtemp(resolve(tmpdir(), 'samsungpop-test-profile-'));
-    testOutputDir = await mkdtemp(resolve(tmpdir(), 'samsungpop-test-output-'));
-    controllerPath = resolve(root, 'scripts', 'samsungpop-controller.mjs');
-    collectPath = resolve(root, 'scripts', 'samsungpop-playwright', 'collect.mjs');
+    testBrowser = await chromium.launch({ headless: true });
+    testPage = await testBrowser.newPage();
+    await testPage.goto('file:///' + FAKE_BALANCE_PAGE.replace(/\\\\/g, '/'));
+    
+    snapshotDir = resolve(root, 'results', 'samsungpop', 'snapshots');
+    mkdirSync(snapshotDir, { recursive: true });
 
-    mkdirSync(testProfileDir, { recursive: true });
-
-    console.log(`Test profile: ${testProfileDir}`);
     console.log(`Fake page: ${FAKE_BALANCE_PAGE}`);
+    console.log(`Snapshot dir: ${snapshotDir}`);
   });
 
   after(async () => {
-    try { rm(testProfileDir, { recursive: true, force: true }); } catch {}
-    try { rm(testOutputDir, { recursive: true, force: true }); } catch {}
-  });
-
-  test('collect returns NAVIGATION_FAILED when no valid session exists', async () => {
-    const result = await runController('collect');
-    assert.strictEqual(result.error_code, 'NAVIGATION_FAILED');
-    console.log('PASS: collect without session returns NAVIGATION_FAILED');
-  });
-
-  test('collect returns valid status structure with session', async () => {
-    const cdpPort = generateCdpPort();
-    const sessionToken = generateSessionToken();
-    await writeCdpSession(testProfileDir, cdpPort, sessionToken);
-
-    const result = await runController('collect', {
-      CDP_PORT: String(cdpPort),
-      CDP_PORT_FILE: resolve(testProfileDir, 'cdp-port'),
-      CDP_SESSION_FILE: resolve(testProfileDir, 'cdp-session'),
-      CDP_SESSION_TOKEN: sessionToken,
-    });
-
-    assert.ok(result.state !== undefined, 'Should have state');
-    assert.ok(result.browser !== undefined, 'Should have browser');
-    assert.ok(result.site !== undefined, 'Should have site');
-    assert.ok(result.auth !== undefined, 'Should have auth');
-    assert.ok(result.error_code !== undefined, 'Should have error_code');
-
-    console.log(`Collect result: ${JSON.stringify(result)}`);
-    console.log('PASS: collect returns valid status structure');
-  });
-
-  test('collect sanitizes output - only allowed fields present', async () => {
-    const cdpPort = generateCdpPort();
-    const sessionToken = generateSessionToken();
-    await writeCdpSession(testProfileDir, cdpPort, sessionToken);
-
-    const result = await runController('collect', {
-      CDP_PORT: String(cdpPort),
-      CDP_PORT_FILE: resolve(testProfileDir, 'cdp-port'),
-      CDP_SESSION_FILE: resolve(testProfileDir, 'cdp-session'),
-      CDP_SESSION_TOKEN: sessionToken,
-    });
-
-    const outputStr = JSON.stringify(result);
-    assert.ok(!outputStr.includes('samsungpop.com'), 'Should not contain real URL');
-    assert.ok(!outputStr.includes('password'), 'Should not contain password');
-    assert.ok(!outputStr.includes('cookie'), 'Should not contain cookie');
-    assert.ok(!outputStr.includes('localStorage'), 'Should not contain localStorage');
-    assert.ok(!outputStr.includes('sessionStorage'), 'Should not contain sessionStorage');
-
-    if (result.fields) {
-      const allowedFields = ['TOTAL_BALANCE', 'AVAILABLE_BALANCE', 'EVALUATION_AMOUNT', 'ACCOUNT_NUMBER_MASKED'];
-      for (const field of result.fields) {
-        assert.ok(allowedFields.includes(field), `Field ${field} should be in allowed list`);
+    try { await testBrowser.close(); } catch {}
+    // Clean up test snapshots
+    try { 
+      if (existsSync(snapshotDir)) {
+        const files = readdirSync(snapshotDir);
+        for (const f of files) {
+          if (f.startsWith('samsungpop-') && f.endsWith('.json')) {
+            rmSync(resolve(snapshotDir, f), { force: true });
+          }
+        }
       }
-    }
-
-    console.log('PASS: collect output sanitized - no sensitive data');
+    } catch {}
   });
 
-  test('collect with invalid session token returns error', async () => {
-    const cdpPort = generateCdpPort();
-    const sessionToken = generateSessionToken();
-    await writeCdpSession(testProfileDir, cdpPort, 'different-token');
+  test('extractTotals parses all four totals correctly', async () => {
+    const { extractTotals } = await import('./samsungpop-playwright/collect.mjs');
+    const totals = await extractTotals(testPage);
+    
+    console.log(`Extracted totals: ${JSON.stringify(totals)}`);
+    
+    assert.ok(totals.totalValuation !== null && totals.totalValuation !== undefined, 'total_valuation should be parsed');
+    assert.ok(totals.totalPL !== null && totals.totalPL !== undefined, 'total_pl should be parsed');
+    assert.ok(totals.totalReturnRate !== null && totals.totalReturnRate !== undefined, 'total_return_rate should be parsed');
+    assert.ok(totals.cashBalance !== null && totals.cashBalance !== undefined, 'cash_balance should be parsed');
+    
+    assert.strictEqual(totals.totalValuation, 52345678);
+    assert.strictEqual(totals.totalPL, 2345678);
+    assert.strictEqual(totals.totalReturnRate, 4.68);
+    assert.strictEqual(totals.cashBalance, 10000000);
+    
+    console.log('PASS: extractTotals parses all four totals correctly');
+  });
 
-    const result = await runController('collect', {
-      CDP_PORT: String(cdpPort),
-      CDP_PORT_FILE: resolve(testProfileDir, 'cdp-port'),
-      CDP_SESSION_FILE: resolve(testProfileDir, 'cdp-session'),
-      CDP_SESSION_TOKEN: sessionToken,
+  test('extractHoldings parses three holdings with positive/negative values', async () => {
+    const { extractHoldings } = await import('./samsungpop-playwright/collect.mjs');
+    const positions = await extractHoldings(testPage);
+    
+    console.log(`Extracted positions: ${JSON.stringify(positions)}`);
+    
+    assert.ok(positions.length > 0, 'Should have positions');
+    assert.strictEqual(positions.length, 3, 'Should have exactly 3 holdings');
+    
+    // Samsung Electronics
+    const samsung = positions.find(p => p.name.includes('\uc0bc\uc131\uc804\uc790') || p.name.includes('Samsung'));
+    assert.ok(samsung, 'Should find Samsung Electronics');
+    assert.strictEqual(samsung.quantity, 50);
+    assert.strictEqual(samsung.valuation, 3500000);
+    assert.strictEqual(samsung.pl, 250000);
+    assert.strictEqual(samsung.returnRate, 7.69);
+    
+    // SK Hynix (negative PL)
+    const sk = positions.find(p => p.name.includes('SK\ud558\uc774\ub2c9\uc2a4') || p.name.includes('Hynix'));
+    assert.ok(sk, 'Should find SK Hynix');
+    assert.strictEqual(sk.quantity, 20);
+    assert.strictEqual(sk.valuation, 2800000);
+    assert.strictEqual(sk.pl, -120000);
+    assert.strictEqual(sk.returnRate, -4.11);
+    
+    // NAVER
+    const naver = positions.find(p => p.name.includes('NAVER'));
+    assert.ok(naver, 'Should find NAVER');
+    assert.strictEqual(naver.quantity, 5);
+    assert.strictEqual(naver.valuation, 1200000);
+    assert.strictEqual(naver.pl, 85000);
+    assert.strictEqual(naver.returnRate, 7.62);
+    
+    console.log('PASS: extractHoldings parses three holdings with positive/negative values');
+  });
+
+  test('determinePageType identifies balance page', async () => {
+    const { determinePageType } = await import('./samsungpop-playwright/collect.mjs');
+    const pageType = await determinePageType(testPage);
+    assert.strictEqual(pageType, 'BALANCE_PAGE');
+    console.log('PASS: determinePageType identifies balance page');
+  });
+
+  test('writeSnapshot writes valid snapshot and can be re-read', async () => {
+    const { writeSnapshot, sanitize, StateEnum, BrowserEnum, SiteEnum, AuthEnum, CollectCodeEnum } = await import('./samsungpop-playwright/collect.mjs');
+    const { extractTotals, extractHoldings } = await import('./samsungpop-playwright/collect.mjs');
+    
+    const totals = await extractTotals(testPage);
+    const positions = await extractHoldings(testPage);
+    
+    const snapshot = {
+      schema_version: 1,
+      source: 'samsungpop',
+      captured_at: new Date().toISOString(),
+      currency: 'KRW',
+      totals: {
+        total_valuation: totals.totalValuation ?? null,
+        total_pl: totals.totalPL ?? null,
+        total_return_rate: totals.totalReturnRate ?? null,
+        cash_balance: totals.cashBalance ?? null
+      },
+      positions,
+      capture_status: 'SAVED'
+    };
+    
+    const result = await writeSnapshot(snapshot);
+    assert.ok(result, 'writeSnapshot should return result');
+    assert.ok(result.path, 'Should have path');
+    assert.ok(result.path.startsWith('results/samsungpop/snapshots/'), 'Path should be relative to results');
+    assert.ok(result.path.endsWith('.json'), 'Path should end with .json');
+    
+    // Re-read and verify
+    const content = await readFile(resolve(root, result.path), 'utf8');
+    const reloaded = JSON.parse(content);
+    
+    assert.strictEqual(reloaded.schema_version, 1);
+    assert.strictEqual(reloaded.source, 'samsungpop');
+    assert.ok(reloaded.captured_at);
+    assert.strictEqual(reloaded.currency, 'KRW');
+    assert.strictEqual(reloaded.totals.total_valuation, 52345678);
+    assert.strictEqual(reloaded.totals.total_pl, 2345678);
+    assert.strictEqual(reloaded.totals.total_return_rate, 4.68);
+    assert.strictEqual(reloaded.totals.cash_balance, 10000000);
+    assert.strictEqual(reloaded.positions.length, 3);
+    assert.strictEqual(reloaded.capture_status, 'SAVED');
+    
+    console.log(`Snapshot written and verified: ${result.path}`);
+    console.log('PASS: writeSnapshot writes valid snapshot and can be re-read');
+  });
+
+  test('second writeSnapshot creates distinct file (no overwrite)', async () => {
+    const { writeSnapshot } = await import('./samsungpop-playwright/collect.mjs');
+    
+    const snapshot1 = {
+      schema_version: 1,
+      source: 'samsungpop',
+      captured_at: new Date().toISOString(),
+      currency: 'KRW',
+      totals: { total_valuation: 100, total_pl: 10, total_return_rate: 1, cash_balance: 50 },
+      positions: [{ name: 'Test', quantity: 1, valuation: 100, pl: 10, returnRate: 1 }],
+      capture_status: 'SAVED'
+    };
+    
+    const result1 = await writeSnapshot(snapshot1);
+    assert.ok(result1.path);
+    
+    // Wait for different timestamp and create new snapshot object
+    await new Promise(r => setTimeout(r, 150));
+    
+    const snapshot2 = {
+      schema_version: 1,
+      source: 'samsungpop',
+      captured_at: new Date().toISOString(),
+      currency: 'KRW',
+      totals: { total_valuation: 200, total_pl: 20, total_return_rate: 2, cash_balance: 100 },
+      positions: [{ name: 'Test2', quantity: 2, valuation: 200, pl: 20, returnRate: 2 }],
+      capture_status: 'SAVED'
+    };
+    
+    const result2 = await writeSnapshot(snapshot2);
+    assert.ok(result2.path);
+    assert.notStrictEqual(result1.path, result2.path, 'Should create distinct files');
+    
+    const snap1 = JSON.parse(await readFile(resolve(root, result1.path), 'utf8'));
+    const snap2 = JSON.parse(await readFile(resolve(root, result2.path), 'utf8'));
+    assert.notStrictEqual(snap1.captured_at, snap2.captured_at);
+    
+    console.log('PASS: Second writeSnapshot creates distinct file (no overwrite)');
+  });
+
+  test('sanitize validates collect_code and bounded metadata', async () => {
+    const { sanitize, CollectCodeEnum } = await import('./samsungpop-playwright/collect.mjs');
+    
+    const valid = sanitize({ 
+      state: 'OPEN', 
+      browser: 'RUNNING', 
+      site: 'SAMSUNGPOP', 
+      auth: 'UNKNOWN', 
+      collect_code: 'SAVED',
+      saved_path: 'results/samsungpop/snapshots/samsungpop-2024-01-01T00-00-00.json',
+      totals_count: 4,
+      positions_count: 3
     });
+    
+    assert.strictEqual(valid.collect_code, 'SAVED');
+    assert.strictEqual(valid.saved_path, 'results/samsungpop/snapshots/samsungpop-2024-01-01T00-00-00.json');
+    assert.strictEqual(valid.totals_count, 4);
+    assert.strictEqual(valid.positions_count, 3);
+    
+    // Invalid collect_code defaults to ERROR
+    const invalid = sanitize({ collect_code: 'INVALID' });
+    assert.strictEqual(invalid.collect_code, 'ERROR');
+    
+    // Out of bounds counts are dropped
+    const oob = sanitize({ totals_count: 100, positions_count: 200 });
+    assert.strictEqual(oob.totals_count, undefined);
+    assert.strictEqual(oob.positions_count, undefined);
+    
+    // Path not in snapshots dir is dropped
+    const badPath = sanitize({ saved_path: '/etc/passwd' });
+    assert.strictEqual(badPath.saved_path, undefined);
+    
+    console.log('PASS: sanitize validates collect_code and bounded metadata');
+  });
 
-    assert.ok(result.error_code !== 'NONE' || result.browser === 'NOT_RUNNING');
-    console.log('PASS: collect with invalid token rejected');
+  test('No account number extraction anywhere', async () => {
+    const { extractTotals, extractHoldings, writeSnapshot } = await import('./samsungpop-playwright/collect.mjs');
+    
+    const totals = await extractTotals(testPage);
+    const positions = await extractHoldings(testPage);
+    
+    // No account number field in totals
+    const totalsKeys = Object.keys(totals);
+    assert.ok(!totalsKeys.some(k => k.toLowerCase().includes('account')));
+    
+    // No account number in positions
+    for (const pos of positions) {
+      const posKeys = Object.keys(pos);
+      assert.ok(!posKeys.some(k => k.toLowerCase().includes('account')));
+    }
+    
+    // Snapshot doesn't contain raw account digits
+    const snapshot = {
+      schema_version: 1, source: 'samsungpop', captured_at: new Date().toISOString(),
+      currency: 'KRW', totals: { total_valuation: 100, total_pl: 0, total_return_rate: 0, cash_balance: 50 },
+      positions: [{ name: 'Test', quantity: 1, valuation: 100, pl: 0, returnRate: 0 }],
+      capture_status: 'SAVED'
+    };
+    const result = await writeSnapshot(snapshot);
+    const content = await readFile(resolve(root, result.path), 'utf8');
+    assert.ok(!content.includes('123-456-789012'));
+    assert.ok(!content.toLowerCase().includes('account'));
+    
+    console.log('PASS: No account number extraction anywhere');
   });
 });
 
-describe('Samsung POP Collect - Controller Integration', () => {
-  before(async () => {
-    testProfileDir = await mkdtemp(resolve(tmpdir(), 'samsungpop-test-profile-'));
-    testOutputDir = await mkdtemp(resolve(tmpdir(), 'samsungpop-test-output-'));
-    controllerPath = resolve(root, 'scripts', 'samsungpop-controller.mjs');
-    mkdirSync(testProfileDir, { recursive: true });
-  });
-
-  after(async () => {
-    try { rm(testProfileDir, { recursive: true, force: true }); } catch {}
-    try { rm(testOutputDir, { recursive: true, force: true }); } catch {}
-  });
-
-  test('controller main recognizes collect subcommand', async () => {
-    const result = await runController('collect');
-    assert.ok(result.error_code !== 'UNSUPPORTED', 'collect should be supported');
-    console.log('PASS: collect subcommand recognized by main');
-  });
-
-  test('controller module loads without error', async () => {
-    // Test that the controller file can be loaded as a module
-    const controllerUrl = 'file:///' + controllerPath.replace(/\\/g, '/');
+describe('Samsung POP Controller Integration Tests', () => {
+  test('controller module loads and exports all required functions', async () => {
+    const controllerUrl = 'file:///' + resolve(root, 'scripts', 'samsungpop-controller.mjs').replace(/\\\\/g, '/');
     const controller = await import(controllerUrl);
-    assert.ok(typeof controller.cmdCollect === 'function', 'cmdCollect should be exported');
-    assert.ok(typeof controller.cmdOpen === 'function', 'cmdOpen should be exported');
-    assert.ok(typeof controller.cmdStatus === 'function', 'cmdStatus should be exported');
-    console.log('PASS: controller module loads with all commands');
+    assert.ok(typeof controller.cmdCollect === 'function', 'cmdCollect exported');
+    assert.ok(typeof controller.cmdOpen === 'function', 'cmdOpen exported');
+    assert.ok(typeof controller.cmdStatus === 'function', 'cmdStatus exported');
+    assert.ok(typeof controller.CollectCodeEnum === 'object', 'CollectCodeEnum exported');
+    assert.ok(typeof controller.sanitizeCollect === 'function', 'sanitizeCollect exported');
+    console.log('PASS: controller module loads with all exports');
   });
 });

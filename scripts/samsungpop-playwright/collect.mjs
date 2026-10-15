@@ -73,7 +73,11 @@ function sanitize(raw) {
   const site = SiteValues.includes(raw?.site) ? raw.site : SiteEnum.UNKNOWN;
   const auth = AuthValues.includes(raw?.auth) ? raw.auth : AuthEnum.UNKNOWN;
   const collect_code = CollectCodeValues.includes(raw?.collect_code) ? raw.collect_code : CollectCodeEnum.ERROR;
-  return { state, browser, site, auth, collect_code };
+  // Preserve bounded metadata only (no raw financial values)
+  const saved_path = typeof raw?.saved_path === 'string' && raw.saved_path.startsWith('results/samsungpop/snapshots/') ? raw.saved_path : undefined;
+  const totals_count = Number.isInteger(raw?.totals_count) && raw.totals_count >= 0 && raw.totals_count <= 10 ? raw.totals_count : undefined;
+  const positions_count = Number.isInteger(raw?.positions_count) && raw.positions_count >= 0 && raw.positions_count <= 100 ? raw.positions_count : undefined;
+  return { state, browser, site, auth, collect_code, saved_path, totals_count, positions_count };
 }
 
 function parseKRW(text) {
@@ -164,9 +168,17 @@ async function determinePageType(page) {
   try {
     const url = new URL(page.url());
     const pathname = url.pathname.toLowerCase();
-    if (pathname.includes('balance') || pathname.includes('holding') || pathname.includes('account') || pathname.includes('asset')) {
+    // Korean/English balance page keywords - must be validated against live Samsung POP
+    if (pathname.includes('balance') || pathname.includes('holding') || pathname.includes('account') || pathname.includes('asset') ||
+        pathname.includes('잔고') || pathname.includes('보유') || pathname.includes('계좌') || pathname.includes('자산')) {
       return 'BALANCE_PAGE';
     }
+    // Also allow if page has financial table markers
+    const hasFinancialMarkers = await page.evaluate(() => {
+      const text = document.body.innerText || '';
+      return /총\s*평가|총\s*손익|총\s*수익률|예수금|보유종목|종목명|수량|평가금액|손익|수익률/.test(text);
+    });
+    if (hasFinancialMarkers) return 'BALANCE_PAGE';
   } catch {}
   return 'OTHER';
 }
@@ -175,9 +187,14 @@ async function writeSnapshot(data) {
   try {
     mkdirSync(SNAPSHOT_DIR, { recursive: true });
     const timestamp = new Date().toISOString().replace(/[:.]/g, '-');
-    const filename = `samsungpop-${timestamp}.json`;
+    const randomSuffix = Math.random().toString(36).substring(2, 8);
+    const filename = `samsungpop-${timestamp}-${randomSuffix}.json`;
     const filepath = resolve(SNAPSHOT_DIR, filename);
-    writeFileSync(filepath, JSON.stringify(data, null, 2), { mode: 0o600 });
+    const tempPath = filepath + '.tmp';
+    // Atomic write: write to temp, then rename
+    writeFileSync(tempPath, JSON.stringify(data, null, 2), { mode: 0o600 });
+    const { renameSync } = await import('node:fs');
+    renameSync(tempPath, filepath);
     return { path: `results/samsungpop/snapshots/${filename}`, absolute: filepath };
   } catch (err) {
     console.error('Snapshot write failed:', err.message);
@@ -384,5 +401,8 @@ async function main() {
     process.exitCode = 1;
   }
 }
+
+// Export extraction functions for direct testing
+export { parseKRW, parsePercent, parseIntSafe, extractTotals, extractHoldings, determinePageType, writeSnapshot, sanitize, StateEnum, BrowserEnum, SiteEnum, AuthEnum, CollectCodeEnum, HOLDING_SELECTORS, TOTAL_SELECTORS };
 
 main();
