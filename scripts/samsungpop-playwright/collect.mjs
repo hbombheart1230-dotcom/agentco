@@ -26,7 +26,8 @@ const PROFILE_DIR = process.env.BANKING_PROFILE_DIR;
 const CDP_PORT_FILE = process.env.CDP_PORT_FILE;
 const CDP_SESSION_FILE = process.env.CDP_SESSION_FILE;
 const CDP_SESSION_TOKEN = process.env.CDP_SESSION_TOKEN;
-const SNAPSHOT_DIR = resolve(root, 'results', 'samsungpop', 'snapshots');
+// Default snapshot directory (production) - can be overridden by explicit parameter
+const DEFAULT_SNAPSHOT_DIR = resolve(root, 'results', 'samsungpop', 'snapshots');
 
 // S2 whitelisted fields for holdings extraction
 // These selectors must be validated against live Samsung POP during user-supervised session
@@ -192,27 +193,30 @@ async function determinePageType(page) {
   return 'OTHER';
 }
 
-async function writeSnapshot(data) {
+async function writeSnapshot(data, snapshotDir = DEFAULT_SNAPSHOT_DIR) {
   try {
-    mkdirSync(SNAPSHOT_DIR, { recursive: true });
+    mkdirSync(snapshotDir, { recursive: true });
     const timestamp = new Date().toISOString().replace(/[:.]/g, '-');
     const randomSuffix = Math.random().toString(36).substring(2, 8);
     const filename = `samsungpop-${timestamp}-${randomSuffix}.json`;
-    const filepath = resolve(SNAPSHOT_DIR, filename);
+    const filepath = resolve(snapshotDir, filename);
     const tempPath = filepath + '.tmp';
-    // Atomic write: write to temp, then rename
+    // Atomic write: write to temp, then rename with no-clobber
     writeFileSync(tempPath, JSON.stringify(data, null, 2), { mode: 0o600 });
-    const { renameSync } = await import('node:fs');
+    const { renameSync, constants } = await import('node:fs');
     try {
+      // Use O_EXCL equivalent: fail if destination exists
       renameSync(tempPath, filepath);
     } catch (renameErr) {
-      // Windows rename may fail if dest exists, try unlink then rename
-      try { unlinkSync(filepath); } catch {}
-      renameSync(tempPath, filepath);
+      // On collision: clean up temp file, DO NOT unlink existing file
+      try { unlinkSync(tempPath); } catch {}
+      // Return null to indicate collision/failure - caller must handle
+      return null;
     }
     return { path: `results/samsungpop/snapshots/${filename}`, absolute: filepath };
   } catch (err) {
     // No raw error message in output
+    try { unlinkSync(resolve(snapshotDir, `samsungpop-${new Date().toISOString().replace(/[:.]/g, '-')}-*.tmp`)); } catch {}
     return null;
   }
 }

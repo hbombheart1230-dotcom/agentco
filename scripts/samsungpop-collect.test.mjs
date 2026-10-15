@@ -157,62 +157,51 @@ describe('Samsung POP Collect - Fake Page Extraction & Persistence Tests', () =>
     };
     
     // Use test-only snapshot dir for writeSnapshot
-    const originalSnapshotDir = process.env.SNAPSHOT_DIR;
-    process.env.SNAPSHOT_DIR = testSnapshotDir;
-    try {
-      const { writeSnapshot: ws } = await import('./samsungpop-playwright/collect.mjs');
-      const result = await ws(snapshot);
-      assert.ok(result, 'writeSnapshot should return result');
-      assert.ok(result.path, 'Should have path');
-      assert.ok(result.path.startsWith('results/samsungpop/snapshots/') || result.path.startsWith(testSnapshotDir), 'Path should be relative to results or test dir');
-      assert.ok(result.path.endsWith('.json'), 'Path should end with .json');
-      
-      // Re-read and verify
-      const content = await readFile(resolve(root, result.path), 'utf8');
-      const reloaded = JSON.parse(content);
-      
-      assert.strictEqual(reloaded.schema_version, 1);
-      assert.strictEqual(reloaded.source, 'samsungpop');
-      assert.ok(reloaded.captured_at);
-      assert.strictEqual(reloaded.currency, 'KRW');
-      assert.strictEqual(reloaded.totals.total_valuation, 52345678);
-      assert.strictEqual(reloaded.totals.total_pl, 2345678);
-      assert.strictEqual(reloaded.totals.total_return_rate, 4.68);
-      assert.strictEqual(reloaded.totals.cash_balance, 10000000);
-      assert.strictEqual(reloaded.positions.length, 3);
-      assert.strictEqual(reloaded.capture_status, 'SAVED');
-      
-      console.log(`Snapshot written and verified: ${result.path}`);
-      console.log('PASS: writeSnapshot writes valid snapshot and can be re-read');
-    } finally {
-      if (originalSnapshotDir) process.env.SNAPSHOT_DIR = originalSnapshotDir;
-      else delete process.env.SNAPSHOT_DIR;
-    }
+    const result = await writeSnapshot(snapshot, testSnapshotDir);
+    assert.ok(result, 'writeSnapshot should return result');
+    assert.ok(result.path, 'Should have path');
+    assert.ok(result.path.endsWith('.json'), 'Path should end with .json');
+    assert.ok(result.absolute.startsWith(testSnapshotDir), 'Should be in test directory');
+    
+    // Re-read and verify
+    const content = await readFile(result.absolute, 'utf8');
+    const reloaded = JSON.parse(content);
+    
+    assert.strictEqual(reloaded.schema_version, 1);
+    assert.strictEqual(reloaded.source, 'samsungpop');
+    assert.ok(reloaded.captured_at);
+    assert.strictEqual(reloaded.currency, 'KRW');
+    assert.strictEqual(reloaded.totals.total_valuation, 52345678);
+    assert.strictEqual(reloaded.totals.total_pl, 2345678);
+    assert.strictEqual(reloaded.totals.total_return_rate, 4.68);
+    assert.strictEqual(reloaded.totals.cash_balance, 10000000);
+    assert.strictEqual(reloaded.positions.length, 3);
+    assert.strictEqual(reloaded.capture_status, 'SAVED');
+    
+    console.log(`Snapshot written and verified: ${result.absolute}`);
+    console.log('PASS: writeSnapshot writes valid snapshot and can be re-read');
   });
 
   test('second writeSnapshot creates distinct file (no overwrite)', async () => {
-      const { writeSnapshot } = await import('./samsungpop-playwright/collect.mjs');
+        const { writeSnapshot } = await import('./samsungpop-playwright/collect.mjs');
     
-      const snapshot1 = {
-        schema_version: 1,
-        source: 'samsungpop',
-        captured_at: new Date().toISOString(),
-        currency: 'KRW',
-        totals: { total_valuation: 100, total_pl: 10, total_return_rate: 1, cash_balance: 50 },
-        positions: [{ name: 'Test', quantity: 1, valuation: 100, pl: 10, returnRate: 1 }],
-        capture_status: 'SAVED'
-      };
+        const snapshot1 = {
+          schema_version: 1,
+          source: 'samsungpop',
+          captured_at: new Date().toISOString(),
+          currency: 'KRW',
+          totals: { total_valuation: 100, total_pl: 10, total_return_rate: 1, cash_balance: 50 },
+          positions: [{ name: 'Test', quantity: 1, valuation: 100, pl: 10, returnRate: 1 }],
+          capture_status: 'SAVED'
+        };
     
-      const originalSnapshotDir = process.env.SNAPSHOT_DIR;
-      process.env.SNAPSHOT_DIR = testSnapshotDir;
-      try {
-        const { writeSnapshot: ws } = await import('./samsungpop-playwright/collect.mjs');
-        const result1 = await ws(snapshot1);
-        assert.ok(result1.path);
-      
+        const result1 = await writeSnapshot(snapshot1, testSnapshotDir);
+        assert.ok(result1, 'First writeSnapshot should succeed');
+        assert.ok(result1.absolute.startsWith(testSnapshotDir), 'First snapshot in test dir');
+    
         // Wait for different timestamp and create new snapshot object
         await new Promise(r => setTimeout(r, 150));
-      
+    
         const snapshot2 = {
           schema_version: 1,
           source: 'samsungpop',
@@ -222,20 +211,17 @@ describe('Samsung POP Collect - Fake Page Extraction & Persistence Tests', () =>
           positions: [{ name: 'Test2', quantity: 2, valuation: 200, pl: 20, returnRate: 2 }],
           capture_status: 'SAVED'
         };
-      
-        const result2 = await ws(snapshot2);
-        assert.ok(result2.path);
-        assert.notStrictEqual(result1.path, result2.path, 'Should create distinct files');
-      
-        const snap1 = JSON.parse(await readFile(resolve(root, result1.path), 'utf8'));
-        const snap2 = JSON.parse(await readFile(resolve(root, result2.path), 'utf8'));
+    
+        const result2 = await writeSnapshot(snapshot2, testSnapshotDir);
+        assert.ok(result2, 'Second writeSnapshot should succeed');
+        assert.notStrictEqual(result1.absolute, result2.absolute, 'Should create distinct files');
+    
+        const snap1 = JSON.parse(await readFile(result1.absolute, 'utf8'));
+        const snap2 = JSON.parse(await readFile(result2.absolute, 'utf8'));
         assert.notStrictEqual(snap1.captured_at, snap2.captured_at);
-      
+    
         console.log('PASS: Second writeSnapshot creates distinct file (no overwrite)');
-      } finally {
-        delete process.env.SNAPSHOT_DIR;
-      }
-    });
+      });
 
   test('sanitize validates collect_code and bounded metadata', async () => {
     const { sanitize, CollectCodeEnum } = await import('./samsungpop-playwright/collect.mjs');
@@ -296,17 +282,10 @@ describe('Samsung POP Collect - Fake Page Extraction & Persistence Tests', () =>
       capture_status: 'SAVED'
     };
     
-    const originalSnapshotDir = process.env.SNAPSHOT_DIR;
-    process.env.SNAPSHOT_DIR = testSnapshotDir;
-    try {
-      const { writeSnapshot: ws } = await import('./samsungpop-playwright/collect.mjs');
-      const result = await ws(snapshot);
-      const content = await readFile(resolve(root, result.path), 'utf8');
-      assert.ok(!content.includes('123-456-789012'));
-      assert.ok(!content.toLowerCase().includes('account'));
-    } finally {
-      delete process.env.SNAPSHOT_DIR;
-    }
+    const result = await writeSnapshot(snapshot, testSnapshotDir);
+    const content = await readFile(result.absolute, 'utf8');
+    assert.ok(!content.includes('123-456-789012'));
+    assert.ok(!content.toLowerCase().includes('account'));
     
     console.log('PASS: No account number extraction anywhere');
   });

@@ -219,7 +219,8 @@ async function runPlaywrightScript(scriptName, args = [], options = {}) {
         ...process.env,
         BANKING_PROFILE_DIR: getBankingProfileDir(),
         BANKING_OUTPUT_DIR: getBankingOutputDir(),
-        SAMSUNGPOP_ORIGIN,
+        // Allow test to override origin via env; default to production origin
+        SAMSUNGPOP_ORIGIN: process.env.SAMSUNGPOP_ORIGIN || SAMSUNGPOP_ORIGIN,
         CDP_PORT: String(cdpPort),
         CDP_PORT_FILE: getCdpPortFile(),
         CDP_SESSION_FILE: getCdpSessionFile(),

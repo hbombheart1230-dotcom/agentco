@@ -131,24 +131,35 @@ export default function (pi: ExtensionAPI) {
   const controllerPath = resolve(root, 'scripts', 'samsungpop-controller.mjs');
 
   /** Execute controller command and return sanitized status */
-  async function runController(subcommand: 'open' | 'status' | 'collect'): Promise<Status | CollectStatus> {
-    const result = await pi.exec(process.execPath, [controllerPath, subcommand], {
-      cwd: root,
-      timeout: 60000,
-    });
-    if (result.code !== 0) {
-      return sanitizeStatus({ error_code: 'NAVIGATION_FAILED' });
-    }
-    try {
-      const parsed = JSON.parse(result.stdout.trim());
-      if (parsed.collect_code) {
-        return sanitizeCollect(parsed);
+    async function runController(subcommand: 'open' | 'status' | 'collect'): Promise<Status | CollectStatus> {
+      const result = await pi.exec(process.execPath, [controllerPath, subcommand], {
+        cwd: root,
+        timeout: 60000,
+      });
+      if (result.code !== 0) {
+        // Non-zero exit: return collect-shaped error for collect, status-shaped for others
+        if (subcommand === 'collect') {
+          return sanitizeCollect({ collect_code: 'ERROR' });
+        }
+        return sanitizeStatus({ error_code: 'NAVIGATION_FAILED' });
       }
-      return sanitizeStatus(parsed);
-    } catch {
-      return sanitizeStatus({ error_code: 'UNKNOWN' });
+      try {
+        const parsed = JSON.parse(result.stdout.trim());
+        if (parsed.collect_code) {
+          return sanitizeCollect(parsed);
+        }
+        // If collect subcommand but no collect_code in response, it's a malformed response
+        if (subcommand === 'collect') {
+          return sanitizeCollect({ collect_code: 'ERROR' });
+        }
+        return sanitizeStatus(parsed);
+      } catch {
+        if (subcommand === 'collect') {
+          return sanitizeCollect({ collect_code: 'ERROR' });
+        }
+        return sanitizeStatus({ error_code: 'UNKNOWN' });
+      }
     }
-  }
 
   /** /samsungpop open - Launch Edge with banking profile, open Samsung POP */
   pi.registerCommand('samsungpop', {
