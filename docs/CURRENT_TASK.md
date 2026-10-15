@@ -1,21 +1,27 @@
 # Agentco — CURRENT_TASK (2026-10-15)
 
-**State: NO ACTIVE IMPLEMENTATION TASK. S1 CLOSED / FUNCTIONAL PASS; next user-directed topic: S2 Samsung POP read-only information access design.**
+**State: S2 READ & SAVE APPROVED FOR LOCAL IMPLEMENTATION; work order lives on feature branch.** S1 functional PASS; S2 actual finance read/save has NOT been implemented/tested by GPT.
 
 ## Assistant-first default
-A greeting, general conversation or personal-assistant query is NOT permission to read repository docs, run Git, use workers, or access finance. Enter development mode only when the user explicitly requests development, review or a named project task. Follow root `AGENTS.md`. Canonical personal repo: `hbombheart1230-dotcom/agentco`; Windows workspace: `C:\Agentco`; remote `origin/main` is authoritative, but respect existing local work.
+A greeting, general conversation or personal-assistant query is NOT permission to inspect Git, start workers or access financial data. Enter development mode only for an explicitly requested task. Follow root \`AGENTS.md\`. Personal repo: \`hbombheart1230-dotcom/agentco\`; canonical Windows workspace: \`C:\Agentco\`. Personal Agentco is separate from Samsung Display and Agentra.
 
-## Accepted milestones
-- Existing P0/P1, P2, P5.1–P5.10 improvements remain in main. Some worker flows had **synthetic** PASS only: broad autonomous Pi→3 Workers is NOT a verified production feature.
-- Pi CLI is default Main; **Codex CLI (local/native)** implements when delegated; **Claude Code CLI (local/native)** independently reviews changed SHA; **Hermes CLI (local/native)** is optional for targeted testing, not mandatory. CLI may use paid external-model API providers; local CLI does not mean zero credits. ChatGPT = architect/final technical judgment; user = product direction and approval.
-- **S1 Samsung POP browser:** local Pi `/samsungpop open` and `/samsungpop status`; user manually logs in; status is fixed enum only, `auth=UNKNOWN` by design. User-supervised Pi local smoke PASS (open, two status calls, repeat open without new Edge, user login, two final statuses). Reported 41/41 offline isolated tests PASS. Claude Code CLI earlier CONDITIONAL_PASS, subsequent narrow auth cleanup independently diff-reviewed by GPT. Source implementation `3395c3910b94b54d51bed6c3d818825b4f78859a`; merged via [PR #3](https://github.com/hbombheart1230-dotcom/agentco/pull/3) at `14aa506ebd5499367eab6ba5ed29e437bf549445`. Detailed historical evidence: `docs/work-orders/S1_SAMSUNGPOP_BROWSER_READONLY.md`. **Do not reopen S1 or repeatedly reread old reviews without a newly observed failure.**
-- Repo branch-history consolidation (legacy P3/P5.1/old POP design retained in ancestry without overwriting newer code): `docs/BRANCH_CONSOLIDATION_20261015.md`.
+## Current development task (READ ONLY THESE FIRST)
+- Work order: \`docs/work-orders/S2_SAMSUNGPOP_READ_SAVE.md\`.
+- Assigned branch: \`feature/s2-samsungpop-read-save-20261015\`, based on authoritative \`origin/main\` at \`0a6e8bdb956da188845aededbd6347abe1578751\`.
+- Intent: user-supervised \`/samsungpop collect\` reads an already-visible Samsung POP balance/holdings screen, saves timestamped local JSON under ignored \`results/samsungpop/snapshots/\`, returns status/path only by default. Reuse S1 browser and Pi Extension. This is the first example of a future cross-site read/save assistant (hotel/air/shops later, **not now**).
+- Explicitly lightweight: no new Windows user, finance MCP, generalized broker platform, SQLite, 3-Worker orchestration, auto login or transactions. Current same-Windows-user approach is **not hard OS isolation**; do not claim otherwise. No credentials/cookies/identifiers collected or raw financial data sent to cloud LLM automatically.
+- Current authority: GPT writes design/work order; Pi local Main implements; optional local Codex implements if Pi delegates; Claude independently verifies exact pushed code SHA; GPT/user gate merge.
 
-## Next topic: Samsung POP S2 (DESIGN ONLY until explicitly assigned)
-Target: after user signs in manually in the dedicated Edge profile, user-approved **read-only** financial-information retrieval for the personal assistant. Begin with a thin scope: choose exact data fields (e.g. balances/positions), explicit user invocation, local-only extraction and a deliberately restricted JSON schema. Before accessing real account information, resolve CDP/browser-process ownership and secrets/PII handling, decide whether any data may reach external LLMs, and verify no orders/transfers/login automation. Make a new S2 work order only when user authorizes scope. Prefer native browser/extension/Skill/MCP, minimal custom code.
+## Local sync FIRST — preserve user changes
+Last local inventory: \`feature/s1-samsungpop-readonly-20261014\` @ \`3395c3910b94b54d51bed6c3d818825b4f78859a\`; dirty \`pi-dev/settings.json\`; **3 stashes** (p5-10, p2, main). Remote \`main\` currently \`0a6e8bdb956da188845aededbd6347abe1578751\`. GitHub creation of S2 feature branch does not update \`C:\Agentco\`.
+- Fetch; inspect local main and diff before switching; protect dirty/untracked/ignored work/settings/three stashes/profile; use only safe fast-forward branch updates.
+- No \`reset --hard\`, \`git clean\`, force switch, blind pull, stash pop/drop, profile/auth reads, or overwrites. If switching unsafe, STOP and report, do not code in old branch.
+- After safe sync, switch to fetched \`origin/feature/s2-samsungpop-read-save-20261015\`, read the linked S2 work order and only source files it identifies. Existing completed S1 work order/history and full smoke suite are not required.
 
-## First task when moving the local machine to the merged main
-`C:\Agentco` was last reported checked out on `feature/s1-samsungpop-readonly-20261014`, with an existing user-modified `pi-dev/settings.json` and **three stashes**. GitHub consolidation only touched remote. The next local Pi/Codex action must inspect Git status, protect that change and the three stashes, then sync to `origin/main` safely. No blind `reset --hard`, `stash pop`, clean, force checkout, profile access, or overwrite. No automatic deletion of legacy remote branches.
+## Accepted prior milestones (do not re-open)
+- P0/P1, P2, P5.1–P5.10 live in main; broad Pi→3-Worker automation is not a verified production feature.
+- S1: \`/samsungpop open\` and \`status\`, manual Edge login, status \`auth=UNKNOWN\`; user-supervised functional smoke PASS, no finance reads. Merged via PR #3, baseline feature SHA \`3395c3910b94b54d51bed6c3d818825b4f78859a\`. No need to re-test S1 except targeted S2 integration regressions.
+- Branch consolidation log \`docs/BRANCH_CONSOLIDATION_20261015.md\`. No remote branch deletion.
 
-## Context-budget rule
-For a new S2 design request read **this file** and `docs/BRANCH_CONSOLIDATION_20261015.md` first, then only the S1 interfaces/extension directly relevant. Avoid completed history, repeated all-tests runs, model overdelegation and speculative architecture. Keep implementation and verification separately owned when code actually changes.
+## Context budget
+Read \`CURRENT_TASK.md\` + active S2 work order and only changed components it names; skip old S1 review histories, repeated full tests, redundant worker calls. When implemented, update task state based on evidence; report mock vs live separately.
