@@ -22,10 +22,27 @@ const __dirname = dirname(fileURLToPath(import.meta.url));
 const root = resolve(__dirname, '..');
 
 const SAMSUNGPOP_ORIGIN = 'https://www.samsungpop.com/';
-const BANKING_PROFILE_DIR = resolve(process.env.USERPROFILE || process.env.HOME || '', '.agentco', 'browser-profile-banking');
-const BANKING_OUTPUT_DIR = resolve(process.env.USERPROFILE || process.env.HOME || '', '.agentco', 'browser-output-banking');
+const DEFAULT_BANKING_PROFILE_DIR = resolve(process.env.USERPROFILE || process.env.HOME || '', '.agentco', 'browser-profile-banking');
+const DEFAULT_BANKING_OUTPUT_DIR = resolve(process.env.USERPROFILE || process.env.HOME || '', '.agentco', 'browser-output-banking');
+
+// Backward-compat constant for tests that check exported BANKING_PROFILE_DIR
+const BANKING_PROFILE_DIR = resolve(process.env.BANKING_PROFILE_DIR || DEFAULT_BANKING_PROFILE_DIR);
+const BANKING_OUTPUT_DIR = resolve(process.env.BANKING_OUTPUT_DIR || DEFAULT_BANKING_OUTPUT_DIR);
 const CDP_PORT_FILE = resolve(BANKING_PROFILE_DIR, 'cdp-port');
 const CDP_SESSION_FILE = resolve(BANKING_PROFILE_DIR, 'cdp-session');
+
+function getBankingProfileDir() {
+  return resolve(process.env.BANKING_PROFILE_DIR || DEFAULT_BANKING_PROFILE_DIR);
+}
+function getBankingOutputDir() {
+  return resolve(process.env.BANKING_OUTPUT_DIR || DEFAULT_BANKING_OUTPUT_DIR);
+}
+function getCdpPortFile() {
+  return resolve(getBankingProfileDir(), 'cdp-port');
+}
+function getCdpSessionFile() {
+  return resolve(getBankingProfileDir(), 'cdp-session');
+}
 
 function generateCdpPort() {
   // Use a random port in the dynamic range (49152-65535)
@@ -37,13 +54,14 @@ function generateSessionToken() {
 }
 
 function writeCdpSession(port, token) {
-  writeFileSync(CDP_SESSION_FILE, JSON.stringify({ port, token }), { mode: 0o600 });
+  writeFileSync(getCdpSessionFile(), JSON.stringify({ port, token }), { mode: 0o600 });
 }
 
 function readCdpSession() {
-  if (!existsSync(CDP_SESSION_FILE)) return null;
+  const sessionFile = getCdpSessionFile();
+  if (!existsSync(sessionFile)) return null;
   try {
-    const content = readFileSync(CDP_SESSION_FILE, 'utf8').trim();
+    const content = readFileSync(sessionFile, 'utf8').trim();
     const data = JSON.parse(content);
     if (data && Number.isInteger(data.port) && data.port > 1024 && data.port < 65535 && typeof data.token === 'string') {
       return data;
@@ -53,7 +71,7 @@ function readCdpSession() {
 }
 
 function clearCdpSession() {
-  try { unlinkSync(CDP_SESSION_FILE); } catch {}
+  try { unlinkSync(getCdpSessionFile()); } catch {}
 }
 
 const StateEnum = { OPEN: 'OPEN', LOGGED_IN: 'LOGGED_IN', LOGGED_OUT: 'LOGGED_OUT', UNKNOWN: 'UNKNOWN', ERROR: 'ERROR' };
@@ -78,18 +96,19 @@ function sanitizeStatus(raw) {
 }
 
 function writeCdpPort(port) {
-  writeFileSync(CDP_PORT_FILE, String(port), { mode: 0o600 });
+  writeFileSync(getCdpPortFile(), String(port), { mode: 0o600 });
 }
 
 function readCdpPort() {
-  if (!existsSync(CDP_PORT_FILE)) return null;
-  const content = readFileSync(CDP_PORT_FILE, 'utf8').trim();
+  const portFile = getCdpPortFile();
+  if (!existsSync(portFile)) return null;
+  const content = readFileSync(portFile, 'utf8').trim();
   const port = parseInt(content, 10);
   return Number.isInteger(port) && port > 1024 && port < 65535 ? port : null;
 }
 
 function clearCdpPort() {
-  try { unlinkSync(CDP_PORT_FILE); } catch {}
+  try { unlinkSync(getCdpPortFile()); } catch {}
 }
 
 async function runPlaywrightScript(scriptName, args = [], options = {}) {
@@ -102,7 +121,7 @@ async function runPlaywrightScript(scriptName, args = [], options = {}) {
     // Ensure profile directory exists before writing session files
     try {
       const { mkdirSync } = await import('node:fs');
-      mkdirSync(BANKING_PROFILE_DIR, { recursive: true });
+      mkdirSync(getBankingProfileDir(), { recursive: true });
     } catch {}
     
     // Check for existing valid session (duplicate open handling)
@@ -113,9 +132,14 @@ async function runPlaywrightScript(scriptName, args = [], options = {}) {
         const { chromium } = await import('playwright');
         const browser = await chromium.connectOverCDP(`http://localhost:${existingSession.port}`, { timeout: 2000 });
         await browser.close();
-        // Session is valid - reuse it
-        cdpPort = existingSession.port;
-        sessionToken = existingSession.token;
+        // Session is valid - reuse it, return success without spawning new Edge
+        return sanitizeStatus({
+          state: StateEnum.OPEN,
+          browser: BrowserEnum.RUNNING,
+          site: SiteEnum.SAMSUNGPOP,
+          auth: AuthEnum.UNKNOWN,
+          error_code: ErrorCodeEnum.NONE
+        });
       } catch {
         // Stale session - generate new one
         cdpPort = generateCdpPort();
@@ -159,12 +183,12 @@ async function runPlaywrightScript(scriptName, args = [], options = {}) {
       cwd: root,
       env: {
         ...process.env,
-        BANKING_PROFILE_DIR,
-        BANKING_OUTPUT_DIR,
+        BANKING_PROFILE_DIR: getBankingProfileDir(),
+        BANKING_OUTPUT_DIR: getBankingOutputDir(),
         SAMSUNGPOP_ORIGIN,
         CDP_PORT: String(cdpPort),
-        CDP_PORT_FILE,
-        CDP_SESSION_FILE,
+        CDP_PORT_FILE: getCdpPortFile(),
+        CDP_SESSION_FILE: getCdpSessionFile(),
         CDP_SESSION_TOKEN: sessionToken,
         SYSTEMROOT: process.env.SYSTEMROOT,
         WINDIR: process.env.WINDIR,
@@ -189,7 +213,7 @@ async function runPlaywrightScript(scriptName, args = [], options = {}) {
 
     child.stdout?.on('data', (d) => {
       stdout += d.toString();
-      if (!waitForExit && !resolved) {
+      if (!resolved) {
         const lines = stdout.trim().split('\n');
         for (const line of lines) {
           if (line.startsWith('{')) {
@@ -272,4 +296,4 @@ if (process.argv[1] && resolve(process.argv[1]) === fileURLToPath(import.meta.ur
   });
 }
 
-export { cmdOpen, cmdStatus, sanitizeStatus, StateEnum, BrowserEnum, SiteEnum, AuthEnum, ErrorCodeEnum, BANKING_PROFILE_DIR, generateCdpPort, generateSessionToken, readCdpPort, writeCdpPort, clearCdpPort, readCdpSession, writeCdpSession, clearCdpSession, CDP_PORT_FILE, CDP_SESSION_FILE };
+export { cmdOpen, cmdStatus, sanitizeStatus, StateEnum, BrowserEnum, SiteEnum, AuthEnum, ErrorCodeEnum, BANKING_PROFILE_DIR, BANKING_OUTPUT_DIR, CDP_PORT_FILE, CDP_SESSION_FILE, generateCdpPort, generateSessionToken, readCdpPort, writeCdpPort, clearCdpPort, readCdpSession, writeCdpSession, clearCdpSession, getBankingProfileDir, getBankingOutputDir, getCdpPortFile, getCdpSessionFile };
