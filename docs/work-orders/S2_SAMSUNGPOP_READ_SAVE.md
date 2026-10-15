@@ -73,3 +73,32 @@ Return concise:
 `BASE_SHA`, `BRANCH`, `IMPLEMENTATION_SHA`, `SYNC_RESULT`, `PRESERVED_LOCAL_CHANGES`, `CHANGED_FILES`, `MOCK_TESTS`, `LIVE`, `SAVE_PATH_PATTERN`, `DATA_EXPOSURE`, `KNOWN_LIMITATIONS`, `PUSH`.
 
 Stop on local Git conflict or any unforeseen sensitive-data exposure rather than weakening the safety check.
+
+
+---
+
+## GPT code review — 2026-10-15, implementation `16ae48930d9e4e46d480a3268040c24d95cb90d0`
+
+**Verdict: REWORK REQUIRED.** Remote push/cherry-pick OK; S2 "Read & Save" functional acceptance is NOT met. Review is static GitHub source review; no real banking site or local runtime was accessed. Reported 6/6 tests only establish status/dispatch behavior, not real fixture extraction or JSON persistence.
+
+### Observed code gaps (fix only these; do not reopen full S1)
+
+1. `scripts/samsungpop-playwright/collect.mjs` extracts at most four synthetic top-level fields, then emits `values` over child stdout. **It never writes a JSON snapshot**, never collects positions, P/L or yield and has no successful/partial schema criteria. Its selectors are fake/guessed: not verified against live Samsung POP.
+2. `scripts/samsungpop-controller.mjs` calls `sanitizeStatus(parsed)`, dropping `fields` and `values`; `pi-dev/extensions/samsungpop.ts` calls `sanitizeStatus` again and drops them. `formatCollectResult` consequently cannot display data; Pi must instead display **only status, count, relative saved path**, with no amounts/account IDs or raw page values. Sensitive data should not travel by stdout: write the snapshot within the local child, emit bounded metadata only.
+3. The field named `ACCOUNT_NUMBER_MASKED` currently retains account digits with punctuation removed. **Delete this field entirely from extraction, output and snapshot.** Account numbers are not required by S2 and masked output is not presently implemented. Explicit fake sentinel tests must prove no account identifiers, credentials or raw page data enter output/saved snapshot.
+4. `cmdStatus()` and `cmdCollect()` currently use the default `waitForExit:true`, allowing some success/close/failure paths to remove session files, breaking repeated status/collect. Fix lifecycle in a minimal way; distinguish successful child output vs errors/timeouts. Do not launch/kill unrelated Edge processes or remove user profiles/sessions.
+5. The fake-page 6/6 tests never assert actual browser extraction from the fixture or saving correct balances. Replace/add behavioral tests that exercise **production extractor and snapshot writer** with fake DOM (can use real Playwright against local fixture or directly pass a fixture-owned Playwright page to an exported production extractor). Verify parsed totals and multi-row positions, negative values, currency and missing/empty fields, create **two distinct timestamped ignored snapshots** and re-read JSON to check equality/schema. Test no snapshot on selector drift, login-like page, wrong origin and uncertain browser ownership.
+6. The current S1 attached browser PID/CDP ownership remains unverified. The same-user model tools also have access to local processes; do **not** misrepresent `triggerTurn:false` or Pi hooks as hard security isolation. For the lightweight user-supervised design, fail closed for ambiguous CDP session/wrong browser, keep all raw results local, and explicitly report remaining exposure. No OS accounts/ACL, new MCP, generalized broker or remote LLM calls. If reliable browser identity cannot be validated with existing code, stop **LIVE=BLOCKED** and report minimal fix.
+
+### Targeted acceptance gates
+
+- Keep exactly the existing `/samsungpop open|status|collect` command family and existing project dependencies; change only relevant S2 source/tests/fake fixture (plus minimal S1 lifecycle fix).
+- Structured snapshot: `schema_version`, `source`, `captured_at`, `totals` (valuation, P/L, return rate, cash if truly visible), `positions` (name, quantity, valuation, P/L, return rate), `capture_status`; missing numbers must be null, not fake zero. Use a stable simple JSON format, locally and atomically written under git-ignored `results/samsungpop/snapshots/`. Unique filenames, no overwrite, no credentials/account identifiers. If there are no verified financial fields, **do not save a success snapshot**.
+- Pi and controller result shape: enum `SAVED|PARTIAL|LOGIN_REQUIRED|NOT_ON_BALANCE_PAGE|SCHEMA_CHANGED|BROWSER_UNAVAILABLE|ERROR`, plus only relative path, field/position count. No balances in stdout/stderr or model-facing response, no arbitrary output paths from model input.
+- Test `open→status→status→collect→status` with synthetic controlled session, including close/error/timeout; don't blindly force a `waitForExit:false` flag without ensuring child completion/error handling.
+- Mock success must prove **real extraction + local persistence** and that no fake account-number sentinel leaks. Tests must not reach real Samsung POP or copy/access user browser profile.
+- No actual account read or live browser interaction until explicit separate user-attended test. Status by branch: `MOCK=PASS|FAIL`, `LIVE=NOT_RUN|BLOCKED`, `PERSISTENCE=PASS|FAIL`, `OWNERSHIP=VERIFIED|UNKNOWN`.
+- After fix: implement/test/commit/push to same S2 feature branch only, no main merge. Use temporary worktree at latest origin S2 tip if the canonical dirty branch diverges; preserve `pi-dev/settings.json`, 3 stashes, local commit `cd04aca`, profiles and ignored files. Absolutely no hard reset or force push.
+- Small cost: one implementer (Pi or local Codex CLI) and one independent Claude review after implementation SHA. No extra workers/old test suites without relevant changed code.
+
+Do not state S2 is finished until a local JSON snapshot from actual fixture data is verified.
