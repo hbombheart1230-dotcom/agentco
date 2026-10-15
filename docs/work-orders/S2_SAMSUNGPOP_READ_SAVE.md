@@ -190,3 +190,66 @@ Do not reset hard or force push. Work on latest remote S2 feature branch, commit
 - Cleanup temporary worktree only if clean, no running process, and all code pushed; if cleanup hits permission error, preserve it and report, do not delete blindly.
 - Report exactly: `BASE_REMOTE_SHA`, `IMPLEMENTATION_SHA`, `CHANGED_FILES`, `TEST_COMMANDS_AND_RESULTS`, `MOCK_EXTRACT`, `SNAPSHOT_REOPEN`, `METADATA_END_TO_END`, `SESSION_SEQUENCE`, `NO_ACCOUNT_SENTINEL_LEAK`, `LIVE`, `CDP_OWNERSHIP`, `PUSH`, `LOCAL_CHANGES_PRESERVED`, `STASH_COUNT`, `WORKTREE_CLEANUP`, `BLOCKERS`.
 - Independent Claude Code CLI review of pushed SHA is a **separate** phase; Pi should not self-award PASS or merge main.
+
+
+---
+
+## GPT independent static review — implementation `4e65ec51afb4250a5a070038a85c8c1c2a19712d` (2026-10-15)
+
+**Decision: CONDITIONAL / QA BLOCKED, not full S2 PASS.** Repo HEAD independently confirmed. Eight reported mock tests include actual Playwright fixture extraction and direct JSON readback; this is meaningful progress, but **not** Controller→Pi end-to-end, and one test has potentially destructive cleanup. The assistant did not run tests or access the live finance site.
+
+### Stop-the-line issue — user snapshots can be deleted by tests
+
+`scripts/samsungpop-collect.test.mjs`:
+- `before()` sets `snapshotDir=resolve(root,'results','samsungpop','snapshots')`;
+- `after()` loops over **every** file named `samsungpop-*.json` and `rmSync` deletes it.
+- Real user snapshots under the ignored local results directory would be deleted. **Do not run this test again in a workspace containing user snapshots** until this is corrected.
+
+**Required fix:** Run snapshot tests in a *unique temporary fixture-only directory*, separate from live `results/samsungpop/snapshots`; ensure writer has a test-only dependency-injection mechanism or pure output-root parameter that the live `/samsungpop collect` command cannot set. Cleanup may remove **only files created by this test** in the isolated directory; `rm -rf` of the real snapshots tree or wildcard deletion is forbidden. Add canary test: create an unrelated pre-existing snapshot sentinel in a second directory, run writer/tests and verify canary content untouched. Do not delete or overwrite existing user snapshots. Preserve local worktrees, stashes and browser profiles.
+
+### Required minimal corrections (same files; no architectural expansion)
+
+1. **Complete collect-shape error paths.** `scripts/samsungpop-controller.mjs`: `cmdCollect()` with no CDP session, child error/timeout/invalid stdout and controller top-level failure currently return `sanitizeStatus` (no `collect_code`). `pi-dev/extensions/samsungpop.ts:runController` nonzero exit and parse failure likewise return status. Make all collect invocations return `collect_code=BROWSER_UNAVAILABLE|ERROR` (appropriate status enums), not a blank/undefined result. Add tests for no session, timeout, nonzero exit, malformed JSON, and successful collect. Do not alter S1 open/status semantics.
+2. **Do not emit raw stderr in normal operation.** Controller now captures child stderr and executes `console.error('DEBUG: Child stderr:', d.toString().trim())`. Remove verbatim stderr logging and unbounded stdout/stderr accumulation. Catch and return fixed codes (no raw page URLs, HTML, account values or secrets in command output/logs). Child `writeSnapshot` also logs raw `err.message`; replace with fixed error code. Test with synthetic `SECRET_SENTINEL` in subprocess stderr and prove it is absent from output.
+3. **Strict bounded metadata path.** `sanitizeCollect` in controller and `sanitize` in collector currently only use `saved_path.startsWith('results/samsungpop/snapshots/')`; that admits traversal-like strings and newline characters. Validate the entire expected basename/suffix pattern; reject `..`, backslash, control characters, absolute paths, suspicious encodings and anything outside the intended relative directory. Match Pi formatter sanitization to the same contract; count fields integer and bounded.
+4. **No fake complete integration PASS.** Eight mock tests call exported `extractTotals`, `extractHoldings` and `writeSnapshot` directly. The single controller test checks exported functions only, not actual controller→child→Pi command. Add one **synthetic end-to-end mock using the actual production command handlers** (with test-owned browser/session/profile, zero real-bank network access), verifying `collect_code`, saved relative path and counts reach the user-facing Pi output. If Pi hosting is infeasible, separately report `PI_UI_E2E=NOT_RUN`; at minimum run real controller→child end-to-end and explain limitations. Explicitly cover `open→status→status→collect→status` semantics and do not report it PASS merely from unit tests.
+5. **Browser/read guard (targeted only).** Current `determinePageType` accepts any page whose body contains broad words like `수량` or `수익률`; this is not evidence that a specific intended visible balance page is selected. Limit recognition to an actual combination of financial fields/holding table rather than a single generic word. When current page is ambiguous, return `NOT_ON_BALANCE_PAGE|SCHEMA_CHANGED` without saving. All real Samsung POP selectors remain unverified and live data collection is still NOT_RUN.
+6. **No new platform/security work.** The user deliberately chose a lightweight read/save assistant. Do NOT add Windows accounts, ACL provisioning, broker service, separate finance MCP, SQLite, order/trade features or external LLM transmission. Continue to record `CDP_OWNERSHIP=NOT_VERIFIED` accurately and fail closed if browser identity is ambiguous. Future live selector validation requires manual user login and visible confirmation, NOT unsupervised browser access.
+7. **Other minor:** Verify snapshot no-overwrite semantics with an existing target file (platform-specific `rename` may replace destination); clean only the temporary file created by failed writes. Avoid unnecessary refactoring or repeatedly reading S1 history.
+
+### Required acceptance matrix
+
+- `TEST_ISOLATION=PASS`: test-created files only; existing real snapshot/canary preserved.
+- `MOCK_EXTRACTION=PASS`: 4 totals + 3 actual fixture positions, signed amounts/rates verified.
+- `PERSISTENCE=PASS`: two unique local test files, re-read exact data, no overwrite, null/partial cases.
+- `CONTROLLER_CHILD_E2E=PASS`: real production controller dispatch receives collect status and bounded metadata from synthetic test-owned session.
+- `PI_UI_E2E=PASS|NOT_RUN`: don't confuse schema unit test with UI run.
+- `FAILURE_PATHS=PASS`: no session, timeout, malformed payload, process exit always collect-shaped.
+- `NO_RAW_LOGS=PASS`: synthetic account/token sentinel not in stderr/stdout/command display/results.
+- `SESSION_SEQUENCE=PASS|NOT_RUN`: real sequence evidence, not source comments.
+- `LIVE=NOT_RUN`, `CDP_OWNERSHIP=NOT_VERIFIED`.
+
+**Git and roles:** Fetch latest remote S2 branch; do changes in a fresh temporary worktree because canonical workspace is dirty and divergent. Do not use `reset --hard`, `git clean`, force push, `stash pop/drop`, or delete old worktrees blindly. One Pi/Codex implementer only; implement, run focused tests, push fast-forward to S2 feature branch. Then Claude Code CLI must independently check pushed SHA and return PASS/REWORK with exact observed tests. GPT+user decide merge to main. No live financial data until then.
+
+### Exact delivery report
+
+`FINAL_SHA`
+`BASE_REMOTE_SHA`
+`CHANGED_FILES`
+`TEST_COMMANDS`
+`TEST_ISOLATION`
+`MOCK_EXTRACTION`
+`PERSISTENCE`
+`CONTROLLER_CHILD_E2E`
+`PI_UI_E2E`
+`FAILURE_PATHS`
+`NO_RAW_LOGS`
+`SESSION_SEQUENCE`
+`LIVE`
+`CDP_OWNERSHIP`
+`PUSH`
+`PRESERVED_LOCAL_STATE`
+`WORKTREE_CLEANUP`
+`BLOCKERS`
+
+Stop if a test attempts to access/delete real snapshot files, or if the implementation cannot produce truthful integration evidence. Do not claim overall PASS on partial green unit tests.
