@@ -36,36 +36,11 @@ function sanitize(raw) {
 }
 
 async function determineAuthStatus(page) {
-  try {
-    // Only explicit positive UI indicators count
-    const loggedInSelectors = [
-      '[data-testid="user-menu"]', '.user-profile', '#logout-button',
-      'button:has-text("로그아웃")', 'a:has-text("마이페이지")',
-      '.header-user', '.user-name', '[data-user-id]',
-    ];
-    for (const sel of loggedInSelectors) {
-      try {
-        const el = await page.$(sel);
-        if (el) return AuthEnum.LOGGED_IN;
-      } catch {}
-    }
-
-    const loggedOutSelectors = [
-      'button:has-text("로그인")', 'a:has-text("로그인")',
-      '#login-button', '.login-btn', '.btn-login',
-    ];
-    for (const sel of loggedOutSelectors) {
-      try {
-        const el = await page.$(sel);
-        if (el) return AuthEnum.LOGGED_OUT;
-      } catch {}
-    }
-
-    // No cookie/localStorage inference; ambiguous => UNKNOWN
-    return AuthEnum.UNKNOWN;
-  } catch {
-    return AuthEnum.UNKNOWN;
-  }
+  // S1: No generic DOM selectors for auth state.
+  // Only verified, bank-specific indicators can confirm LOGGED_IN/LOGGED_OUT.
+  // Generic selectors (logout button, login form, user menu) are NOT proof of auth.
+  // Return UNKNOWN conservatively; user manually confirms login if needed.
+  return AuthEnum.UNKNOWN;
 }
 
 function launchEdgeDetached(cdpPort) {
