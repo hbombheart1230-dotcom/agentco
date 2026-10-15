@@ -6,18 +6,22 @@
     <title>삼성증권 POP - 잔고조회 (테스트용)</title>
     <style>
         body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; margin: 0; padding: 20px; background: #f5f5f5; }
-        .container { max-width: 800px; margin: 0 auto; background: white; border-radius: 8px; box-shadow: 0 2px 8px rgba(0,0,0,0.1); padding: 24px; }
+        .container { max-width: 1000px; margin: 0 auto; background: white; border-radius: 8px; box-shadow: 0 2px 8px rgba(0,0,0,0.1); padding: 24px; }
         .header { text-align: center; margin-bottom: 24px; padding-bottom: 16px; border-bottom: 1px solid #eee; }
         .header h1 { color: #1a1a1a; font-size: 24px; margin: 0; }
-        .balance-section { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 16px; margin-bottom: 24px; }
-        .balance-card { background: #f8f9fa; border-radius: 8px; padding: 20px; text-align: center; border: 1px solid #e9ecef; }
-        .balance-label { font-size: 14px; color: #666; margin-bottom: 8px; font-weight: 500; }
-        .balance-value { font-size: 28px; font-weight: 700; color: #1a1a1a; font-family: 'SF Mono', Monaco, monospace; }
-        .account-section { background: #f8f9fa; border-radius: 8px; padding: 20px; border: 1px solid #e9ecef; }
-        .account-row { display: flex; justify-content: space-between; align-items: center; padding: 12px 0; border-bottom: 1px solid #e9ecef; }
-        .account-row:last-child { border-bottom: none; }
-        .account-label { font-size: 14px; color: #666; font-weight: 500; }
-        .account-value { font-family: 'SF Mono', Monaco, monospace; font-size: 16px; color: #1a1a1a; }
+        .totals-section { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 16px; margin-bottom: 24px; }
+        .total-card { background: #f8f9fa; border-radius: 8px; padding: 20px; text-align: center; border: 1px solid #e9ecef; }
+        .total-label { font-size: 14px; color: #666; margin-bottom: 8px; font-weight: 500; }
+        .total-value { font-size: 28px; font-weight: 700; color: #1a1a1a; font-family: 'SF Mono', Monaco, monospace; }
+        .total-value.negative { color: #dc3545; }
+        .total-value.positive { color: #28a745; }
+        .holdings-table { width: 100%; border-collapse: collapse; margin-bottom: 24px; }
+        .holdings-table th, .holdings-table td { padding: 12px; text-align: right; border-bottom: 1px solid #e9ecef; }
+        .holdings-table th { background: #f8f9fa; font-weight: 600; color: #333; }
+        .holdings-table td.name { text-align: left; }
+        .holdings-table tr:hover { background: #f8f9fa; }
+        .positive { color: #28a745; }
+        .negative { color: #dc3545; }
         .test-notice { background: #fff3cd; border: 1px solid #ffc107; border-radius: 4px; padding: 12px; margin-top: 20px; color: #856404; font-size: 14px; text-align: center; }
     </style>
 </head>
@@ -28,31 +32,60 @@
             <p style="color: #666; margin: 8px 0 0;">잔고조회 - 테스트 전용 페이지</p>
         </div>
 
-        <div class="balance-section">
-            <div class="balance-card">
-                <div class="balance-label">총 잔고 (TOTAL_BALANCE)</div>
-                <div class="balance-value" data-testid="total-balance">12,345,678</div>
+        <div class="totals-section">
+            <div class="total-card">
+                <div class="total-label">총 평가금액 (TOTAL_VALUATION)</div>
+                <div class="total-value" data-testid="total-valuation">52,345,678</div>
             </div>
-            <div class="balance-card">
-                <div class="balance-label">출금가능금액 (AVAILABLE_BALANCE)</div>
-                <div class="balance-value" data-testid="available-balance">10,000,000</div>
+            <div class="total-card">
+                <div class="total-label">총 손익 (TOTAL_PL)</div>
+                <div class="total-value positive" data-testid="total-pl">+2,345,678</div>
             </div>
-            <div class="balance-card">
-                <div class="balance-label">평가금액 (EVALUATION_AMOUNT)</div>
-                <div class="balance-value" data-testid="evaluation-amount">15,000,000</div>
+            <div class="total-card">
+                <div class="total-label">총 수익률 (TOTAL_RETURN_RATE)</div>
+                <div class="total-value positive" data-testid="total-return">+4.68%</div>
+            </div>
+            <div class="total-card">
+                <div class="total-label">예수금 (CASH_BALANCE)</div>
+                <div class="total-value" data-testid="cash-balance">10,000,000</div>
             </div>
         </div>
 
-        <div class="account-section">
-            <div class="account-row">
-                <span class="account-label">계좌번호 (ACCOUNT_NUMBER_MASKED)</span>
-                <span class="account-value" data-testid="account-number">123-456-789012</span>
-            </div>
-            <div class="account-row">
-                <span class="account-label">계좌명</span>
-                <span class="account-value">종합매매계좌</span>
-            </div>
-        </div>
+        <h2 style="margin-bottom: 16px; color: #333;">보유종목</h2>
+        <table class="holdings-table">
+            <thead>
+                <tr>
+                    <th class="name">종목명</th>
+                    <th>수량</th>
+                    <th>평가금액</th>
+                    <th>손익</th>
+                    <th>수익률</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr class="holding-row" data-testid="holding-row">
+                    <td class="name"><span class="holding-name" data-testid="holding-name">삼성전자</span></td>
+                    <td><span class="holding-qty" data-testid="holding-qty">50</span></td>
+                    <td><span class="holding-valuation" data-testid="holding-valuation">3,500,000</span></td>
+                    <td><span class="holding-pl positive" data-testid="holding-pl">+250,000</span></td>
+                    <td><span class="holding-return positive" data-testid="holding-return">+7.69%</span></td>
+                </tr>
+                <tr class="holding-row" data-testid="holding-row">
+                    <td class="name"><span class="holding-name" data-testid="holding-name">SK하이닉스</span></td>
+                    <td><span class="holding-qty" data-testid="holding-qty">20</span></td>
+                    <td><span class="holding-valuation" data-testid="holding-valuation">2,800,000</span></td>
+                    <td><span class="holding-pl negative" data-testid="holding-pl">-120,000</span></td>
+                    <td><span class="holding-return negative" data-testid="holding-return">-4.11%</span></td>
+                </tr>
+                <tr class="holding-row" data-testid="holding-row">
+                    <td class="name"><span class="holding-name" data-testid="holding-name">NAVER</span></td>
+                    <td><span class="holding-qty" data-testid="holding-qty">5</span></td>
+                    <td><span class="holding-valuation" data-testid="holding-valuation">1,200,000</span></td>
+                    <td><span class="holding-pl positive" data-testid="holding-pl">+85,000</span></td>
+                    <td><span class="holding-return positive" data-testid="holding-return">+7.62%</span></td>
+                </tr>
+            </tbody>
+        </table>
 
         <div class="test-notice">
             ⚠️ 이 페이지는 S2 개발/테스트용 가짜 금융 페이지입니다. 실제 금융 데이터가 아닙니다.

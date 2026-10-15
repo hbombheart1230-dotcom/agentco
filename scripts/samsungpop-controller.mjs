@@ -84,12 +84,23 @@ const BrowserEnum = { RUNNING: 'RUNNING', NOT_RUNNING: 'NOT_RUNNING', UNKNOWN: '
 const SiteEnum = { SAMSUNGPOP: 'SAMSUNGPOP', OTHER: 'OTHER', UNKNOWN: 'UNKNOWN' };
 const AuthEnum = { LOGGED_IN: 'LOGGED_IN', LOGGED_OUT: 'LOGGED_OUT', UNKNOWN: 'UNKNOWN' };
 const ErrorCodeEnum = { NONE: 'NONE', ISOLATION_BLOCKED: 'ISOLATION_BLOCKED', PROFILE_LOCKED: 'PROFILE_LOCKED', NAVIGATION_FAILED: 'NAVIGATION_FAILED', UNSUPPORTED: 'UNSUPPORTED', UNKNOWN: 'UNKNOWN' };
+// S2 collect-specific codes
+const CollectCodeEnum = { 
+  SAVED: 'SAVED', 
+  PARTIAL: 'PARTIAL', 
+  LOGIN_REQUIRED: 'LOGIN_REQUIRED', 
+  NOT_ON_BALANCE_PAGE: 'NOT_ON_BALANCE_PAGE', 
+  SCHEMA_CHANGED: 'SCHEMA_CHANGED', 
+  BROWSER_UNAVAILABLE: 'BROWSER_UNAVAILABLE', 
+  ERROR: 'ERROR' 
+};
 
 const StateValues = Object.values(StateEnum);
 const BrowserValues = Object.values(BrowserEnum);
 const SiteValues = Object.values(SiteEnum);
 const AuthValues = Object.values(AuthEnum);
 const ErrorCodeValues = Object.values(ErrorCodeEnum);
+const CollectCodeValues = Object.values(CollectCodeEnum);
 
 function sanitizeStatus(raw) {
   const state = StateValues.includes(raw?.state) ? raw.state : StateEnum.UNKNOWN;
@@ -98,6 +109,15 @@ function sanitizeStatus(raw) {
   const auth = AuthValues.includes(raw?.auth) ? raw.auth : AuthEnum.UNKNOWN;
   const error_code = ErrorCodeValues.includes(raw?.error_code) ? raw.error_code : ErrorCodeEnum.UNKNOWN;
   return { state, browser, site, auth, error_code };
+}
+
+function sanitizeCollect(raw) {
+  const state = StateValues.includes(raw?.state) ? raw.state : StateEnum.UNKNOWN;
+  const browser = BrowserValues.includes(raw?.browser) ? raw.browser : BrowserEnum.UNKNOWN;
+  const site = SiteValues.includes(raw?.site) ? raw.site : SiteEnum.UNKNOWN;
+  const auth = AuthValues.includes(raw?.auth) ? raw.auth : AuthEnum.UNKNOWN;
+  const collect_code = CollectCodeValues.includes(raw?.collect_code) ? raw.collect_code : CollectCodeEnum.ERROR;
+  return { state, browser, site, auth, collect_code };
 }
 
 function writeCdpPort(port) {
@@ -225,13 +245,17 @@ async function runPlaywrightScript(scriptName, args = [], options = {}) {
             try {
               const parsed = JSON.parse(line);
               // Accept both status format and collect format
-              if (parsed.state && parsed.browser && parsed.site && parsed.auth && parsed.error_code) {
+              if (parsed.state && parsed.browser && parsed.site && parsed.auth && (parsed.error_code || parsed.collect_code)) {
                 resolved = true;
                 clearTimeout(timer);
                 // For open: don't clear CDP port/session - status needs it
                 // For status/collect: do NOT clear on success - preserve for open->status->status
                 // Only clear on error/stale session (handled in child.on close/error)
-                resolvePromise(sanitizeStatus(parsed));
+                if (parsed.collect_code) {
+                  resolvePromise(sanitizeCollect(parsed));
+                } else {
+                  resolvePromise(sanitizeStatus(parsed));
+                }
                 return;
               }
             } catch {}
@@ -260,7 +284,11 @@ async function runPlaywrightScript(scriptName, args = [], options = {}) {
           clearCdpPort();
           clearCdpSession();
         }
-        resolvePromise(sanitizeStatus(parsed));
+        if (parsed.collect_code) {
+          resolvePromise(sanitizeCollect(parsed));
+        } else {
+          resolvePromise(sanitizeStatus(parsed));
+        }
       } catch {
         if (waitForExit) {
           clearCdpPort();
@@ -281,11 +309,11 @@ async function cmdOpen() {
 }
 
 async function cmdStatus() {
-  return runPlaywrightScript('status');
+  return runPlaywrightScript('status', [], { waitForExit: false });
 }
 
 async function cmdCollect() {
-  return runPlaywrightScript('collect');
+  return runPlaywrightScript('collect', [], { waitForExit: false });
 }
 
 async function main() {
@@ -307,4 +335,4 @@ if (process.argv[1] && resolve(process.argv[1]) === fileURLToPath(import.meta.ur
   });
 }
 
-export { cmdOpen, cmdStatus, cmdCollect, sanitizeStatus, StateEnum, BrowserEnum, SiteEnum, AuthEnum, ErrorCodeEnum, BANKING_PROFILE_DIR, BANKING_OUTPUT_DIR, CDP_PORT_FILE, CDP_SESSION_FILE, generateCdpPort, generateSessionToken, readCdpPort, writeCdpPort, clearCdpPort, readCdpSession, writeCdpSession, clearCdpSession, getBankingProfileDir, getBankingOutputDir, getCdpPortFile, getCdpSessionFile };
+export { cmdOpen, cmdStatus, cmdCollect, sanitizeStatus, sanitizeCollect, StateEnum, BrowserEnum, SiteEnum, AuthEnum, ErrorCodeEnum, CollectCodeEnum, BANKING_PROFILE_DIR, BANKING_OUTPUT_DIR, CDP_PORT_FILE, CDP_SESSION_FILE, generateCdpPort, generateSessionToken, readCdpPort, writeCdpPort, clearCdpPort, readCdpSession, writeCdpSession, clearCdpSession, getBankingProfileDir, getBankingOutputDir, getCdpPortFile, getCdpSessionFile };

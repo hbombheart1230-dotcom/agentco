@@ -22,28 +22,7 @@ const BrowserEnum = ['RUNNING', 'NOT_RUNNING', 'UNKNOWN'] as const;
 const SiteEnum = ['SAMSUNGPOP', 'OTHER', 'UNKNOWN'] as const;
 const AuthEnum = ['LOGGED_IN', 'LOGGED_OUT', 'UNKNOWN'] as const;
 const ErrorCodeEnum = ['NONE', 'ISOLATION_BLOCKED', 'PROFILE_LOCKED', 'NAVIGATION_FAILED', 'UNSUPPORTED', 'UNKNOWN'] as const;
-
-const CollectFieldEnum = ['TOTAL_BALANCE', 'AVAILABLE_BALANCE', 'EVALUATION_AMOUNT', 'ACCOUNT_NUMBER_MASKED'] as const;
-
-const CollectSchema = Type.Object({
-  state: Type.Union(StateEnum.map(e => Type.Literal(e))),
-  browser: Type.Union(BrowserEnum.map(e => Type.Literal(e))),
-  site: Type.Union(SiteEnum.map(e => Type.Literal(e))),
-  auth: Type.Union(AuthEnum.map(e => Type.Literal(e))),
-  error_code: Type.Union(ErrorCodeEnum.map(e => Type.Literal(e))),
-  fields: Type.Optional(Type.Array(Type.Union(CollectFieldEnum.map(e => Type.Literal(e))))),
-  values: Type.Optional(Type.Record(Type.String(), Type.String())),
-}, { additionalProperties: false });
-
-type CollectStatus = {
-  state: typeof StateEnum[number];
-  browser: typeof BrowserEnum[number];
-  site: typeof SiteEnum[number];
-  auth: typeof AuthEnum[number];
-  error_code: typeof ErrorCodeEnum[number];
-  fields?: typeof CollectFieldEnum[number][];
-  values?: Record<string, string>;
-};
+const CollectCodeEnum = ['SAVED', 'PARTIAL', 'LOGIN_REQUIRED', 'NOT_ON_BALANCE_PAGE', 'SCHEMA_CHANGED', 'BROWSER_UNAVAILABLE', 'ERROR'] as const;
 
 const StatusSchema = Type.Object({
   state: Type.Union(StateEnum.map(e => Type.Literal(e))),
@@ -61,6 +40,28 @@ type Status = {
   error_code: typeof ErrorCodeEnum[number];
 };
 
+const CollectSchema = Type.Object({
+  state: Type.Union(StateEnum.map(e => Type.Literal(e))),
+  browser: Type.Union(BrowserEnum.map(e => Type.Literal(e))),
+  site: Type.Union(SiteEnum.map(e => Type.Literal(e))),
+  auth: Type.Union(AuthEnum.map(e => Type.Literal(e))),
+  collect_code: Type.Union(CollectCodeEnum.map(e => Type.Literal(e))),
+  saved_path: Type.Optional(Type.String()),
+  totals_count: Type.Optional(Type.Number()),
+  positions_count: Type.Optional(Type.Number()),
+}, { additionalProperties: false });
+
+type CollectStatus = {
+  state: typeof StateEnum[number];
+  browser: typeof BrowserEnum[number];
+  site: typeof SiteEnum[number];
+  auth: typeof AuthEnum[number];
+  collect_code: typeof CollectCodeEnum[number];
+  saved_path?: string;
+  totals_count?: number;
+  positions_count?: number;
+};
+
 /** Sanitize - only allow fixed enum values */
 function sanitizeStatus(raw: any): Status {
   const state = StateEnum.includes(raw?.state) ? raw.state : 'UNKNOWN';
@@ -69,6 +70,20 @@ function sanitizeStatus(raw: any): Status {
   const auth = AuthEnum.includes(raw?.auth) ? raw.auth : 'UNKNOWN';
   const error_code = ErrorCodeEnum.includes(raw?.error_code) ? raw.error_code : 'UNKNOWN';
   return { state, browser, site, auth, error_code };
+}
+
+function sanitizeCollect(raw: any): CollectStatus {
+  const state = StateEnum.includes(raw?.state) ? raw.state : 'UNKNOWN';
+  const browser = BrowserEnum.includes(raw?.browser) ? raw.browser : 'UNKNOWN';
+  const site = SiteEnum.includes(raw?.site) ? raw.site : 'UNKNOWN';
+  const auth = AuthEnum.includes(raw?.auth) ? raw.auth : 'UNKNOWN';
+  const collect_code = CollectCodeEnum.includes(raw?.collect_code) ? raw.collect_code : 'ERROR';
+  return { 
+    state, browser, site, auth, collect_code,
+    saved_path: raw?.saved_path,
+    totals_count: raw?.totals_count,
+    positions_count: raw?.positions_count
+  };
 }
 
 /** Format status for user display */
@@ -86,21 +101,30 @@ function formatStatus(status: Status): string {
   Error:     ${status.error_code}`;
 }
 
-/** Format collect result for user display */
+/** Format collect result for user display - NO raw financial values */
 function formatCollectResult(status: CollectStatus): string {
-  if (status.error_code !== 'NONE') {
-    return `Samsung POP Collect: ${status.error_code}`;
+  const icons = {
+    SAVED: '✅',
+    PARTIAL: '⚠️',
+    LOGIN_REQUIRED: '🔒',
+    NOT_ON_BALANCE_PAGE: '📄',
+    SCHEMA_CHANGED: '🔄',
+    BROWSER_UNAVAILABLE: '🔴',
+    ERROR: '❌'
+  };
+  const icon = icons[status.collect_code as keyof typeof icons] || '❓';
+  
+  let msg = `Samsung POP Collect: ${icon} ${status.collect_code}`;
+  if (status.saved_path) {
+    msg += `\n  Saved: ${status.saved_path}`;
   }
-  const lines = ['Samsung POP Balance Collect:'];
-  if (status.values) {
-    for (const [key, value] of Object.entries(status.values)) {
-      lines.push(`  ${key}: ${value}`);
-    }
+  if (status.totals_count !== undefined) {
+    msg += `\n  Totals fields: ${status.totals_count}`;
   }
-  if (status.fields && status.fields.length > 0) {
-    lines.push(`  Fields: ${status.fields.join(', ')}`);
+  if (status.positions_count !== undefined) {
+    msg += `\n  Holdings: ${status.positions_count}`;
   }
-  return lines.join('\n');
+  return msg;
 }
 
 export default function (pi: ExtensionAPI) {
@@ -116,7 +140,11 @@ export default function (pi: ExtensionAPI) {
       return sanitizeStatus({ error_code: 'NAVIGATION_FAILED' });
     }
     try {
-      return sanitizeStatus(JSON.parse(result.stdout.trim()));
+      const parsed = JSON.parse(result.stdout.trim());
+      if (parsed.collect_code) {
+        return sanitizeCollect(parsed);
+      }
+      return sanitizeStatus(parsed);
     } catch {
       return sanitizeStatus({ error_code: 'UNKNOWN' });
     }
@@ -159,9 +187,8 @@ export default function (pi: ExtensionAPI) {
         const usage = `Usage: /samsungpop open | status | collect
   open    — Launch Edge with isolated banking profile, open https://www.samsungpop.com/
   status  — Check browser/login status without navigation
-  collect — Extract allowed balance fields from the current page (fake page only for testing)
-  
-  All commands return ONLY fixed enums/data. No page content ever reaches the model.`;
+  collect — Extract balance/holdings from visible page, save JSON snapshot
+  \n  All commands return ONLY fixed enums/metadata. No page content or raw values reach the model.`;
         pi.sendMessage({
           customType: 'samsungpop-status',
           content: usage,
