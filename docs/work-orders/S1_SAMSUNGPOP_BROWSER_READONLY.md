@@ -224,3 +224,19 @@ Claude Code CLI (local native) independently reviewed commit `6e76c7f68961da19c8
 3. **Limitations, not launch blockers:** `cdp-session` file token and random port are not a cryptographic/OS-level verification of the Edge PID/creator. Do not say `CDP_OWNERSHIP=PASS` or hard isolation is enforced. Correct any misleading product-facing comments where directly relevant. No PID subsystem, token rotation, named pipes, or broad tool/sandbox refactor in this S1 cleanup.
 
 **Next:** Codex CLI (native/local) performs **one minimal feature-only change**, safely verifies isolated tests, commit/push; preserve all three local stashes/auth/profiles and main. Pi CLI coordinates without implementing and Hermes CLI is unused. After a lightweight independent Claude Code CLI diff check, user **manually** tries `/samsungpop open`, signs in directly in Edge (no agent credentials/cookie/snapshot capture), and checks `/samsungpop status` twice and reuse. Report `LIVE=NOT_RUN` until user actually does it. Any browser state can only be claimed observed, not model-isolated. Main merge requires user/GPT go-ahead.
+
+
+## S1 manual smoke acceptance — 2026-10-15
+
+**Functional verdict: PASS based on user-provided Pi CLI local manual smoke report.** Implemented HEAD before this acceptance note: `3395c3910b94b54d51bed6c3d818825b4f78859a`. Previous Claude Code CLI verdict: CONDITIONAL_PASS at `6e76c7f`, followed by auth-selector removal at `3395c3910b94b54d51bed6c3d818825b4f78859a`, which GPT reviewed by GitHub commit diff. Reported offline tests: 41/41 PASS; GPT did not execute the user's local tests or directly inspect authenticated bank content.
+
+**Local manual smoke reported PASS:**
+- `open` launched the banking-profile Edge and Samsung POP homepage; sanitized result `OPEN/RUNNING/SAMSUNGPOP/UNKNOWN/NONE`.
+- Two successive `status` calls returned the same status.
+- Repeated `open` returned on existing session without a second Edge.
+- User manually completed login in Edge; Pi ran another two `status` checks with the same sanitized status.
+- Browser/profile/session reportedly remained in place; no credentials/cookies/financial data were intentionally read or sent.
+
+**Release boundary:** This accepts the S1 feature **functional manual-login-first browser and status workflow**, not login-state attestation or CDP process-ownership verification. `auth=UNKNOWN` is expected even after user login; a random port and local token do not attest listener/PID/launch identity. Generic model-visible browser tools or future automatic banking data reads are **not authorized by this PASS**. Do not claim full OS-level isolation. A future S2 bank-data read feature requires separate consent, private data handling, CDP owner restriction and read-only scope.
+
+**Branch policy:** Keep implementation on S1 feature until user/GPT explicitly approves merging `main`; preserve user's 3 stashes and local `pi-dev/settings.json` dirty change. Pi CLI local runtime controls manual workflow; Codex CLI/Claude Code CLI/Hermes CLI need not run again for this unchanged S1 code. No automatic trading/transfers or login automation.
