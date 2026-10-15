@@ -5,6 +5,11 @@
  * Reads CDP port from controller's port file to verify session ownership.
  * NO profile cloning, NO navigation, NO cookie/storage inspection.
  * NEVER returns raw page content, URLs, or snapshots.
+ *
+ * IMPORTANT: CDP port + session token verification is NOT proof of actual Edge process ownership.
+ * Token is controller-written and controller-read; this attaches to whatever
+ * process listens on that port. No PID/launch-identity verification is performed.
+ * Auth=UNKNOWN returned conservatively for S1 manual-login flow.
  */
 
 import { chromium } from 'playwright';

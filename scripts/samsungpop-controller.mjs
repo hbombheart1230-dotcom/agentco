@@ -10,6 +10,11 @@
  * Uses a SINGLE persistent banking profile at ~/.agentco/browser-profile-banking
  * Each open generates a random CDP port for session ownership verification.
  * Status attaches ONLY to the controller-owned CDP endpoint via port file.
+ *
+ * IMPORTANT: CDP port + session token in file is NOT proof of actual Edge process ownership.
+ * The token is controller-written and controller-read; status attaches to whatever
+ * process listens on that port. No PID/launch-identity verification is performed.
+ * For S1 manual-login flow, auth=UNKNOWN is returned conservatively.
  */
 
 import { spawn } from 'node:child_process';

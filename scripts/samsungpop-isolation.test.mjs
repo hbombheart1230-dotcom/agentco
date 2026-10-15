@@ -65,6 +65,18 @@ function assertNoSentinels(obj, context) {
 }
 
 describe('S1 Samsung POP - Isolation Gate Synthetic Tests', () => {
+  let originalProfileDir;
+
+  before(() => {
+    originalProfileDir = process.env.BANKING_PROFILE_DIR;
+    process.env.BANKING_PROFILE_DIR = '/tmp/samsungpop-isolation-test';
+  });
+
+  after(() => {
+    if (originalProfileDir === undefined) delete process.env.BANKING_PROFILE_DIR;
+    else process.env.BANKING_PROFILE_DIR = originalProfileDir;
+  });
+
   test('sanitizeStatus returns only fixed enums', () => {
     // Test with valid enums
     const valid = sanitizeStatus({
