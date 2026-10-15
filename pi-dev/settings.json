@@ -17,7 +17,8 @@
     "extensions/permission-gate.ts",
     "extensions/protected-paths.ts",
     "extensions/git-checkpoint.ts",
-    "extensions/harness-delegation.ts"
+    "extensions/harness-delegation.ts",
+    "extensions/samsungpop.ts"
   ],
   "packages": [
     "npm:@ian-pascoe/pi-lsp@0.8.0",

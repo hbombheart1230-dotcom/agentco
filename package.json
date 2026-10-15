@@ -9,7 +9,8 @@
     "smoke": "node scripts/smoke.mjs"
   },
   "dependencies": {
-    "@earendil-works/pi-coding-agent": "1.0.4"
+    "@earendil-works/pi-coding-agent": "1.0.4",
+    "playwright": "^1.48.0"
   },
   "engines": {
     "node": ">=22.19.0"
