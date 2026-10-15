@@ -122,3 +122,71 @@ Do not state S2 is finished until a local JSON snapshot from actual fixture data
 No new architecture, OS accounts, separate MCP, SQL, cloud API, site-wide crawling, trading, login automation, or historical regression marathon. No real bank site access until mock tests prove saved JSON and user is present. Mark `CDP_OWNERSHIP=NOT_VERIFIED` until reliable process/session association is achieved, and do not claim a hard security boundary for same-user processes. Preserve canonical dirty `pi-dev/settings.json`, stash 3, profiles, local `cd04aca`, and the stuck temporary worktree; clean the temporary worktree only after proving no valuable changes and closing its processes.
 
 Do not reset hard or force push. Work on latest remote S2 feature branch, commit/push only this branch. Report `IMPLEMENTATION_SHA`, `RUN_TEST_COMMANDS`, `MOCK_EXTRACT`, `SNAPSHOT_REOPEN`, `CONTROLLER_METADATA`, `SESSION_SEQUENCE`, `LIVE=NOT_RUN`, `PUSH`. Independent Claude review after implementation, then GPT/user main gate.
+
+
+---
+
+## Execution contract — exact S2 final-fix implementation instructions (2026-10-15)
+
+**Read this section as an executable checklist, not high-level guidance. No improvisation beyond this bounded task.** Current inspected source baseline is `6f9b0f9c127e6e0dde3e1181e2caccb3dc2ba856` and latest documented branch tip before this addendum was `957d8e46cc8606f45970ea9a06afb21d0fc4d711`. Run exactly one implementer. No live bank.
+
+### Phase 0 — Git safety (STOP if failing)
+
+- Run `git -C C:\Agentco status --short --branch`, `git -C C:\Agentco stash list` (metadata only), `git -C C:\Agentco fetch origin`, and read `git rev-parse origin/feature/s2-samsungpop-read-save-20261015`. Confirm the fetched remote contains this execution contract; if head changed unexpectedly and overlaps the task, STOP before writing.
+- Never check out over local modified `pi-dev/settings.json`, pop/drop the three stashes, move user browser profiles, or lose the existing local `cd04aca` implementation commit.
+- Create a *new, unique* temporary, detached Git worktree from fetched `origin/feature/s2-samsungpop-read-save-20261015`. Do not reuse or blindly remove `C:\agentco-s2-rework`; inspect its Git status and any active processes first. Do not use `reset --hard`, `clean`, `--force` or `--force-with-lease`.
+- Do not modify the task specification while implementation is running. Keep all code changes inside the new temporary worktree, and push only a fast-forward to `feature/s2-samsungpop-read-save-20261015` when tests pass.
+
+### Phase 1 — concrete source-code patches
+
+**A. `scripts/samsungpop-controller.mjs`**
+
+1. `sanitizeCollect(raw)` currently returns only `state/browser/site/auth/collect_code`, silently removing `saved_path/totals_count/positions_count`. Validate and allow these *three and only these three* metadata properties when supplied:
+   - `saved_path`: repository-relative, must match the expected `results/samsungpop/snapshots/samsungpop-*.json` location, with no `..`, absolute path, escape, newlines or control characters.
+   - `totals_count`, `positions_count`: finite nonnegative integer, bounded to sensible maxima. Invalid metadata => safe `ERROR`, not arbitrary echoed text.
+   - Do not send `totals`, `positions`, account identifiers, raw DOM or monetary values to stdout/Pi.
+2. `cmdCollect` early-return if no session currently produces a status-shaped `error_code`, causing the Pi collect formatter to see `collect_code=undefined`. Ensure all `collect` success/failure paths produce a valid collect-shaped result with one of `SAVED|PARTIAL|LOGIN_REQUIRED|NOT_ON_BALANCE_PAGE|SCHEMA_CHANGED|BROWSER_UNAVAILABLE|ERROR`.
+3. Keep `cmdStatus` and `cmdCollect` session metadata intact on successful queries; handle child error, timeout, malformed response and exit without reporting `SAVED` unless child actually completed a snapshot. Do not use the mere `waitForExit:false` setting as proof. Test the sequence repeatedly using a test-owned session.
+4. No uncontrolled stdout memory growth or child error detail leakage into model-facing response; cap/parse the single expected JSON result and use sanitized error codes.
+
+**B. `pi-dev/extensions/samsungpop.ts`**
+
+1. `runController('collect')` must normalize *all* paths (including nonzero exit, JSON parse failure and exceptions) into a valid `CollectStatus` with `collect_code=ERROR` or `BROWSER_UNAVAILABLE`, instead of returning a `Status` object missing `collect_code`.
+2. `sanitizeCollect` independently validate the same bounded, allowlisted metadata; `formatCollectResult` displays only `collect_code`, relative `saved_path`, `totals_count`, `positions_count`. No currency amounts or holding names in Pi output. Do not touch existing `/samsungpop open` and `status` behavior except a documented needed compatibility fix.
+3. Do not claim `triggerTurn:false` or a separate `pi.exec` child establishes OS-level isolation. Preserve normal non-bank browser MCP functionality.
+
+**C. `scripts/samsungpop-playwright/collect.mjs`**
+
+1. Preserve extraction allowlist: totals `total_valuation,total_pl,total_return_rate,cash_balance`; positions `name,quantity,valuation,pl,returnRate`. Never read/store account number, personal identifiers, cookies, localStorage, sessionStorage, credential fields, network response payloads or full DOM.
+2. Extract only from one explicitly identified, user-visible balance/holdings page under the approved origin in production; the current English substring pathname check `balance|holding|account|asset` is not sufficient. Fake fixture should be identifiable by *validated financial DOM structure* within a synthetic test setup. Distinguish wrong page vs selector drift; if uncertain, do not save misleading data. Do not guess real Samsung POP selectors are correct.
+3. Ensure parsers correctly handle fixture inputs including `52,345,678`, `+2,345,678`, `+4.68%`, `10,000,000`; three rows: Samsung Electronics 50/3,500,000/+250,000/+7.69%, SK Hynix 20/2,800,000/-120,000/-4.11%, NAVER 5/1,200,000/+85,000/+7.62%. Assert corresponding actual fixture names, not English-translated hardcoding: `삼성전자`, `SK하이닉스`, `NAVER`.
+4. Missing values become `null`, never accidental zero; no silently skipped malformed rows or falsely perfect `SAVED`. Only `SAVED` if required fields are present/valid; `PARTIAL` only when some valid content genuinely persisted. No snapshot success if no financial fields found.
+5. `writeSnapshot` currently writes directly and is not atomic. Implement no-overwrite unique filename (timestamp + random suffix if needed), write a unique temporary file exclusively in the ignored snapshot directory and atomically rename to a unique target where supported, ensuring no existing file is replaced. On error, clean only the temp file from the current operation and emit only bounded failure metadata (no raw exception).
+6. A successful snapshot JSON has `schema_version=1`, `source='samsungpop'`, valid `captured_at`, `currency='KRW'` only when evidenced for the captured fields, `totals`, `positions`, and `capture_status`. Relative path fixed under `results/samsungpop/snapshots/`. Verify after save by reopening in mock tests.
+7. CDP port + stored token alone does NOT authenticate Edge ownership. Never attach to ambiguous/non-owned sessions or claim ownership VERIFIED; mark `CDP_OWNERSHIP=NOT_VERIFIED` unless a concrete check is implemented and actually tested. No broad security redesign is authorized; if this prevents safe live read, mark live BLOCKED rather than bypass.
+
+**D. `scripts/samsungpop-collect.test.mjs` and fixture**
+
+1. Replace the existing obsolete 6-test checks which inspect status shape and old `ACCOUNT_NUMBER_MASKED` behavior. Do not just rename or duplicate them. Remove tracked `scripts/samsungpop-collect.test.mjs.bak` once verified it adds no unique content (Git preserves history).
+2. Use actual exported production parser/writer or a test-owned local Playwright page to load `fixtures/samsungpop-fake-balance.html`. Test *actual* selector extraction, saved JSON and controller/Pi metadata propagation; no mock that re-implements the production parser.
+3. Required assertions, all executable:
+   - exact four `totals` values: 52345678, 2345678, 4.68, 10000000;
+   - exactly 3 positions; the three fixture names, quantities, valuations, signed P/L, and signed rates above;
+   - `schema_version`, source, valid time and status, and the saved path existing under ignored snapshot root;
+   - two successive collects create **different** paths and both JSON payloads remain readable with their respective values;
+   - missing/invalid amount => `null` or explicit `PARTIAL`, *not* silently 0 or `SAVED`;
+   - empty/wrong/login-like page and wrong/unowned CDP session never yield `SAVED`;
+   - fake identifier sentinel e.g. `S2_ACCOUNT_SENTINEL_987654321` placed outside allowed finance fields does **not** appear in snapshot, stdout, logs or Pi message;
+   - `open → status → status → collect → status` retains test session, and timeout/error return defined error result, never undefined `collect_code`;
+   - controller and Pi do not expose raw holdings/totals; only bounded metadata.
+4. If actual browser-based mock E2E is unavailable on the Windows machine, say `MOCK_E2E=NOT_RUN` and explain why. Do **not** relabel a unit test as full E2E success.
+5. Run only relevant updated S2 tests and targeted S1 status/collect tests. The existing 18/19 S1 behavior suite contains a static/source-string failure; report it separately, do not hide, spoof, or overfocus on it.
+
+### Phase 2 — completion gates and Git delivery
+
+- Before commit, prove `MOCK_EXTRACT=PASS`, `SNAPSHOT_REOPEN=PASS`, `METADATA_END_TO_END=PASS`, `SESSION_SEQUENCE=PASS`, `NO_ACCOUNT_SENTINEL_LEAK=PASS`; otherwise report FAIL/NOT_RUN and STOP, no claim of S2 completion.
+- `LIVE=NOT_RUN`. Do not launch Samsung POP, ask for bank login, inspect actual balances, order/trade, install Windows accounts, modify Windows permissions/MCP or call cloud APIs with finance data.
+- `git diff --check`; inspect changed filenames. No profile/auth/settings/stash modification. Commit/push **only** code/tests/fixture narrowly required, against current S2 feature remote fast-forward. If remote changed during work, STOP and reconcile without force.
+- Cleanup temporary worktree only if clean, no running process, and all code pushed; if cleanup hits permission error, preserve it and report, do not delete blindly.
+- Report exactly: `BASE_REMOTE_SHA`, `IMPLEMENTATION_SHA`, `CHANGED_FILES`, `TEST_COMMANDS_AND_RESULTS`, `MOCK_EXTRACT`, `SNAPSHOT_REOPEN`, `METADATA_END_TO_END`, `SESSION_SEQUENCE`, `NO_ACCOUNT_SENTINEL_LEAK`, `LIVE`, `CDP_OWNERSHIP`, `PUSH`, `LOCAL_CHANGES_PRESERVED`, `STASH_COUNT`, `WORKTREE_CLEANUP`, `BLOCKERS`.
+- Independent Claude Code CLI review of pushed SHA is a **separate** phase; Pi should not self-award PASS or merge main.
