@@ -128,7 +128,7 @@ async function runPlaywrightScript(scriptName, args = [], options = {}) {
       const { mkdirSync } = await import('node:fs');
       mkdirSync(getBankingProfileDir(), { recursive: true });
     } catch {}
-    
+
     // Check for existing valid session (duplicate open handling)
     const existingSession = readCdpSession();
     if (existingSession) {
@@ -158,7 +158,7 @@ async function runPlaywrightScript(scriptName, args = [], options = {}) {
       writeCdpPort(cdpPort);
       writeCdpSession(cdpPort, sessionToken);
     }
-  } else if (scriptName === 'status') {
+  } else if (scriptName === 'status' || scriptName === 'collect') {
     const session = readCdpSession();
     if (!session) {
       return sanitizeStatus({ error_code: ErrorCodeEnum.NAVIGATION_FAILED });
@@ -224,11 +224,12 @@ async function runPlaywrightScript(scriptName, args = [], options = {}) {
           if (line.startsWith('{')) {
             try {
               const parsed = JSON.parse(line);
+              // Accept both status format and collect format
               if (parsed.state && parsed.browser && parsed.site && parsed.auth && parsed.error_code) {
                 resolved = true;
                 clearTimeout(timer);
                 // For open: don't clear CDP port/session - status needs it
-                // For status: do NOT clear on success - preserve for open→status→status
+                // For status/collect: do NOT clear on success - preserve for open->status->status
                 // Only clear on error/stale session (handled in child.on close/error)
                 resolvePromise(sanitizeStatus(parsed));
                 return;
@@ -283,11 +284,16 @@ async function cmdStatus() {
   return runPlaywrightScript('status');
 }
 
+async function cmdCollect() {
+  return runPlaywrightScript('collect');
+}
+
 async function main() {
   const command = process.argv[2];
   let result;
   if (command === 'open') result = await cmdOpen();
   else if (command === 'status') result = await cmdStatus();
+  else if (command === 'collect') result = await cmdCollect();
   else {
     result = sanitizeStatus({ error_code: ErrorCodeEnum.UNSUPPORTED });
   }
@@ -301,4 +307,4 @@ if (process.argv[1] && resolve(process.argv[1]) === fileURLToPath(import.meta.ur
   });
 }
 
-export { cmdOpen, cmdStatus, sanitizeStatus, StateEnum, BrowserEnum, SiteEnum, AuthEnum, ErrorCodeEnum, BANKING_PROFILE_DIR, BANKING_OUTPUT_DIR, CDP_PORT_FILE, CDP_SESSION_FILE, generateCdpPort, generateSessionToken, readCdpPort, writeCdpPort, clearCdpPort, readCdpSession, writeCdpSession, clearCdpSession, getBankingProfileDir, getBankingOutputDir, getCdpPortFile, getCdpSessionFile };
+export { cmdOpen, cmdStatus, cmdCollect, sanitizeStatus, StateEnum, BrowserEnum, SiteEnum, AuthEnum, ErrorCodeEnum, BANKING_PROFILE_DIR, BANKING_OUTPUT_DIR, CDP_PORT_FILE, CDP_SESSION_FILE, generateCdpPort, generateSessionToken, readCdpPort, writeCdpPort, clearCdpPort, readCdpSession, writeCdpSession, clearCdpSession, getBankingProfileDir, getBankingOutputDir, getCdpPortFile, getCdpSessionFile };

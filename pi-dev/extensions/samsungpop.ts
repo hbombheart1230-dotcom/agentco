@@ -1,7 +1,7 @@
 /**
  * Samsung POP Extension - Isolated Browser Commands
  *
- * Registers `/samsungpop open` and `/samsungpop status` commands.
+ * Registers `/samsungpop open`, `/samsungpop status`, and `/samsungpop collect` commands.
  * These commands invoke the standalone controller script via pi.exec(),
  * keeping ALL browser automation OUTSIDE the model-visible tool surface.
  *
@@ -22,6 +22,28 @@ const BrowserEnum = ['RUNNING', 'NOT_RUNNING', 'UNKNOWN'] as const;
 const SiteEnum = ['SAMSUNGPOP', 'OTHER', 'UNKNOWN'] as const;
 const AuthEnum = ['LOGGED_IN', 'LOGGED_OUT', 'UNKNOWN'] as const;
 const ErrorCodeEnum = ['NONE', 'ISOLATION_BLOCKED', 'PROFILE_LOCKED', 'NAVIGATION_FAILED', 'UNSUPPORTED', 'UNKNOWN'] as const;
+
+const CollectFieldEnum = ['TOTAL_BALANCE', 'AVAILABLE_BALANCE', 'EVALUATION_AMOUNT', 'ACCOUNT_NUMBER_MASKED'] as const;
+
+const CollectSchema = Type.Object({
+  state: Type.Union(StateEnum.map(e => Type.Literal(e))),
+  browser: Type.Union(BrowserEnum.map(e => Type.Literal(e))),
+  site: Type.Union(SiteEnum.map(e => Type.Literal(e))),
+  auth: Type.Union(AuthEnum.map(e => Type.Literal(e))),
+  error_code: Type.Union(ErrorCodeEnum.map(e => Type.Literal(e))),
+  fields: Type.Optional(Type.Array(Type.Union(CollectFieldEnum.map(e => Type.Literal(e))))),
+  values: Type.Optional(Type.Record(Type.String(), Type.String())),
+}, { additionalProperties: false });
+
+type CollectStatus = {
+  state: typeof StateEnum[number];
+  browser: typeof BrowserEnum[number];
+  site: typeof SiteEnum[number];
+  auth: typeof AuthEnum[number];
+  error_code: typeof ErrorCodeEnum[number];
+  fields?: typeof CollectFieldEnum[number][];
+  values?: Record<string, string>;
+};
 
 const StatusSchema = Type.Object({
   state: Type.Union(StateEnum.map(e => Type.Literal(e))),
@@ -64,11 +86,28 @@ function formatStatus(status: Status): string {
   Error:     ${status.error_code}`;
 }
 
+/** Format collect result for user display */
+function formatCollectResult(status: CollectStatus): string {
+  if (status.error_code !== 'NONE') {
+    return `Samsung POP Collect: ${status.error_code}`;
+  }
+  const lines = ['Samsung POP Balance Collect:'];
+  if (status.values) {
+    for (const [key, value] of Object.entries(status.values)) {
+      lines.push(`  ${key}: ${value}`);
+    }
+  }
+  if (status.fields && status.fields.length > 0) {
+    lines.push(`  Fields: ${status.fields.join(', ')}`);
+  }
+  return lines.join('\n');
+}
+
 export default function (pi: ExtensionAPI) {
   const controllerPath = resolve(root, 'scripts', 'samsungpop-controller.mjs');
 
   /** Execute controller command and return sanitized status */
-  async function runController(subcommand: 'open' | 'status'): Promise<Status> {
+  async function runController(subcommand: 'open' | 'status' | 'collect'): Promise<Status | CollectStatus> {
     const result = await pi.exec(process.execPath, [controllerPath, subcommand], {
       cwd: root,
       timeout: 60000,
@@ -85,12 +124,12 @@ export default function (pi: ExtensionAPI) {
 
   /** /samsungpop open - Launch Edge with banking profile, open Samsung POP */
   pi.registerCommand('samsungpop', {
-    description: 'open | status — Samsung POP local browser (isolated, no model access)',
+    description: 'open | status | collect — Samsung POP local browser (isolated, no model access)',
     handler: async (args, ctx) => {
       const parts = args.trim().split(/\s+/);
       const sub = parts[0]?.toLowerCase();
 
-      let status: Status;
+      let status: Status | CollectStatus;
       if (sub === 'open') {
         status = await runController('open');
         // Send result without triggering LLM turn
@@ -108,12 +147,21 @@ export default function (pi: ExtensionAPI) {
           display: true,
           details: status,
         }, { triggerTurn: false });
+      } else if (sub === 'collect') {
+        status = await runController('collect');
+        pi.sendMessage({
+          customType: 'samsungpop-collect',
+          content: formatCollectResult(status),
+          display: true,
+          details: status,
+        }, { triggerTurn: false });
       } else {
-        const usage = `Usage: /samsungpop open | status
-  open   — Launch Edge with isolated banking profile, open https://www.samsungpop.com/
-  status — Check browser/login status without navigation
+        const usage = `Usage: /samsungpop open | status | collect
+  open    — Launch Edge with isolated banking profile, open https://www.samsungpop.com/
+  status  — Check browser/login status without navigation
+  collect — Extract allowed balance fields from the current page (fake page only for testing)
   
-  Both commands return ONLY fixed enums. No page content ever reaches the model.`;
+  All commands return ONLY fixed enums/data. No page content ever reaches the model.`;
         pi.sendMessage({
           customType: 'samsungpop-status',
           content: usage,
