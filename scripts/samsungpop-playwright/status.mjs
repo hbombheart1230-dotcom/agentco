@@ -13,6 +13,8 @@ import { existsSync, readFileSync } from 'node:fs';
 const ORIGIN = process.env.SAMSUNGPOP_ORIGIN || 'https://www.samsungpop.com/';
 const PROFILE_DIR = process.env.BANKING_PROFILE_DIR;
 const CDP_PORT_FILE = process.env.CDP_PORT_FILE;
+const CDP_SESSION_FILE = process.env.CDP_SESSION_FILE;
+const CDP_SESSION_TOKEN = process.env.CDP_SESSION_TOKEN;
 
 const StateEnum = { OPEN: 'OPEN', LOGGED_IN: 'LOGGED_IN', LOGGED_OUT: 'LOGGED_OUT', UNKNOWN: 'UNKNOWN', ERROR: 'ERROR' };
 const BrowserEnum = { RUNNING: 'RUNNING', NOT_RUNNING: 'NOT_RUNNING', UNKNOWN: 'UNKNOWN' };
@@ -36,14 +38,19 @@ function sanitize(raw) {
 }
 
 function readCdpPortFromFile() {
-  if (!CDP_PORT_FILE || !existsSync(CDP_PORT_FILE)) return null;
+  if (!CDP_SESSION_FILE || !existsSync(CDP_SESSION_FILE)) return null;
   try {
-    const content = readFileSync(CDP_PORT_FILE, 'utf8').trim();
-    const port = parseInt(content, 10);
-    return Number.isInteger(port) && port > 1024 && port < 65535 ? port : null;
-  } catch {
-    return null;
-  }
+    const content = readFileSync(CDP_SESSION_FILE, 'utf8').trim();
+    const data = JSON.parse(content);
+    if (data && Number.isInteger(data.port) && data.port > 1024 && data.port < 65535 && typeof data.token === 'string') {
+      // Verify session token matches expected token from controller
+      if (CDP_SESSION_TOKEN && data.token !== CDP_SESSION_TOKEN) {
+        return null; // Token mismatch - not our session
+      }
+      return data.port;
+    }
+  } catch {}
+  return null;
 }
 
 async function determineAuthStatus(page) {

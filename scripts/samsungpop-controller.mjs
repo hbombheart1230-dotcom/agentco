@@ -25,10 +25,35 @@ const SAMSUNGPOP_ORIGIN = 'https://www.samsungpop.com/';
 const BANKING_PROFILE_DIR = resolve(process.env.USERPROFILE || process.env.HOME || '', '.agentco', 'browser-profile-banking');
 const BANKING_OUTPUT_DIR = resolve(process.env.USERPROFILE || process.env.HOME || '', '.agentco', 'browser-output-banking');
 const CDP_PORT_FILE = resolve(BANKING_PROFILE_DIR, 'cdp-port');
+const CDP_SESSION_FILE = resolve(BANKING_PROFILE_DIR, 'cdp-session');
 
 function generateCdpPort() {
   // Use a random port in the dynamic range (49152-65535)
   return 49152 + (randomBytes(2).readUInt16BE(0) % 16384);
+}
+
+function generateSessionToken() {
+  return randomBytes(16).toString('hex');
+}
+
+function writeCdpSession(port, token) {
+  writeFileSync(CDP_SESSION_FILE, JSON.stringify({ port, token }), { mode: 0o600 });
+}
+
+function readCdpSession() {
+  if (!existsSync(CDP_SESSION_FILE)) return null;
+  try {
+    const content = readFileSync(CDP_SESSION_FILE, 'utf8').trim();
+    const data = JSON.parse(content);
+    if (data && Number.isInteger(data.port) && data.port > 1024 && data.port < 65535 && typeof data.token === 'string') {
+      return data;
+    }
+  } catch {}
+  return null;
+}
+
+function clearCdpSession() {
+  try { unlinkSync(CDP_SESSION_FILE); } catch {}
 }
 
 const StateEnum = { OPEN: 'OPEN', LOGGED_IN: 'LOGGED_IN', LOGGED_OUT: 'LOGGED_OUT', UNKNOWN: 'UNKNOWN', ERROR: 'ERROR' };
@@ -72,24 +97,35 @@ async function runPlaywrightScript(scriptName, args = [], options = {}) {
 
   const scriptPath = resolve(__dirname, 'samsungpop-playwright', `${scriptName}.mjs`);
   let cdpPort;
+  let sessionToken;
   if (scriptName === 'open') {
     cdpPort = generateCdpPort();
+    sessionToken = generateSessionToken();
     writeCdpPort(cdpPort);
+    writeCdpSession(cdpPort, sessionToken);
   } else if (scriptName === 'status') {
-    cdpPort = readCdpPort();
-    if (!cdpPort) {
+    const session = readCdpSession();
+    if (!session) {
       return sanitizeStatus({ error_code: ErrorCodeEnum.NAVIGATION_FAILED });
     }
+    cdpPort = session.port;
+    sessionToken = session.token;
   } else {
     cdpPort = generateCdpPort();
+    sessionToken = generateSessionToken();
     writeCdpPort(cdpPort);
+    writeCdpSession(cdpPort, sessionToken);
   }
 
   return new Promise((resolvePromise) => {
     const controller = new AbortController();
     const timer = setTimeout(() => {
       controller.abort();
-      clearCdpPort();
+      // Do NOT clear port/session on timeout for open - it persists for session ownership
+      if (waitForExit) {
+        clearCdpPort();
+        clearCdpSession();
+      }
       resolvePromise(sanitizeStatus({ error_code: ErrorCodeEnum.NAVIGATION_FAILED }));
     }, timeoutMs);
 
@@ -102,6 +138,8 @@ async function runPlaywrightScript(scriptName, args = [], options = {}) {
         SAMSUNGPOP_ORIGIN,
         CDP_PORT: String(cdpPort),
         CDP_PORT_FILE,
+        CDP_SESSION_FILE,
+        CDP_SESSION_TOKEN: sessionToken,
         SYSTEMROOT: process.env.SYSTEMROOT,
         WINDIR: process.env.WINDIR,
         COMSPEC: process.env.COMSPEC,
@@ -149,7 +187,10 @@ async function runPlaywrightScript(scriptName, args = [], options = {}) {
     child.on('error', (err) => {
       if (!resolved) {
         clearTimeout(timer);
-        clearCdpPort();
+        if (waitForExit) {
+          clearCdpPort();
+          clearCdpSession();
+        }
         resolvePromise(sanitizeStatus({ error_code: ErrorCodeEnum.NAVIGATION_FAILED }));
       }
     });
@@ -159,10 +200,16 @@ async function runPlaywrightScript(scriptName, args = [], options = {}) {
       clearTimeout(timer);
       try {
         const parsed = JSON.parse(stdout.trim());
-        if (waitForExit) clearCdpPort();
+        if (waitForExit) {
+          clearCdpPort();
+          clearCdpSession();
+        }
         resolvePromise(sanitizeStatus(parsed));
       } catch {
-        clearCdpPort();
+        if (waitForExit) {
+          clearCdpPort();
+          clearCdpSession();
+        }
         if (code !== 0) {
           resolvePromise(sanitizeStatus({ error_code: ErrorCodeEnum.NAVIGATION_FAILED }));
         } else {
@@ -199,4 +246,4 @@ if (process.argv[1] && resolve(process.argv[1]) === fileURLToPath(import.meta.ur
   });
 }
 
-export { cmdOpen, cmdStatus, sanitizeStatus, StateEnum, BrowserEnum, SiteEnum, AuthEnum, ErrorCodeEnum, BANKING_PROFILE_DIR, generateCdpPort, readCdpPort, writeCdpPort, clearCdpPort, CDP_PORT_FILE };
+export { cmdOpen, cmdStatus, sanitizeStatus, StateEnum, BrowserEnum, SiteEnum, AuthEnum, ErrorCodeEnum, BANKING_PROFILE_DIR, generateCdpPort, generateSessionToken, readCdpPort, writeCdpPort, clearCdpPort, readCdpSession, writeCdpSession, clearCdpSession, CDP_PORT_FILE, CDP_SESSION_FILE };
